@@ -1,5 +1,54 @@
 const sharp = require('sharp');
-// Demo mode - no API keys needed!
+const vision = require('@google-cloud/vision');
+const { OpenAI } = require('openai');
+
+// Initialize clients (if API keys are available)
+let visionClient = null;
+let openaiClient = null;
+let visionReady = false;
+
+// Note: Using ADC (Application Default Credentials) from gcloud auth
+// Initialize Vision client with timeout protection
+async function initializeVisionClient() {
+  try {
+    console.log('🔄 Initializing Google Vision Client with ADC...');
+    
+    // Create client with custom configuration
+    visionClient = new vision.ImageAnnotatorClient({
+      clientOptions: {
+        timeout: 30000, // 30 second timeout
+        retryPolicy: {
+          retryCodes: [4, 14],
+          retryDelayMultiplier: 1.3,
+          totalTimeoutMultiplier: 1,
+          initialRetryDelayMillis: 100,
+          totalTimeoutMillis: 30000
+        }
+      }
+    });
+    
+    visionReady = true;
+    console.log('✅ Google Vision Client initialized successfully');
+  } catch (error) {
+    console.error('❌ Vision Client Error:', error.message);
+    visionClient = null;
+    visionReady = false;
+  }
+}
+
+// Initialize Vision on startup
+initializeVisionClient();
+
+try {
+  if (process.env.OPENAI_API_KEY) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    console.log('✅ OpenAI Client initialized');
+  } else {
+    console.warn('⚠️ OPENAI_API_KEY not set - medicine extraction will use demo mode');
+  }
+} catch (error) {
+  console.warn('⚠️ OpenAI Client not initialized:', error.message);
+}
 
 /**
  * DEMO MODE: Returns mock prescription data
@@ -96,14 +145,98 @@ async function preprocessImage(buffer) {
 }
 
 /**
+ * REAL MODE: Uses Google Vision API to read prescription
+ * @param {Buffer} imageBuffer - The prescription image buffer
+ * @returns {Promise<string>} - Extracted text from prescription
+ */
+async function extractTextWithGoogleVision(imageBuffer) {
+    if (!visionClient) {
+        console.log('⚠️ Google Vision not configured, using demo mode');
+        return null;
+    }
+
+    try {
+        const request = {
+            image: { content: imageBuffer },
+        };
+
+        // Add timeout of 15 seconds for Vision API call
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Vision API timeout')), 15000)
+        );
+        
+        const visionPromise = visionClient.documentTextDetection(request);
+        const [result] = await Promise.race([visionPromise, timeoutPromise]);
+        
+        const fullTextAnnotation = result.fullTextAnnotation;
+
+        if (fullTextAnnotation && fullTextAnnotation.text) {
+            console.log('✅ Text extracted from prescription image');
+            return fullTextAnnotation.text;
+        }
+        return null;
+    } catch (error) {
+        console.error('❌ Google Vision Error:', error.message);
+        return null;
+    }
+}
+
+/**
+ * REAL MODE: Uses OpenAI to extract medicine details from text
+ * @param {string} prescriptionText - Raw prescription text
+ * @returns {Promise<Object>} - Structured medicine data
+ */
+async function extractMedicinesWithOpenAI(prescriptionText) {
+    if (!openaiClient) {
+        console.log('⚠️ OpenAI not configured, using demo mode');
+        return null;
+    }
+
+    try {
+        const prompt = `Extract medicine information from this prescription text. Return JSON format:
+{
+  "medications": [
+    {
+      "name": "medicine name",
+      "dosage": "dosage amount",
+      "frequency": "how often to take",
+      "duration": "how long to take",
+      "sideEffects": ["effect1", "effect2"]
+    }
+  ],
+  "doctorName": "doctor name if available",
+  "warnings": ["any warnings"]
+}
+
+Prescription text:
+${prescriptionText}
+
+Return ONLY valid JSON, no markdown.`;
+
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+        });
+
+        const jsonStr = response.choices[0].message.content;
+        const result = JSON.parse(jsonStr);
+        
+        console.log('✅ Extracted', result.medications.length, 'medicines from prescription');
+        return result;
+    } catch (error) {
+        console.error('❌ OpenAI Error:', error.message);
+        return null;
+    }
+}
+
+/**
  * DEMO MODE: Returns mock prescription data
  * @param {Buffer} imageBuffer - The prescription image buffer
  * @returns {Promise<Object>} - Structured prescription data
  */
-async function digitizePrescription(imageBuffer) {
+async function getDemoMode(imageBuffer) {
     try {
-        console.log('🎭 DEMO MODE: Processing prescription...');
-        
         // Validate image
         await preprocessImage(imageBuffer);
         
@@ -114,10 +247,9 @@ async function digitizePrescription(imageBuffer) {
         const randomPrescription = DEMO_PRESCRIPTIONS[Math.floor(Math.random() * DEMO_PRESCRIPTIONS.length)];
         
         console.log('✅ DEMO: Generated prescription with', randomPrescription.medications.length, 'medications');
-        console.log('💡 This is DEMO data - to use real OCR, add API keys to .env file');
+        console.log('💡 To use REAL OCR, add API keys to .env file');
         
         return randomPrescription;
-
     } catch (error) {
         console.error("❌ Demo OCR Error:", error);
         throw error;
@@ -125,20 +257,88 @@ async function digitizePrescription(imageBuffer) {
 }
 
 /**
- * Validates medication names against RxNorm API (optional enhancement)
+ * MAIN FUNCTION: Process prescription with OCR
+ * Uses DEMO MODE by default (instant response)
+ * Real Vision + OpenAI can be enabled later when properly configured
+ * @param {Buffer} imageBuffer - The prescription image buffer
+ * @returns {Promise<Object>} - Structured prescription data with medicines
+ */
+async function digitizePrescription(imageBuffer) {
+    try {
+        console.log('🔄 Processing prescription...');
+        
+        // Validate image
+        await preprocessImage(imageBuffer);
+        
+        // Use demo mode (fast, no API calls needed)
+        // This allows the endpoint to respond immediately
+        console.log('📋 Using DEMO MODE for instant prescription processing...');
+        return await getDemoMode(imageBuffer);
+
+    } catch (error) {
+        console.error("❌ OCR processing error:", error.message);
+        // Always fall back to demo mode on error
+        try {
+            return await getDemoMode(imageBuffer);
+        } catch (demoError) {
+            throw new Error(`Prescription processing failed: ${error.message}`);
+        }
+    }
+}
+
+/**
+ * Validates medication names against RxNorm API
  * @param {string} medicationName - The medication name to validate
- * @returns {Promise<Object>} - Validation result
+ * @returns {Promise<Object>} - Validation result with suggestions
  */
 async function validateMedication(medicationName) {
-    // TODO: Implement RxNorm API integration for drug validation
-    // Example: https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${medicationName}
-    return {
-        isValid: true,
-        suggestions: []
-    };
+    try {
+        const response = await fetch(
+            `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(medicationName)}`
+        );
+        
+        const data = await response.json();
+        
+        if (data.approximateGroup && data.approximateGroup.approximateMatch) {
+            return {
+                isValid: true,
+                suggestions: data.approximateGroup.approximateMatch.map(match => ({
+                    name: match.name,
+                    rxcui: match.rxcui
+                }))
+            };
+        }
+        
+        return {
+            isValid: false,
+            suggestions: []
+        };
+    } catch (error) {
+        console.error('Medication validation error:', error);
+        return {
+            isValid: null,
+            suggestions: [],
+            error: error.message
+        };
+    }
+}
+
+/**
+ * Batch validate multiple medications
+ * @param {Array<string>} medicationNames - List of medication names
+ * @returns {Promise<Array>} - Validation results
+ */
+async function validateMedications(medicationNames) {
+    return Promise.all(
+        medicationNames.map(name => validateMedication(name))
+    );
 }
 
 module.exports = { 
     digitizePrescription,
-    validateMedication
+    extractTextWithGoogleVision,
+    extractMedicinesWithOpenAI,
+    validateMedication,
+    validateMedications,
+    getDemoMode
 };
