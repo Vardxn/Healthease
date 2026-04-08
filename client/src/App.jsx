@@ -12,7 +12,7 @@ import AIChatbot from './components/AIChatbot';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={import.meta.env.BASE_URL}>
         <div className="min-h-screen">
           <Navbar />
           <main className="container mx-auto px-4 py-8 animate-fadeIn">
