@@ -1,6 +1,58 @@
-// Demo mode - no API keys needed!
 const User = require('../models/User');
 const Prescription = require('../models/Prescription');
+const { OpenAI } = require('openai');
+
+let openaiClient = null;
+try {
+    if (process.env.OPENAI_API_KEY) {
+        openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        console.log('✅ OpenAI Chat Client initialized');
+    } else {
+        console.warn('⚠️ OPENAI_API_KEY not set - chat will use demo mode');
+    }
+} catch (error) {
+    console.warn('⚠️ OpenAI Chat client not initialized:', error.message);
+    openaiClient = null;
+}
+
+function buildMedicalSystemPrompt() {
+    return [
+        'You are HealthEase, a professional, empathetic medical assistant.',
+        'You help users understand symptoms, medications, and next steps in a safe way.',
+        'Be concise, calm, and structured. Use short sections and bullet points when helpful.',
+        'You are not a substitute for a doctor. Encourage consulting a clinician for diagnosis and treatment.',
+        'If the user describes red-flag symptoms (severe chest pain, trouble breathing, stroke symptoms, severe bleeding, suicidal thoughts), advise urgent local emergency services immediately.',
+        'When appropriate, ask 1-2 clarifying questions.',
+        'If medicine names are mentioned, preserve proper nouns carefully.',
+        'Do not invent prescription details. If context is missing, say so.',
+    ].join('\n');
+}
+
+function buildPatientContextMessage(patientContext) {
+    if (!patientContext) return null;
+
+    const lines = [];
+    if (patientContext.age) lines.push(`Age: ${patientContext.age}`);
+    if (patientContext.bloodGroup) lines.push(`Blood group: ${patientContext.bloodGroup}`);
+    if (Array.isArray(patientContext.conditions) && patientContext.conditions.length) {
+        lines.push(`Chronic conditions: ${patientContext.conditions.join(', ')}`);
+    }
+    if (Array.isArray(patientContext.allergies) && patientContext.allergies.length) {
+        lines.push(`Allergies: ${patientContext.allergies.join(', ')}`);
+    }
+    if (Array.isArray(patientContext.medications) && patientContext.medications.length) {
+        lines.push(`Recent prescribed medicines (names): ${patientContext.medications.slice(0, 12).join(', ')}`);
+    }
+    if (patientContext.latestPrescriptionSummary) {
+        lines.push(`Latest prescription (summary): ${patientContext.latestPrescriptionSummary}`);
+    }
+    if (patientContext.latestPrescriptionRawText) {
+        lines.push(`Latest prescription (OCR raw text):\n${patientContext.latestPrescriptionRawText}`);
+    }
+
+    if (!lines.length) return null;
+    return `Patient context (from profile + recent prescriptions). Use carefully:\n${lines.join('\n')}`;
+}
 
 /**
  * DEMO MODE: AI Chatbot with pre-written responses
@@ -53,13 +105,33 @@ class ChatService {
                 .sort({ uploadDate: -1 })
                 .limit(5);
 
+            const latest = prescriptions[0] || null;
+            const latestPrescriptionSummary = latest
+                ? [
+                    latest.doctorName ? `Doctor: ${latest.doctorName}` : null,
+                    Array.isArray(latest.medications) && latest.medications.length
+                        ? `Medicines: ${latest.medications
+                            .slice(0, 8)
+                            .map((m) => m?.name)
+                            .filter(Boolean)
+                            .join(', ')}${latest.medications.length > 8 ? '…' : ''}`
+                        : null,
+                    typeof latest.notes === 'string' && latest.notes.trim()
+                        ? `Notes: ${latest.notes.trim()}`
+                        : null,
+                ].filter(Boolean).join(' | ')
+                : null;
+
             return {
                 age: user.profile?.age,
                 bloodGroup: user.profile?.bloodGroup,
                 conditions: user.profile?.chronicConditions || [],
                 allergies: user.profile?.allergies || [],
                 prescriptionCount: prescriptions.length,
-                medications: prescriptions.flatMap(rx => rx.medications.map(m => m.name))
+                medications: prescriptions.flatMap(rx => (rx.medications || []).map(m => m.name)).filter(Boolean),
+                latestPrescriptionId: latest?._id?.toString?.() || null,
+                latestPrescriptionSummary,
+                latestPrescriptionRawText: typeof latest?.ocrRawText === 'string' ? latest.ocrRawText.trim() : null
             };
         } catch (error) {
             console.error('Error fetching patient context:', error);
@@ -76,10 +148,45 @@ class ChatService {
      */
     async processMessage(userId, message, conversationHistory = []) {
         try {
-            console.log('🎭 DEMO MODE: Processing chat message...');
-            
             const patientData = await this.getPatientContext(userId);
-            const lowerMessage = message.toLowerCase();
+            const text = typeof message === 'string' ? message.trim() : '';
+
+            if (!text) {
+                return "Please type a question so I can help.";
+            }
+
+            // REAL MODE (OpenAI)
+            if (openaiClient) {
+                const contextMsg = buildPatientContextMessage(patientData);
+
+                const history = Array.isArray(conversationHistory)
+                    ? conversationHistory
+                        .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+                        .slice(-16)
+                    : [];
+
+                const messages = [
+                    { role: 'system', content: buildMedicalSystemPrompt() },
+                    ...(contextMsg ? [{ role: 'system', content: contextMsg }] : []),
+                    ...history,
+                    { role: 'user', content: text }
+                ];
+
+                const response = await openaiClient.chat.completions.create({
+                    model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o',
+                    messages,
+                    temperature: 0.3
+                });
+
+                const reply = response?.choices?.[0]?.message?.content?.trim();
+                if (reply) return reply;
+                return "I’m sorry — I couldn’t generate a response right now. Please try again.";
+            }
+
+            // DEMO MODE fallback
+            console.log('🎭 DEMO MODE: Processing chat message...');
+
+            const lowerMessage = text.toLowerCase();
 
             // Simulate AI thinking time
             await new Promise(resolve => setTimeout(resolve, 800));

@@ -1,6 +1,9 @@
 import { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import AchievementsSection from '../components/AchievementsSection';
+import ProjectObjectivesSection from '../components/ProjectObjectivesSection';
+import VoiceChatbot from '../components/VoiceChatbot';
 
 const Dashboard = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
@@ -124,6 +127,18 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-10">
+        <VoiceChatbot />
+      </div>
+
+      <div className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 mt-10">
+        <ProjectObjectivesSection />
+      </div>
+
+      <div className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 mt-0">
+        <AchievementsSection />
       </div>
     </div>
   );

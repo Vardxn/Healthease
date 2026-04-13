@@ -85,4 +85,16 @@ export const chatAPI = {
     api.get('/chat/context')
 };
 
+// Voice Chat API
+export const voiceChatAPI = {
+  sendAudio: (formData) => {
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    };
+    return api.post('/voice-chat', formData, config);
+  }
+};
+
 export default api;

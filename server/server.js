@@ -18,6 +18,7 @@ connectDB();
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/voice-chat', require('./routes/voiceChatRoutes'));
 app.use('/api/ocr', require('./routes/ocrRoutes'));
 
 // Centralized file upload error mapping (multer, file type, file size)
