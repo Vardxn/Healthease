@@ -9,20 +9,40 @@ const ocrService = require('../services/ocrService');
 exports.uploadPrescription = async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ msg: 'No file uploaded' });
+            return res.status(400).json({
+                success: false,
+                msg: 'No file uploaded'
+            });
+        }
+
+        if (!req.file.buffer || req.file.size === 0) {
+            return res.status(400).json({
+                success: false,
+                msg: 'Uploaded file is empty'
+            });
         }
 
         console.log('📤 Processing prescription upload for user:', req.user.id);
 
         // 1. Process Image via AI Service
-        const { rawText, medications, doctorName } = await ocrService.digitizePrescription(req.file.buffer);
+        const {
+            rawText,
+            medications,
+            doctorName,
+            processingMode,
+            warnings = [],
+            fallbackReason = null,
+            quality = null
+        } = await ocrService.digitizePrescription(req.file.buffer);
+
+        const normalizedMedications = Array.isArray(medications) ? medications : [];
 
         // 2. Save to Database (Draft mode, user should verify)
         const newPrescription = new Prescription({
             patientId: req.user.id, // Assumes auth middleware adds user to req
             imageUrl: req.file.cloudinaryUrl || "https://placeholder-url.com/temp.jpg", // Replace with actual cloud storage URL
             ocrRawText: rawText,
-            medications: medications,
+            medications: normalizedMedications,
             doctorName: doctorName,
             isVerified: false
         });
@@ -32,14 +52,32 @@ exports.uploadPrescription = async (req, res) => {
         res.json({
             success: true,
             msg: 'Prescription processed successfully',
+            processingMode,
+            meta: {
+                fallbackReason,
+                warnings,
+                quality,
+                medicationCount: normalizedMedications.length,
+                rawTextLength: rawText ? rawText.length : 0,
+                uploadedFile: {
+                    originalName: req.file.originalname,
+                    mimeType: req.file.mimetype,
+                    sizeBytes: req.file.size
+                }
+            },
             data: newPrescription
         });
 
     } catch (err) {
         console.error('Prescription upload error:', err);
-        res.status(500).json({ 
+
+        const isImageValidationError =
+            err.message &&
+            (err.message.includes('Invalid image file') || err.message.includes('Only image files are allowed'));
+
+        res.status(isImageValidationError ? 400 : 500).json({ 
             success: false,
-            msg: 'Server Error', 
+            msg: isImageValidationError ? 'Invalid prescription image' : 'Server Error', 
             error: err.message 
         });
     }

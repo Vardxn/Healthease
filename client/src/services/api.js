@@ -41,11 +41,12 @@ export const authAPI = {
 
 // Prescription API
 export const prescriptionAPI = {
-  upload: (formData) => {
+  upload: (formData, options = {}) => {
     const config = {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      onUploadProgress: options.onUploadProgress
     };
     return api.post('/prescriptions/upload', formData, config);
   },
@@ -61,6 +62,18 @@ export const prescriptionAPI = {
   
   delete: (id) => 
     api.delete(`/prescriptions/${id}`)
+};
+
+// OCR API
+export const ocrAPI = {
+  recognizeHandwriting: (formData) => {
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    };
+    return api.post('/ocr/handwriting', formData, config);
+  }
 };
 
 // Chat API

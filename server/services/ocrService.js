@@ -7,6 +7,12 @@ let visionClient = null;
 let openaiClient = null;
 let visionReady = false;
 
+const PROCESSING_MODES = {
+    REAL: 'real',
+    DEMO: 'demo',
+    DEMO_FALLBACK: 'demo-fallback'
+};
+
 // Note: Using ADC (Application Default Credentials) from gcloud auth
 // Initialize Vision client with timeout protection
 async function initializeVisionClient() {
@@ -144,6 +150,80 @@ async function preprocessImage(buffer) {
     }
 }
 
+function normalizeMedication(medication = {}) {
+    return {
+        name: typeof medication.name === 'string' ? medication.name.trim() : '',
+        dosage: typeof medication.dosage === 'string' ? medication.dosage.trim() : '',
+        frequency: typeof medication.frequency === 'string' ? medication.frequency.trim() : '',
+        duration: typeof medication.duration === 'string' ? medication.duration.trim() : ''
+    };
+}
+
+function normalizePrescriptionResult(result = {}) {
+    const medications = Array.isArray(result.medications)
+        ? result.medications.map(normalizeMedication).filter((med) => med.name)
+        : [];
+
+    return {
+        rawText: typeof result.rawText === 'string' ? result.rawText.trim() : '',
+        medications,
+        doctorName: typeof result.doctorName === 'string' ? result.doctorName.trim() : '',
+        warnings: Array.isArray(result.warnings)
+            ? result.warnings.filter((warning) => typeof warning === 'string' && warning.trim())
+            : []
+    };
+}
+
+function assessOcrQuality({ rawText = '', medications = [], processingMode, warnings = [], fallbackReason = null }) {
+    const qualityFlags = [];
+    const recommendationSet = new Set();
+
+    let confidenceScore = 85;
+    if (processingMode === PROCESSING_MODES.DEMO) {
+        confidenceScore = 65;
+    }
+    if (processingMode === PROCESSING_MODES.DEMO_FALLBACK) {
+        confidenceScore = 50;
+    }
+
+    if (rawText.length < 80) {
+        confidenceScore -= 15;
+        qualityFlags.push('short-text');
+        recommendationSet.add('Retake the image in better lighting so OCR can read more text.');
+    }
+
+    if (!Array.isArray(medications) || medications.length === 0) {
+        confidenceScore -= 25;
+        qualityFlags.push('no-medications-detected');
+        recommendationSet.add('Please manually review and add medicine names before verifying.');
+    } else if (medications.length < 2) {
+        confidenceScore -= 10;
+        qualityFlags.push('low-medication-count');
+    }
+
+    if (warnings.length > 0) {
+        confidenceScore -= Math.min(15, warnings.length * 5);
+        qualityFlags.push('ocr-warnings-present');
+        recommendationSet.add('Double-check dosage and frequency fields before saving.');
+    }
+
+    if (fallbackReason) {
+        confidenceScore -= 10;
+        qualityFlags.push('fallback-used');
+        recommendationSet.add('Live OCR was unavailable. Re-upload for a more accurate extraction.');
+    }
+
+    confidenceScore = Math.max(0, Math.min(100, confidenceScore));
+    const confidenceLevel = confidenceScore >= 80 ? 'high' : confidenceScore >= 55 ? 'medium' : 'low';
+
+    return {
+        confidenceScore,
+        confidenceLevel,
+        qualityFlags,
+        recommendations: Array.from(recommendationSet)
+    };
+}
+
 /**
  * REAL MODE: Uses Google Vision API to read prescription
  * @param {Buffer} imageBuffer - The prescription image buffer
@@ -249,11 +329,59 @@ async function getDemoMode(imageBuffer) {
         console.log('✅ DEMO: Generated prescription with', randomPrescription.medications.length, 'medications');
         console.log('💡 To use REAL OCR, add API keys to .env file');
         
-        return randomPrescription;
+        return {
+            ...normalizePrescriptionResult(randomPrescription),
+            processingMode: PROCESSING_MODES.DEMO,
+            fallbackReason: null
+        };
     } catch (error) {
         console.error("❌ Demo OCR Error:", error);
         throw error;
     }
+}
+
+/**
+ * Extract plain handwriting text from an image.
+ * @param {Buffer} imageBuffer - Uploaded image buffer
+ * @returns {Promise<Object>} - OCR text and metadata
+ */
+async function recognizeHandwriting(imageBuffer) {
+    await preprocessImage(imageBuffer);
+
+    const rawText = await extractTextWithGoogleVision(imageBuffer);
+    if (rawText && rawText.trim()) {
+        const quality = assessOcrQuality({
+            rawText: rawText.trim(),
+            medications: [],
+            processingMode: PROCESSING_MODES.REAL,
+            warnings: [],
+            fallbackReason: null
+        });
+
+        return {
+            text: rawText.trim(),
+            processingMode: PROCESSING_MODES.REAL,
+            warnings: [],
+            quality
+        };
+    }
+
+    const demoResult = await getDemoMode(imageBuffer);
+    const warnings = ['Live OCR unavailable, returned fallback OCR text.'];
+    const quality = assessOcrQuality({
+        rawText: demoResult.rawText,
+        medications: [],
+        processingMode: PROCESSING_MODES.DEMO_FALLBACK,
+        warnings,
+        fallbackReason: 'Live OCR unavailable'
+    });
+
+    return {
+        text: demoResult.rawText,
+        processingMode: PROCESSING_MODES.DEMO_FALLBACK,
+        warnings,
+        quality
+    };
 }
 
 /**
@@ -270,8 +398,56 @@ async function digitizePrescription(imageBuffer) {
         // Validate image
         await preprocessImage(imageBuffer);
         
-        // Use demo mode (fast, no API calls needed)
-        // This allows the endpoint to respond immediately
+        // Try real OCR path first if services are available.
+        if (visionReady && openaiClient) {
+            const rawText = await extractTextWithGoogleVision(imageBuffer);
+
+            if (rawText && rawText.trim()) {
+                const aiExtraction = await extractMedicinesWithOpenAI(rawText);
+
+                if (aiExtraction) {
+                    const normalizedResult = normalizePrescriptionResult({
+                        rawText,
+                        medications: aiExtraction.medications,
+                        doctorName: aiExtraction.doctorName,
+                        warnings: aiExtraction.warnings
+                    });
+
+                    const quality = assessOcrQuality({
+                        rawText: normalizedResult.rawText,
+                        medications: normalizedResult.medications,
+                        processingMode: PROCESSING_MODES.REAL,
+                        warnings: normalizedResult.warnings,
+                        fallbackReason: null
+                    });
+
+                    return {
+                        ...normalizedResult,
+                        processingMode: PROCESSING_MODES.REAL,
+                        fallbackReason: null,
+                        quality
+                    };
+                }
+            }
+
+            console.warn('⚠️ Real OCR returned incomplete data, switching to demo fallback mode.');
+            const fallback = await getDemoMode(imageBuffer);
+            const quality = assessOcrQuality({
+                rawText: fallback.rawText,
+                medications: fallback.medications,
+                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
+                warnings: fallback.warnings,
+                fallbackReason: 'Real OCR pipeline returned incomplete output.'
+            });
+
+            return {
+                ...fallback,
+                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
+                fallbackReason: 'Real OCR pipeline returned incomplete output.',
+                quality
+            };
+        }
+
         console.log('📋 Using DEMO MODE for instant prescription processing...');
         return await getDemoMode(imageBuffer);
 
@@ -279,7 +455,21 @@ async function digitizePrescription(imageBuffer) {
         console.error("❌ OCR processing error:", error.message);
         // Always fall back to demo mode on error
         try {
-            return await getDemoMode(imageBuffer);
+            const fallback = await getDemoMode(imageBuffer);
+            const quality = assessOcrQuality({
+                rawText: fallback.rawText,
+                medications: fallback.medications,
+                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
+                warnings: fallback.warnings,
+                fallbackReason: error.message
+            });
+
+            return {
+                ...fallback,
+                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
+                fallbackReason: error.message,
+                quality
+            };
         } catch (demoError) {
             throw new Error(`Prescription processing failed: ${error.message}`);
         }
@@ -336,6 +526,7 @@ async function validateMedications(medicationNames) {
 
 module.exports = { 
     digitizePrescription,
+    recognizeHandwriting,
     extractTextWithGoogleVision,
     extractMedicinesWithOpenAI,
     validateMedication,
