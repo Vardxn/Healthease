@@ -5,3 +5,7 @@
 google-cloud-sdk/
 google-cloud-cli-*.tar.gz
 source ~*/
+node_modules
+
+# Vercel local link output
+.vercel/
