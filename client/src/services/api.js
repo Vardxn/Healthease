@@ -97,4 +97,18 @@ export const voiceChatAPI = {
   }
 };
 
+// Reminder API
+export const reminderAPI = {
+  setReminder: (data) =>
+    api.post('/reminders/set', data),
+  
+  getReminder: (prescriptionId) =>
+    api.get(`/reminders/${prescriptionId}`)
+};
+
+// Analytics API
+export const analyticsAPI = {
+  getDashboard: () =>
+    api.get('/analytics/dashboard')
+};
 export default api;

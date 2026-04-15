@@ -1,6 +1,24 @@
 const Prescription = require('../models/Prescription');
 const ocrService = require('../services/ocrService');
 
+const GEMINI_STRUCTURED_PARSING_PROMPT_TEMPLATE = `Parse this structured prescription text into JSON.
+Input format is:
+DOCTOR: ...
+PATIENT: ...
+MEDICATIONS: - name | dosage | frequency | duration
+
+Return JSON: {
+    doctorName, patientName, age, date, diagnosis,
+    medications: [{ name, dosage, frequency, duration }],
+    investigations, otherInstructions
+}
+
+If a field says UNCLEAR, set it to null in JSON.
+Return only valid JSON, no explanation.
+
+PRESCRIPTION TEXT:
+{{PRESCRIPTION_TEXT}}`;
+
 /**
  * Upload and process prescription image
  * @route POST /api/prescriptions/upload
@@ -24,6 +42,8 @@ exports.uploadPrescription = async (req, res) => {
 
         console.log('📤 Processing prescription upload for user:', req.user.id);
 
+        const parserPrompt = GEMINI_STRUCTURED_PARSING_PROMPT_TEMPLATE;
+
         // 1. Process Image via AI Service
         const {
             rawText,
@@ -32,16 +52,44 @@ exports.uploadPrescription = async (req, res) => {
             processingMode,
             warnings = [],
             fallbackReason = null,
-            quality = null
-        } = await ocrService.digitizePrescription(req.file.buffer);
+            quality = null,
+            error: ocrError = null
+        } = await ocrService.digitizePrescription(req.file.buffer, parserPrompt);
 
-        const normalizedMedications = Array.isArray(medications) ? medications : [];
+        const rawTextValue = typeof rawText === 'string' ? rawText : '';
+        const trimmedOcrText = rawTextValue.trim();
+        const textLength = rawTextValue.length;
+        const hasStructuredKeywords = /DOCTOR:|MEDICATIONS:/i.test(rawTextValue);
+        const hasMedicationKeywords = /MEDICATIONS:|TAB|CAP|MG|ML|TABLET|CAPSULE|OD|BD|TDS|SOS|DAILY|MORNING|NIGHT|TWICE|THRICE/i.test(rawTextValue);
+        const minimumConfidenceThreshold = 20;
+        const confidenceScore = hasStructuredKeywords
+            ? 90
+            : (trimmedOcrText.length > 20 ? minimumConfidenceThreshold : 0);
+
+        console.log('OCR text length:', textLength);
+        console.log('Confidence score:', confidenceScore);
+
+        let normalizedMedications = Array.isArray(medications) ? medications : [];
+        if (!normalizedMedications.length && hasMedicationKeywords && trimmedOcrText.length > 20) {
+            normalizedMedications = [
+                {
+                    name: 'UNCLEAR',
+                    dosage: '',
+                    frequency: '',
+                    duration: ''
+                }
+            ];
+        }
+
+        const extractionError = trimmedOcrText.length > 20
+            ? null
+            : (ocrError || 'Could not read prescription');
 
         // 2. Save to Database (Draft mode, user should verify)
         const newPrescription = new Prescription({
             patientId: req.user.id, // Assumes auth middleware adds user to req
             imageUrl: req.file.cloudinaryUrl || "https://placeholder-url.com/temp.jpg", // Replace with actual cloud storage URL
-            ocrRawText: rawText,
+            ocrRawText: rawTextValue,
             medications: normalizedMedications,
             doctorName: doctorName,
             isVerified: false
@@ -55,10 +103,12 @@ exports.uploadPrescription = async (req, res) => {
             processingMode,
             meta: {
                 fallbackReason,
+                extractionError,
                 warnings,
                 quality,
+                confidenceScore,
                 medicationCount: normalizedMedications.length,
-                rawTextLength: rawText ? rawText.length : 0,
+                rawTextLength: textLength,
                 uploadedFile: {
                     originalName: req.file.originalname,
                     mimeType: req.file.mimetype,

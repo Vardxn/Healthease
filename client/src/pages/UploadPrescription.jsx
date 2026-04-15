@@ -326,6 +326,10 @@ const UploadPrescription = () => {
           >
             {loading ? '🔍 Processing with AI...' : '🚀 Upload & Digitize Now'}
           </button>
+
+          <p className="mt-3 text-sm text-gray-600 text-center">
+            For best results: place prescription flat, photograph from directly above in good lighting
+          </p>
         </form>
 
         {/* Processing Info */}
@@ -453,10 +457,14 @@ const UploadPrescription = () => {
 
             {result.data.ocrRawText && (
               <div className="mb-6 bg-white rounded-xl p-4 shadow-md">
-                <p className="text-gray-700 font-bold mb-2 text-lg">Extracted Text</p>
-                <pre className="whitespace-pre-wrap break-words text-sm text-gray-700 bg-gray-50 p-3 rounded-lg max-h-80 overflow-y-auto">
-                  {result.data.ocrRawText}
-                </pre>
+                <details>
+                  <summary className="text-gray-700 font-bold text-lg cursor-pointer select-none">
+                    View Raw OCR Text
+                  </summary>
+                  <pre className="mt-3 whitespace-pre-wrap break-words text-sm text-gray-700 bg-gray-50 p-3 rounded-lg max-h-80 overflow-y-auto">
+                    {result.data.ocrRawText}
+                  </pre>
+                </details>
               </div>
             )}
 

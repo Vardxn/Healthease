@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { prescriptionAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import ReminderModal from '../components/ReminderModal';
 
 const PrescriptionList = () => {
   const { isAuthenticated } = useContext(AuthContext);
@@ -9,6 +10,8 @@ const PrescriptionList = () => {
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reminderModalOpen, setReminderModalOpen] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -45,12 +48,22 @@ const PrescriptionList = () => {
   const handleVerify = async (id) => {
     try {
       await prescriptionAPI.update(id, { isVerified: true });
-      setPrescriptions(prescriptions.map(p => 
+      setPrescriptions(prescriptions.map((p) =>
         p._id === id ? { ...p, isVerified: true } : p
       ));
     } catch (err) {
       alert('Failed to verify prescription');
     }
+  };
+
+  const handleOpenReminderModal = (prescription) => {
+    setSelectedPrescription(prescription);
+    setReminderModalOpen(true);
+  };
+
+  const handleCloseReminderModal = () => {
+    setReminderModalOpen(false);
+    setSelectedPrescription(null);
   };
 
   if (loading) {
@@ -130,6 +143,13 @@ const PrescriptionList = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => handleOpenReminderModal(prescription)}
+                    className="text-blue-600 hover:text-blue-800 font-medium text-sm hover:bg-blue-50 px-3 py-1 rounded transition"
+                    title="Set medication reminders"
+                  >
+                    🔔 Reminders
+                  </button>
                   {!prescription.isVerified && (
                     <button
                       onClick={() => handleVerify(prescription._id)}
@@ -175,6 +195,19 @@ const PrescriptionList = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {selectedPrescription && (
+        <ReminderModal
+          isOpen={reminderModalOpen}
+          onClose={handleCloseReminderModal}
+          prescriptionId={selectedPrescription._id}
+          medications={selectedPrescription.medications}
+          onSaveSuccess={() => {
+            // Optionally refresh prescriptions after saving reminder
+            // fetchPrescriptions();
+          }}
+        />
       )}
     </div>
   );

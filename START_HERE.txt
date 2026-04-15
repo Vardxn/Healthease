@@ -1,146 +1,162 @@
-╔════════════════════════════════════════════════════════════════════════════╗
-║                                                                            ║
-║     🏥  HEALTHEASE - AI-POWERED HEALTHCARE PLATFORM FOR INDIANS  🏥       ║
-║                                                                            ║
-║                    ✨ Full-Stack MERN + AI Project ✨                      ║
-║                                                                            ║
-╚════════════════════════════════════════════════════════════════════════════╝
+================================================================================
+                    HealthEase - Daily Startup Guide
+================================================================================
 
-📍 PROJECT LOCATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   /Users/vardxn/Developer/personal/health-ease/
+QUICK START - Open 3 Terminal Windows
 
-📊 PROJECT STATS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ 44 Files Created
-   ✅ ~6,500+ Lines of Code
-   ✅ 13 API Endpoints
-   ✅ 8 React Components
-   ✅ Full Documentation
+================================================================================
+Terminal 1 - Python OCR Service (Port 8000)
+================================================================================
 
-🎯 KEY FEATURES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   📸 Smart OCR - Google Vision + OpenAI GPT-4o
-   🤖 AI Medical Assistant - Context-aware chatbot
-   🔒 JWT Authentication - Secure user management
-   📋 Prescription Management - Complete CRUD operations
-   📱 Responsive UI - Beautiful Tailwind CSS design
+cd python-service
+source venv/bin/activate
+python3 -m uvicorn main:app --reload --port 8000
 
-🛠️ TECH STACK
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Backend:  Node.js, Express, MongoDB, Mongoose
-   AI/ML:    Google Cloud Vision, OpenAI GPT-4o, Sharp
-   Frontend: React 18, Vite, Tailwind CSS, React Router
-   Auth:     JWT, bcrypt
+Expected Output: "Application startup complete. Uvicorn running on http://0.0.0.0:8000"
 
-🚀 QUICK START (5 MINUTES)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Health Check:
+  curl http://localhost:8000/health
+  Expected: {"status":"ok","service":"python-tesseract-ocr"}
 
-   1️⃣  INSTALL DEPENDENCIES
-       cd /Users/vardxn/Developer/personal/health-ease
-       cd server && npm install
-       cd ../client && npm install
+================================================================================
+Terminal 2 - Node Backend (Port 5001)
+================================================================================
 
-   2️⃣  CONFIGURE ENVIRONMENT
-       cd server
-       cp .env.example .env
-       # Edit .env with your API keys
+cd server
+npm run dev
 
-   3️⃣  START MONGODB
-       brew services start mongodb-community
+Expected Output: "🚀 Server running on port 5001" & "✅ MongoDB Connected"
 
-   4️⃣  RUN THE APPLICATION
-       # Terminal 1
-       cd server && npm run dev
+Health Check:
+  curl http://localhost:5001/
+  Expected: Response from backend (may vary by endpoint)
 
-       # Terminal 2
-       cd client && npm run dev
+================================================================================
+Terminal 3 - React Frontend (Port 3000)
+================================================================================
 
-   5️⃣  OPEN IN BROWSER
-       http://localhost:3000
+cd client
+npm run dev
 
-📚 DOCUMENTATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   📖 README.md              - Complete project documentation
-   ⚡ QUICK_START.md         - 5-minute setup guide
-   📡 API_DOCUMENTATION.md   - API reference with examples
-   📊 PROJECT_SUMMARY.md     - Project overview & deliverables
-   💡 DEVELOPMENT_GUIDE.md   - Development tips & troubleshooting
-   📂 FILE_STRUCTURE.md      - Complete file tree & explanations
+Expected Output: "VITE v6.x.x ready in XXX ms" & "➜ Local: http://localhost:3000/"
 
-🔑 REQUIRED API KEYS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   1. MongoDB (Local or Atlas)
-      → https://www.mongodb.com/cloud/atlas
+Health Check:
+  Visit http://localhost:3000 in browser
+  Expected: HealthEase login page loads
 
-   2. OpenAI API Key
-      → https://platform.openai.com/api-keys
+================================================================================
+SERVICE PORTS REFERENCE
+================================================================================
 
-   3. Google Cloud Vision Credentials
-      → https://console.cloud.google.com/apis/credentials
+Python OCR Service:     http://localhost:8000
+Node Backend API:       http://localhost:5001
+React Frontend:         http://localhost:3000
 
-📁 PROJECT STRUCTURE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   health-ease/
-   ├── server/              # Backend (Node.js/Express)
-   │   ├── config/          # Database connection
-   │   ├── controllers/     # Request handlers
-   │   ├── models/          # Mongoose schemas
-   │   ├── routes/          # API endpoints
-   │   ├── services/        # Business logic (OCR, AI)
-   │   ├── middleware/      # Auth & file uploads
-   │   └── utils/           # Helper functions
-   │
-   └── client/              # Frontend (React + Vite)
-       ├── src/
-       │   ├── components/  # Reusable UI (Navbar, Chatbot)
-       │   ├── pages/       # Full views (Dashboard, Upload)
-       │   ├── context/     # State management
-       │   └── services/    # API calls
+================================================================================
+IMPORTANT - BEFORE FIRST START
+================================================================================
 
-🎓 WHAT YOU'LL LEARN
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✨ Full-stack MERN development
-   ✨ AI/ML integration (OCR, NLP)
-   ✨ JWT authentication & security
-   ✨ File uploads & processing
-   ✨ RESTful API design
-   ✨ React state management
-   ✨ Service-oriented architecture
+1. Python Service Setup (One-time):
+   cd python-service
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   Tesseract: brew install tesseract
 
-🎯 USE CASES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ✅ Portfolio project for job applications
-   ✅ Learning full-stack development
-   ✅ Understanding AI integration
-   ✅ Healthcare domain project
-   ✅ Startup MVP base
-   ✅ College final year project
-
-💡 NEXT STEPS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   1. Read QUICK_START.md for setup instructions
-   2. Follow the setup steps above
-   3. Test with sample prescriptions
-   4. Customize and extend features
-   5. Deploy to production (Vercel, Heroku, AWS)
-
-🎉 CONGRATULATIONS!
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   You now have a complete, production-ready healthcare platform!
+2. Backend Setup (One-time):
+   cd server
+   npm install
    
-   This is a professional-grade project that demonstrates:
-   - Modern web development skills
-   - AI/ML integration capabilities
-   - Healthcare domain knowledge
-   - Full-stack expertise
+3. Frontend Setup (One-time):
+   cd client
+   npm install
 
-   Perfect for your portfolio or as a base for a real product! 🚀
+================================================================================
+ENVIRONMENT FILES REQUIRED
+================================================================================
 
-╔════════════════════════════════════════════════════════════════════════════╗
-║                                                                            ║
-║         Built with ❤️ for improving healthcare accessibility             ║
-║                                                                            ║
-║                        Happy Coding! 🎊                                    ║
-║                                                                            ║
-╚════════════════════════════════════════════════════════════════════════════╝
+✓ /server/.env
+  Required variables:
+    PORT=5001
+    MONGO_URI=mongodb://localhost:27017/healthease
+    JWT_SECRET=your_super_secret_jwt_key_change_this
+    OPENAI_API_KEY=sk-your-openai-api-key-here
+    PYTHON_OCR_URL=http://localhost:8000/ocr
+
+✓ /python-service/.env (optional, for future use)
+
+Ensure both .env files exist before starting services!
+
+================================================================================
+STARTUP ORDER IS CRITICAL
+================================================================================
+
+Always start in this order:
+  1. Python OCR Service (Port 8000) - FIRST
+  2. Node Backend (Port 5001) - SECOND
+  3. React Frontend (Port 3000) - THIRD
+
+This ensures the backend can connect to the OCR service before frontend
+tries to connect to the backend.
+
+================================================================================
+QUICK TROUBLESHOOTING
+================================================================================
+
+Python Service fails to start:
+  - Ensure Tesseract is installed: brew install tesseract
+  - Verify venv is activated: source venv/bin/activate
+  - Check Python 3.10+: python3 --version
+
+Backend connection errors:
+  - Confirm MongoDB is running: brew services list
+  - Check .env file exists and PORT=5001 is set
+  - Verify PYTHON_OCR_URL points to http://localhost:8000/ocr
+
+Frontend shows blank page:
+  - Clear browser cache: Ctrl+Shift+Delete (or Cmd+Shift+Delete on Mac)
+  - Check backend is running at http://localhost:5001
+  - Open browser console for error messages (F12)
+
+================================================================================
+MONGODB LOCAL SETUP (if not already running)
+================================================================================
+
+Start MongoDB:
+  brew services start mongodb-community
+
+Stop MongoDB:
+  brew services stop mongodb-community
+
+Check status:
+  brew services list
+
+Reset database (caution - deletes all data):
+  mongosh
+  > use healthease
+  > db.dropDatabase()
+
+================================================================================
+TESTING THE FULL STACK
+================================================================================
+
+1. Go to http://localhost:3000
+2. Register a new account
+3. Login with your credentials
+4. Upload a handwritten prescription image
+5. Wait for AI processing (OCR + parsing)
+6. View digitized prescription in list
+7. Chat with Dr. AI using the chatbot
+
+================================================================================
+DOCUMENTATION FILES
+================================================================================
+
+High-level overview:       STAKEHOLDER_OVERVIEW.md
+Technical architecture:    TECHNICAL_ARCHITECTURE.md
+API documentation:         API_DOCUMENTATION.md
+File structure guide:       FILE_STRUCTURE.md
+Development notes:          DEVELOPMENT_GUIDE.md
+Project summary:            PROJECT_SUMMARY.md
+
+================================================================================

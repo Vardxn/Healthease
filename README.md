@@ -16,9 +16,10 @@ An intelligent healthcare platform for Indians that digitizes handwritten prescr
 ### Backend
 - **Node.js** & **Express.js** - Server framework
 - **MongoDB** with **Mongoose** - Database
-- **Google Cloud Vision API** - OCR text extraction
+- **Python FastAPI + Tesseract** - OCR text extraction microservice
+- **OpenCV** - Image preprocessing inside OCR microservice
 - **OpenAI GPT-4o** - Text parsing and medical assistant
-- **Sharp** - Image preprocessing
+- **Sharp** - Image validation/preprocessing in Node pipeline
 - **JWT** - Authentication
 - **Multer** - File uploads
 
@@ -48,13 +49,17 @@ health-ease/
 │   │   ├── chatRoutes.js
 │   │   └── prescriptionRoutes.js
 │   ├── services/             # Business logic
-│   │   ├── ocrService.js
+│   │   ├── ocrService.js     # Calls Python OCR service over HTTP
 │   │   └── chatService.js
 │   ├── middleware/           # Auth & file upload
 │   │   ├── auth.js
 │   │   └── upload.js
 │   ├── server.js             # Entry point
 │   └── package.json
+│
+├── python-service/            # OCR microservice (FastAPI + Tesseract)
+│   ├── main.py                # /ocr endpoint + OpenCV preprocessing
+│   └── requirements.txt
 │
 └── client/                    # Frontend (React + Vite)
     ├── src/
@@ -82,8 +87,9 @@ health-ease/
 
 ### Prerequisites
 - Node.js 18+ and npm
+- Python 3.10+
+- Tesseract OCR (macOS: brew install tesseract)
 - MongoDB (local or MongoDB Atlas)
-- Google Cloud Platform account (for Vision API)
 - OpenAI API key
 
 ### 1. Clone the Repository
@@ -107,16 +113,18 @@ NODE_ENV=development
 MONGO_URI=mongodb://localhost:27017/healthease
 JWT_SECRET=your_super_secret_jwt_key_change_this
 OPENAI_API_KEY=sk-your-openai-api-key-here
-GOOGLE_APPLICATION_CREDENTIALS=./config/google-vision-credentials.json
+PYTHON_OCR_URL=http://localhost:8000/ocr
 ```
 
-### 3. Google Cloud Vision Setup
+### 3. Python OCR Service Setup
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable **Cloud Vision API**
-4. Create a service account and download the JSON credentials
-5. Save the JSON file as `server/config/google-vision-credentials.json`
+```bash
+cd python-service
+python3 -m pip install -r requirements.txt
+python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+This starts the OCR microservice at `http://localhost:8000/ocr`.
 
 ### 4. MongoDB Setup
 
@@ -144,14 +152,21 @@ npm install
 
 ### 6. Run the Application
 
-**Terminal 1 - Start Backend:**
+**Terminal 1 - Start Python OCR Service:**
+```bash
+cd python-service
+python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+Python OCR service runs on `http://localhost:8000`
+
+**Terminal 2 - Start Backend:**
 ```bash
 cd server
 npm run dev
 ```
-Backend will run on `http://localhost:5000`
+Backend will run on your configured `PORT` (default `http://localhost:5000`)
 
-**Terminal 2 - Start Frontend:**
+**Terminal 3 - Start Frontend:**
 ```bash
 cd client
 npm run dev
@@ -186,7 +201,7 @@ Frontend will run on `http://localhost:3000`
 | `MONGO_URI` | MongoDB connection string | Yes |
 | `JWT_SECRET` | Secret for JWT tokens | Yes |
 | `OPENAI_API_KEY` | OpenAI API key | Yes |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Path to Google Vision credentials | Yes |
+| `PYTHON_OCR_URL` | Python OCR endpoint URL | No (default: `http://localhost:8000/ocr`) |
 
 ## 🧪 Testing the Application
 
@@ -201,10 +216,11 @@ Frontend will run on `http://localhost:3000`
 
 ### OCR Pipeline
 1. **Image Upload** → User uploads prescription image
-2. **Preprocessing** → Sharp library enhances image quality (grayscale, normalize, sharpen)
-3. **Text Extraction** → Google Vision API performs OCR
-4. **AI Parsing** → GPT-4o structures the text into JSON format
-5. **Storage** → Saved to MongoDB with verification status
+2. **Node Validation** → Sharp verifies and prepares image buffer
+3. **Python Preprocessing** → FastAPI microservice uses OpenCV (grayscale, denoise, threshold)
+4. **Text Extraction** → Tesseract OCR extracts prescription text
+5. **AI Parsing** → GPT-4o structures the text into JSON format
+6. **Storage** → Saved to MongoDB with verification status
 
 ### AI Medical Assistant
 - Uses conversation history for context
@@ -254,10 +270,11 @@ brew services list
 brew services restart mongodb-community
 ```
 
-**Google Vision API Error:**
-- Verify credentials file path in `.env`
-- Ensure Vision API is enabled in Google Cloud Console
-- Check if billing is enabled (required even for free tier)
+**Python OCR Service Error:**
+- Ensure FastAPI service is running on port 8000
+- Verify `PYTHON_OCR_URL` in server `.env`
+- Confirm Tesseract is installed: `tesseract --version`
+- Check Python service logs for OCR processing errors
 
 **OpenAI API Error:**
 - Verify API key is valid

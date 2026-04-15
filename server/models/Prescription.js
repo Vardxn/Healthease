@@ -29,7 +29,19 @@ const PrescriptionSchema = new mongoose.Schema({
         type: Boolean, 
         default: false 
     },
-    notes: String
-}, { timestamps: true });
+    notes: String,
 
+    // Medication Reminder System
+    reminder: {
+        enabled: { 
+            type: Boolean, 
+            default: false 
+        },
+        times: [String], // Array of reminder times in HH:MM format (e.g., ["08:00", "14:00", "21:00"])
+        lastSentAt: { 
+            type: Date,
+            default: null
+        }
+    }
+}, { timestamps: true });
 module.exports = mongoose.model('Prescription', PrescriptionSchema);

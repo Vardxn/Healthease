@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import UploadPrescription from './pages/UploadPrescription';
 import PrescriptionList from './pages/PrescriptionList';
 import Profile from './pages/Profile';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import AIChatbot from './components/AIChatbot';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/upload" element={<UploadPrescription />} />
               <Route path="/prescriptions" element={<PrescriptionList />} />
+              <Route path="/dashboard/analytics" element={<AnalyticsDashboard />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

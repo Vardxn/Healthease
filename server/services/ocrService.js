@@ -1,147 +1,28 @@
 const sharp = require('sharp');
-const vision = require('@google-cloud/vision');
+const axios = require('axios');
+const FormData = require('form-data');
 const { OpenAI } = require('openai');
 
-// Initialize clients (if API keys are available)
-let visionClient = null;
 let openaiClient = null;
-let visionReady = false;
+
+const PYTHON_OCR_URL = process.env.PYTHON_OCR_URL || 'http://localhost:8000/ocr';
 
 const PROCESSING_MODES = {
-    REAL: 'real',
-    DEMO: 'demo',
-    DEMO_FALLBACK: 'demo-fallback'
+    REAL: 'real'
 };
 
-// Note: Using ADC (Application Default Credentials) from gcloud auth
-// Initialize Vision client with timeout protection
-async function initializeVisionClient() {
-  try {
-    console.log('🔄 Initializing Google Vision Client with ADC...');
-    
-    // Create client with custom configuration
-    visionClient = new vision.ImageAnnotatorClient({
-      clientOptions: {
-        timeout: 30000, // 30 second timeout
-        retryPolicy: {
-          retryCodes: [4, 14],
-          retryDelayMultiplier: 1.3,
-          totalTimeoutMultiplier: 1,
-          initialRetryDelayMillis: 100,
-          totalTimeoutMillis: 30000
-        }
-      }
-    });
-    
-    visionReady = true;
-    console.log('✅ Google Vision Client initialized successfully');
-  } catch (error) {
-    console.error('❌ Vision Client Error:', error.message);
-    visionClient = null;
-    visionReady = false;
-  }
-}
-
-// Initialize Vision on startup
-initializeVisionClient();
-
 try {
-  if (process.env.OPENAI_API_KEY) {
-    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    console.log('✅ OpenAI Client initialized');
-  } else {
-    console.warn('⚠️ OPENAI_API_KEY not set - medicine extraction will use demo mode');
-  }
+    if (process.env.OPENAI_API_KEY) {
+        openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        console.log('✅ OpenAI Client initialized');
+    } else {
+        console.warn('⚠️ OPENAI_API_KEY not set - parsing will return empty medications');
+    }
 } catch (error) {
-  console.warn('⚠️ OpenAI Client not initialized:', error.message);
+    console.warn('⚠️ OpenAI Client not initialized:', error.message);
 }
 
-/**
- * DEMO MODE: Returns mock prescription data
- * This allows testing without Google Vision or OpenAI API keys
- */
-const DEMO_PRESCRIPTIONS = [
-    {
-        rawText: "Dr. Sarah Johnson, MD\nHealthEase Medical Center\n\nPatient: John Doe\nDate: January 5, 2026\n\nRx:\n1. Amoxicillin 500mg - Take 1 tablet three times daily for 7 days\n2. Ibuprofen 400mg - Take as needed for pain (max 3 per day)\n3. Vitamin D3 1000 IU - Take 1 capsule daily\n\nFollow-up in 2 weeks",
-        medications: [
-            {
-                name: "Amoxicillin",
-                dosage: "500mg",
-                frequency: "Three times daily",
-                duration: "7 days"
-            },
-            {
-                name: "Ibuprofen",
-                dosage: "400mg",
-                frequency: "As needed for pain",
-                duration: "Until symptoms resolve"
-            },
-            {
-                name: "Vitamin D3",
-                dosage: "1000 IU",
-                frequency: "Once daily",
-                duration: "Ongoing"
-            }
-        ],
-        doctorName: "Dr. Sarah Johnson"
-    },
-    {
-        rawText: "Dr. Michael Chen\nCity Hospital - Cardiology\n\nPatient: Jane Smith\nDate: January 5, 2026\n\nPrescription:\n1. Lisinopril 10mg - 1 tablet daily for blood pressure\n2. Metformin 500mg - 1 tablet twice daily with meals\n3. Aspirin 81mg - 1 tablet daily\n\nNext appointment: February 5, 2026",
-        medications: [
-            {
-                name: "Lisinopril",
-                dosage: "10mg",
-                frequency: "Once daily",
-                duration: "Ongoing"
-            },
-            {
-                name: "Metformin",
-                dosage: "500mg",
-                frequency: "Twice daily with meals",
-                duration: "Ongoing"
-            },
-            {
-                name: "Aspirin",
-                dosage: "81mg",
-                frequency: "Once daily",
-                duration: "Ongoing"
-            }
-        ],
-        doctorName: "Dr. Michael Chen"
-    },
-    {
-        rawText: "Dr. Emily Rodriguez\nWellness Clinic\n\nPatient: Alex Kumar\nDate: January 5, 2026\n\nTreatment Plan:\n1. Cetirizine 10mg - Take 1 tablet daily for allergies\n2. Fluticasone nasal spray - 2 sprays each nostril daily\n3. Omega-3 Fish Oil 1000mg - 1 capsule daily\n\nAvoid allergens, follow up if symptoms persist",
-        medications: [
-            {
-                name: "Cetirizine",
-                dosage: "10mg",
-                frequency: "Once daily",
-                duration: "As needed"
-            },
-            {
-                name: "Fluticasone Nasal Spray",
-                dosage: "2 sprays per nostril",
-                frequency: "Once daily",
-                duration: "Ongoing"
-            },
-            {
-                name: "Omega-3 Fish Oil",
-                dosage: "1000mg",
-                frequency: "Once daily",
-                duration: "Ongoing"
-            }
-        ],
-        doctorName: "Dr. Emily Rodriguez"
-    }
-];
-
-/**
- * Preprocesses image (simplified for demo)
- * @param {Buffer} buffer - The image buffer
- * @returns {Promise<Buffer>} - Processed image buffer
- */
 async function preprocessImage(buffer) {
-    // Just verify it's a valid image
     try {
         await sharp(buffer).metadata();
         return buffer;
@@ -174,17 +55,11 @@ function normalizePrescriptionResult(result = {}) {
     };
 }
 
-function assessOcrQuality({ rawText = '', medications = [], processingMode, warnings = [], fallbackReason = null }) {
+function assessOcrQuality({ rawText = '', medications = [], warnings = [] }) {
     const qualityFlags = [];
     const recommendationSet = new Set();
 
     let confidenceScore = 85;
-    if (processingMode === PROCESSING_MODES.DEMO) {
-        confidenceScore = 65;
-    }
-    if (processingMode === PROCESSING_MODES.DEMO_FALLBACK) {
-        confidenceScore = 50;
-    }
 
     if (rawText.length < 80) {
         confidenceScore -= 15;
@@ -193,24 +68,14 @@ function assessOcrQuality({ rawText = '', medications = [], processingMode, warn
     }
 
     if (!Array.isArray(medications) || medications.length === 0) {
-        confidenceScore -= 25;
+        confidenceScore -= 20;
         qualityFlags.push('no-medications-detected');
         recommendationSet.add('Please manually review and add medicine names before verifying.');
-    } else if (medications.length < 2) {
-        confidenceScore -= 10;
-        qualityFlags.push('low-medication-count');
     }
 
     if (warnings.length > 0) {
         confidenceScore -= Math.min(15, warnings.length * 5);
         qualityFlags.push('ocr-warnings-present');
-        recommendationSet.add('Double-check dosage and frequency fields before saving.');
-    }
-
-    if (fallbackReason) {
-        confidenceScore -= 10;
-        qualityFlags.push('fallback-used');
-        recommendationSet.add('Live OCR was unavailable. Re-upload for a more accurate extraction.');
     }
 
     confidenceScore = Math.max(0, Math.min(100, confidenceScore));
@@ -224,271 +89,217 @@ function assessOcrQuality({ rawText = '', medications = [], processingMode, warn
     };
 }
 
-/**
- * REAL MODE: Uses Google Vision API to read prescription
- * @param {Buffer} imageBuffer - The prescription image buffer
- * @returns {Promise<string>} - Extracted text from prescription
- */
-async function extractTextWithGoogleVision(imageBuffer) {
-    if (!visionClient) {
-        console.log('⚠️ Google Vision not configured, using demo mode');
-        return null;
-    }
+async function extractTextWithPythonService(imageBuffer) {
+    const maxAttempts = 2;
+    let lastError = null;
 
-    try {
-        const request = {
-            image: { content: imageBuffer },
-        };
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+            const formData = new FormData();
+            formData.append('file', imageBuffer, {
+                filename: 'prescription.jpg',
+                contentType: 'image/jpeg'
+            });
 
-        // Add timeout of 15 seconds for Vision API call
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Vision API timeout')), 15000)
-        );
-        
-        const visionPromise = visionClient.documentTextDetection(request);
-        const [result] = await Promise.race([visionPromise, timeoutPromise]);
-        
-        const fullTextAnnotation = result.fullTextAnnotation;
+            const response = await axios.post(PYTHON_OCR_URL, formData, {
+                headers: formData.getHeaders(),
+                timeout: 120000,
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity
+            });
 
-        if (fullTextAnnotation && fullTextAnnotation.text) {
-            console.log('✅ Text extracted from prescription image');
-            return fullTextAnnotation.text;
+            const text = response?.data?.text;
+            const extractedText = typeof text === 'string' ? text.trim() : '';
+            const geminiError = response?.data?.error;
+
+            if (geminiError) {
+                console.error('❌ GPT-4o Vision OCR reported error:', geminiError);
+            }
+
+            console.log('OCR text received from Groq Vision:', extractedText);
+            return extractedText;
+        } catch (error) {
+            lastError = error;
+            console.error(`❌ Python OCR service error (attempt ${attempt}/${maxAttempts}):`, error.message);
+            if (attempt < maxAttempts) {
+                console.log('Retrying OCR request to Python service...');
+            }
         }
-        return null;
-    } catch (error) {
-        console.error('❌ Google Vision Error:', error.message);
-        return null;
     }
+
+    console.error(
+        `❌ Failed to extract text from Python OCR service after retries: ${lastError?.message || 'unknown error'}`
+    );
+    return '';
 }
 
-/**
- * REAL MODE: Uses OpenAI to extract medicine details from text
- * @param {string} prescriptionText - Raw prescription text
- * @returns {Promise<Object>} - Structured medicine data
- */
-async function extractMedicinesWithOpenAI(prescriptionText) {
+async function extractMedicinesWithOpenAI(prescriptionText, parserPromptOverride = null) {
     if (!openaiClient) {
-        console.log('⚠️ OpenAI not configured, using demo mode');
-        return null;
+        return {
+            medications: [],
+            doctorName: '',
+            warnings: ['OPENAI_API_KEY missing. Parsing skipped.'],
+            error: 'Could not parse prescription'
+        };
     }
 
-    try {
-        const prompt = `Extract medicine information from this prescription text. Return JSON format:
+    const defaultPrompt = `You are a strict medical prescription parser.
+Extract medicine information only from the OCR text provided.
+Do not invent, guess, or hallucinate medications.
+If OCR text is unclear or insufficient, return empty medications and error "Could not read prescription".
+
+Return valid JSON only with this schema:
 {
   "medications": [
     {
-      "name": "medicine name",
-      "dosage": "dosage amount",
-      "frequency": "how often to take",
-      "duration": "how long to take",
-      "sideEffects": ["effect1", "effect2"]
+      "name": "",
+      "dosage": "",
+      "frequency": "",
+      "duration": ""
     }
   ],
-  "doctorName": "doctor name if available",
-  "warnings": ["any warnings"]
+  "doctorName": "",
+  "warnings": [],
+  "error": null
 }
 
-Prescription text:
-${prescriptionText}
+OCR TEXT:
+${prescriptionText}`;
 
-Return ONLY valid JSON, no markdown.`;
+    const prompt = parserPromptOverride || defaultPrompt;
 
+    try {
         const response = await openaiClient.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o',
             messages: [{ role: 'user', content: prompt }],
-            temperature: 0.3,
+            temperature: 0.1
         });
 
-        const jsonStr = response.choices[0].message.content;
-        const result = JSON.parse(jsonStr);
-        
-        console.log('✅ Extracted', result.medications.length, 'medicines from prescription');
-        return result;
-    } catch (error) {
-        console.error('❌ OpenAI Error:', error.message);
-        return null;
-    }
-}
+        const content = response?.choices?.[0]?.message?.content || '{}';
+        const cleaned = content.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+        const parsed = JSON.parse(cleaned);
 
-/**
- * DEMO MODE: Returns mock prescription data
- * @param {Buffer} imageBuffer - The prescription image buffer
- * @returns {Promise<Object>} - Structured prescription data
- */
-async function getDemoMode(imageBuffer) {
-    try {
-        // Validate image
-        await preprocessImage(imageBuffer);
-        
-        // Simulate processing delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Return random demo prescription
-        const randomPrescription = DEMO_PRESCRIPTIONS[Math.floor(Math.random() * DEMO_PRESCRIPTIONS.length)];
-        
-        console.log('✅ DEMO: Generated prescription with', randomPrescription.medications.length, 'medications');
-        console.log('💡 To use REAL OCR, add API keys to .env file');
-        
         return {
-            ...normalizePrescriptionResult(randomPrescription),
-            processingMode: PROCESSING_MODES.DEMO,
-            fallbackReason: null
+            medications: Array.isArray(parsed.medications) ? parsed.medications : [],
+            doctorName: typeof parsed.doctorName === 'string' ? parsed.doctorName : '',
+            warnings: Array.isArray(parsed.warnings) ? parsed.warnings : [],
+            error: parsed.error || null
         };
     } catch (error) {
-        console.error("❌ Demo OCR Error:", error);
-        throw error;
+        console.error('❌ OpenAI parsing error:', error.message);
+        return {
+            medications: [],
+            doctorName: '',
+            warnings: ['Failed to parse OCR text with GPT-4o.'],
+            error: 'Could not read prescription'
+        };
     }
 }
 
-/**
- * Extract plain handwriting text from an image.
- * @param {Buffer} imageBuffer - Uploaded image buffer
- * @returns {Promise<Object>} - OCR text and metadata
- */
 async function recognizeHandwriting(imageBuffer) {
     await preprocessImage(imageBuffer);
 
-    const rawText = await extractTextWithGoogleVision(imageBuffer);
-    if (rawText && rawText.trim()) {
-        const quality = assessOcrQuality({
-            rawText: rawText.trim(),
-            medications: [],
-            processingMode: PROCESSING_MODES.REAL,
-            warnings: [],
-            fallbackReason: null
-        });
+    const rawText = await extractTextWithPythonService(imageBuffer);
+    const warnings = [];
 
-        return {
-            text: rawText.trim(),
-            processingMode: PROCESSING_MODES.REAL,
-            warnings: [],
-            quality
-        };
+    if (!rawText || rawText.length < 10) {
+        warnings.push('Could not read prescription');
     }
 
-    const demoResult = await getDemoMode(imageBuffer);
-    const warnings = ['Live OCR unavailable, returned fallback OCR text.'];
     const quality = assessOcrQuality({
-        rawText: demoResult.rawText,
+        rawText,
         medications: [],
-        processingMode: PROCESSING_MODES.DEMO_FALLBACK,
-        warnings,
-        fallbackReason: 'Live OCR unavailable'
+        warnings
     });
 
     return {
-        text: demoResult.rawText,
-        processingMode: PROCESSING_MODES.DEMO_FALLBACK,
+        text: rawText,
+        processingMode: PROCESSING_MODES.REAL,
         warnings,
         quality
     };
 }
 
-/**
- * MAIN FUNCTION: Process prescription with OCR
- * Uses DEMO MODE by default (instant response)
- * Real Vision + OpenAI can be enabled later when properly configured
- * @param {Buffer} imageBuffer - The prescription image buffer
- * @returns {Promise<Object>} - Structured prescription data with medicines
- */
-async function digitizePrescription(imageBuffer) {
+async function digitizePrescription(imageBuffer, parserPromptOverride = null) {
     try {
-        console.log('🔄 Processing prescription...');
-        
-        // Validate image
         await preprocessImage(imageBuffer);
-        
-        // Try real OCR path first if services are available.
-        if (visionReady && openaiClient) {
-            const rawText = await extractTextWithGoogleVision(imageBuffer);
 
-            if (rawText && rawText.trim()) {
-                const aiExtraction = await extractMedicinesWithOpenAI(rawText);
+        console.log('Image received, sending to Python OCR...');
+        const ocrText = await extractTextWithPythonService(imageBuffer);
+        console.log('OCR text received from Gemini:', ocrText);
 
-                if (aiExtraction) {
-                    const normalizedResult = normalizePrescriptionResult({
-                        rawText,
-                        medications: aiExtraction.medications,
-                        doctorName: aiExtraction.doctorName,
-                        warnings: aiExtraction.warnings
-                    });
-
-                    const quality = assessOcrQuality({
-                        rawText: normalizedResult.rawText,
-                        medications: normalizedResult.medications,
-                        processingMode: PROCESSING_MODES.REAL,
-                        warnings: normalizedResult.warnings,
-                        fallbackReason: null
-                    });
-
-                    return {
-                        ...normalizedResult,
-                        processingMode: PROCESSING_MODES.REAL,
-                        fallbackReason: null,
-                        quality
-                    };
-                }
-            }
-
-            console.warn('⚠️ Real OCR returned incomplete data, switching to demo fallback mode.');
-            const fallback = await getDemoMode(imageBuffer);
-            const quality = assessOcrQuality({
-                rawText: fallback.rawText,
-                medications: fallback.medications,
-                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
-                warnings: fallback.warnings,
-                fallbackReason: 'Real OCR pipeline returned incomplete output.'
-            });
-
+        if (!ocrText || ocrText.trim().length < 10) {
             return {
-                ...fallback,
-                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
-                fallbackReason: 'Real OCR pipeline returned incomplete output.',
-                quality
+                rawText: ocrText || '',
+                medications: [],
+                doctorName: '',
+                warnings: ['Could not read prescription'],
+                error: 'Could not read prescription',
+                processingMode: PROCESSING_MODES.REAL,
+                fallbackReason: null,
+                quality: assessOcrQuality({
+                    rawText: ocrText || '',
+                    medications: [],
+                    warnings: ['Could not read prescription']
+                })
             };
         }
 
-        console.log('📋 Using DEMO MODE for instant prescription processing...');
-        return await getDemoMode(imageBuffer);
+        console.log('Sending to GPT-4o for parsing...');
+        const promptToUse = parserPromptOverride
+            ? parserPromptOverride.replace('{{PRESCRIPTION_TEXT}}', ocrText)
+            : null;
+        const aiExtraction = await extractMedicinesWithOpenAI(ocrText, promptToUse);
 
+        const normalizedResult = normalizePrescriptionResult({
+            rawText: ocrText,
+            medications: aiExtraction.medications,
+            doctorName: aiExtraction.doctorName,
+            warnings: aiExtraction.warnings
+        });
+
+        console.log('Parsed medications: ' + JSON.stringify(normalizedResult.medications));
+
+        if ((aiExtraction.error || '').toLowerCase().includes('could not read prescription')) {
+            return {
+                ...normalizedResult,
+                medications: [],
+                error: 'Could not read prescription',
+                processingMode: PROCESSING_MODES.REAL,
+                fallbackReason: null,
+                quality: assessOcrQuality({
+                    rawText: normalizedResult.rawText,
+                    medications: [],
+                    warnings: [...normalizedResult.warnings, 'Could not read prescription']
+                })
+            };
+        }
+
+        return {
+            ...normalizedResult,
+            error: aiExtraction.error || null,
+            processingMode: PROCESSING_MODES.REAL,
+            fallbackReason: null,
+            quality: assessOcrQuality({
+                rawText: normalizedResult.rawText,
+                medications: normalizedResult.medications,
+                warnings: normalizedResult.warnings
+            })
+        };
     } catch (error) {
-        console.error("❌ OCR processing error:", error.message);
-        // Always fall back to demo mode on error
-        try {
-            const fallback = await getDemoMode(imageBuffer);
-            const quality = assessOcrQuality({
-                rawText: fallback.rawText,
-                medications: fallback.medications,
-                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
-                warnings: fallback.warnings,
-                fallbackReason: error.message
-            });
-
-            return {
-                ...fallback,
-                processingMode: PROCESSING_MODES.DEMO_FALLBACK,
-                fallbackReason: error.message,
-                quality
-            };
-        } catch (demoError) {
-            throw new Error(`Prescription processing failed: ${error.message}`);
-        }
+        console.error('❌ OCR processing error:', error.message);
+        throw error;
     }
 }
 
-/**
- * Validates medication names against RxNorm API
- * @param {string} medicationName - The medication name to validate
- * @returns {Promise<Object>} - Validation result with suggestions
- */
 async function validateMedication(medicationName) {
     try {
         const response = await fetch(
             `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(medicationName)}`
         );
-        
+
         const data = await response.json();
-        
+
         if (data.approximateGroup && data.approximateGroup.approximateMatch) {
             return {
                 isValid: true,
@@ -498,7 +309,7 @@ async function validateMedication(medicationName) {
                 }))
             };
         }
-        
+
         return {
             isValid: false,
             suggestions: []
@@ -513,23 +324,17 @@ async function validateMedication(medicationName) {
     }
 }
 
-/**
- * Batch validate multiple medications
- * @param {Array<string>} medicationNames - List of medication names
- * @returns {Promise<Array>} - Validation results
- */
 async function validateMedications(medicationNames) {
     return Promise.all(
         medicationNames.map(name => validateMedication(name))
     );
 }
 
-module.exports = { 
+module.exports = {
     digitizePrescription,
     recognizeHandwriting,
-    extractTextWithGoogleVision,
+    extractTextWithPythonService,
     extractMedicinesWithOpenAI,
     validateMedication,
-    validateMedications,
-    getDemoMode
+    validateMedications
 };
