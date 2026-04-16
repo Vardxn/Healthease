@@ -106,6 +106,21 @@ export const reminderAPI = {
     api.get(`/reminders/${prescriptionId}`)
 };
 
+// Patient API
+export const patientAPI = {
+  getProfile: () => api.get('/patient/profile'),
+  createProfile: (data) => api.post('/patient/profile', data),
+  updateProfile: (data) => api.put('/patient/profile', data),
+  deleteProfile: () => api.delete('/patient/profile'),
+  addVitals: (data) => api.post('/patient/vitals', data),
+  getVitals: () => api.get('/patient/vitals')
+};
+
+// Interaction API
+export const interactionsAPI = {
+  check: (medications) => api.post('/interactions/check', { medications })
+};
+
 // Analytics API
 export const analyticsAPI = {
   getDashboard: () =>

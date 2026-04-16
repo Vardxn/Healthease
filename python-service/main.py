@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 import io
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -172,6 +173,10 @@ class SetReminderRequest(BaseModel):
     enabled: bool = True
 
 
+class InteractionCheckRequest(BaseModel):
+    medications: list[str]
+
+
 # ============ Reminder Endpoints ============
 @app.post("/reminders/set")
 async def set_reminder(request: SetReminderRequest):
@@ -278,3 +283,70 @@ async def analytics_dashboard(user_id: str):
         }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Analytics error: {str(exc)}") from exc
+
+
+@app.post("/check-interactions")
+async def check_interactions(request: InteractionCheckRequest):
+    medications = [med.strip() for med in request.medications if isinstance(med, str) and med.strip()]
+
+    if len(medications) < 2:
+        return {
+            "interactions": [],
+            "message": "Add at least 2 medications to check"
+        }
+
+    if not groq_client:
+        return {
+            "interactions": [],
+            "error": "GROQ_API_KEY is missing"
+        }
+
+    prompt = f"""
+You are a clinical pharmacist AI. Analyze these medications for drug interactions:
+{medications}
+
+For each interaction found, return ONLY a JSON array in this exact format:
+[
+  {{
+    "drug1": "medication name",
+    "drug2": "medication name",
+    "severity": "HIGH" or "MODERATE" or "LOW",
+    "description": "one sentence describing the interaction",
+    "recommendation": "one sentence on what to do"
+  }}
+]
+
+If no interactions found, return an empty array: []
+Return ONLY the JSON array. No explanations, no markdown, no preamble.
+"""
+
+    try:
+        response = groq_client.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1
+        )
+
+        content = response.choices[0].message.content or "[]"
+        cleaned = content.strip().removeprefix("```json").removesuffix("```").strip()
+        parsed = json.loads(cleaned)
+
+        if not isinstance(parsed, list):
+            parsed = []
+
+        return {
+            "interactions": parsed,
+            "checked": medications
+        }
+    except json.JSONDecodeError:
+        return {
+            "interactions": [],
+            "error": "Could not parse response"
+        }
+    except Exception as exc:
+        return {
+            "interactions": [],
+            "error": str(exc)
+        }

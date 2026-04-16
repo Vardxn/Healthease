@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { prescriptionAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
@@ -242,6 +242,24 @@ const UploadPrescription = () => {
     : qualityLevel === 'low'
       ? 'bg-red-100 text-red-800 border-red-300'
       : 'bg-amber-100 text-amber-800 border-amber-300';
+  const interactionMedications = useMemo(() => {
+    const meds = Array.isArray(reviewDraft?.medications) && reviewDraft.medications.length
+      ? reviewDraft.medications
+      : Array.isArray(result?.data?.medications) ? result.data.medications : [];
+
+    return Array.from(new Set(
+      meds
+        .map((med) => med?.name || med?.medicineName || med?.medicine_name)
+        .filter(Boolean)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    ));
+  }, [reviewDraft, result]);
+
+  const handleCheckInteractions = () => {
+    localStorage.setItem('pendingInteractionCheck', JSON.stringify(interactionMedications));
+    navigate('/interactions');
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -555,6 +573,22 @@ const UploadPrescription = () => {
               >
                 {reviewSaving ? 'Saving Changes...' : 'Save Reviewed Prescription'}
               </button>
+            )}
+
+            {interactionMedications.length >= 2 && (
+              <div className="mb-6 bg-cyan-50 border border-cyan-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-cyan-900">Check these medications for interactions →</p>
+                  <p className="text-sm text-cyan-800 mt-1">Use the checker to review this prescription against potential drug combinations.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCheckInteractions}
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-semibold transition-colors"
+                >
+                  Check Now
+                </button>
+              </div>
             )}
 
             <button

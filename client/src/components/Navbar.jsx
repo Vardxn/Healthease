@@ -54,6 +54,13 @@ const Navbar = () => {
                   <span>Analytics</span>
                 </Link>
                 <Link 
+                  to="/interactions" 
+                  className="flex items-center gap-2 text-gray-700 hover:text-primary-600 transition-all font-medium group"
+                >
+                  <span className="text-lg group-hover:scale-110 transition-transform">💊</span>
+                  <span>Interactions</span>
+                </Link>
+                <Link 
                   to="/profile" 
                   className="flex items-center gap-2 text-gray-700 hover:text-primary-600 transition-all font-medium group"
                 >
