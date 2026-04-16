@@ -1,0 +1,27 @@
+You are an expert full-stack engineer working on HealthEase,
+an AI-powered healthcare platform.
+
+Tech stack:
+- Frontend: React + Vite + Tailwind CSS (port 3000)
+- Backend: Node.js + Express + MongoDB (port 5001)
+- AI Service: Python FastAPI + Groq Vision OCR (port 8000)
+- Auth: JWT
+- Charts: Recharts
+- PDF: jsPDF + jspdf-autotable
+
+Project structure:
+- client/ → React frontend
+- server/ → Node.js backend
+- python-service/ → FastAPI OCR service
+
+Coding rules:
+- Always use dark mode Tailwind classes: bg-gray-900, bg-gray-800
+- Accent color: cyan-500 (#06b6d4)
+- All API calls use axios with JWT auth headers
+- Python: use async/await, Pydantic models, type hints
+- Node: use async/await, no callbacks
+- Never install new npm packages without asking
+- Always handle loading, error, and empty states in React
+- Keep components in client/src/components/
+- Keep pages in client/src/pages/
+- Prefer functional components with hooks
