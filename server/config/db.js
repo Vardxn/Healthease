@@ -2,25 +2,16 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
-        if (!process.env.MONGO_URI) {
-            const message = 'MONGO_URI is not configured';
-
-            if (process.env.VERCEL) {
-                console.warn(`⚠️ ${message}. API routes requiring DB will fail until env vars are set.`);
-                return;
-            }
-
-            throw new Error(message);
-        }
+        const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/healthease';
 
         if (mongoose.connection.readyState === 1) {
             return;
         }
 
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log('✅ MongoDB Connected...');
+        await mongoose.connect(mongoUri);
+        console.log('MongoDB connected...');
     } catch (err) {
-        console.error('❌ MongoDB Connection Error:', err.message);
+        console.error('MongoDB connection error:', err.message);
 
         // In serverless environments, never force-exit the process.
         if (process.env.VERCEL) {

@@ -8,4 +8,7 @@ if [ ! -x "venv/bin/python" ]; then
 	exit 1
 fi
 
-venv/bin/python -m uvicorn main:app --port 8000 --host 0.0.0.0 --reload
+PORT="${PORT:-8000}"
+HOST="${HOST:-0.0.0.0}"
+
+venv/bin/python -m uvicorn main:app --port "$PORT" --host "$HOST" --reload

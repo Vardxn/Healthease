@@ -192,15 +192,101 @@ def get_health_summary(user_id: str):
             {
                 "patientId": oid,
                 "reminder.enabled": True,
-                "reminder.times.0": {"$exists": True},
             }
         )
+
+        adherence_rate = 0.0
+        if total_prescriptions > 0:
+            adherence_rate = round((reminders_set / total_prescriptions) * 100, 1)
 
         return {
             "total_prescriptions": total_prescriptions,
             "active_medications": active_medications,
             "reminders_set": reminders_set,
+            "adherence_rate": adherence_rate,
             "last_upload": last_upload,
         }
+    finally:
+        client.close()
+
+
+def get_top_diagnoses(user_id: str):
+    """Return top 5 diagnosis labels for the user, excluding unclear/empty values."""
+    oid = _safe_object_id(user_id)
+    if not oid:
+        return []
+
+    client, db = _get_db()
+    try:
+        pipeline = [
+            {"$match": {"patientId": oid}},
+            {
+                "$project": {
+                    "diagnosis": {
+                        "$trim": {
+                            "input": {
+                                "$ifNull": ["$diagnosis", ""]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "diagnosis": {
+                        "$nin": ["", "UNCLEAR", "NONE", "N/A", "unclear", "none", "n/a"]
+                    }
+                }
+            },
+            {"$group": {"_id": "$diagnosis", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1, "_id": 1}},
+            {"$limit": 5},
+        ]
+
+        results = list(db.prescriptions.aggregate(pipeline))
+        return [{"diagnosis": row["_id"], "count": row["count"]} for row in results]
+    finally:
+        client.close()
+
+
+def get_recent_prescriptions(user_id: str):
+    """Return the latest 5 prescriptions for activity feed UI."""
+    oid = _safe_object_id(user_id)
+    if not oid:
+        return []
+
+    client, db = _get_db()
+    try:
+        rows = list(
+            db.prescriptions.find(
+                {"patientId": oid},
+                projection={
+                    "uploadDate": 1,
+                    "doctorName": 1,
+                    "isVerified": 1,
+                    "medications": 1,
+                },
+                sort=[("uploadDate", -1)],
+                limit=5,
+            )
+        )
+
+        activity = []
+        for row in rows:
+            meds = row.get("medications", [])
+            med_count = len(meds) if isinstance(meds, list) else 0
+            upload_date = row.get("uploadDate")
+
+            activity.append(
+                {
+                    "id": str(row.get("_id")),
+                    "date": upload_date.isoformat() if upload_date else None,
+                    "doctor_name": row.get("doctorName") or "UNCLEAR",
+                    "medication_count": med_count,
+                    "is_verified": bool(row.get("isVerified")),
+                }
+            )
+
+        return activity
     finally:
         client.close()

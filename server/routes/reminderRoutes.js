@@ -47,7 +47,8 @@ router.post('/set', auth, async (req, res) => {
     }
 
     // Call Python service to set reminder in MongoDB
-    const pythonOcrUrl = process.env.PYTHON_OCR_URL || 'http://localhost:8000/ocr';
+    const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:8000';
+    const pythonOcrUrl = process.env.PYTHON_OCR_URL || `${pythonServiceUrl.replace(/\/$/, '')}/ocr`;
     const pythonBaseUrl = pythonOcrUrl.replace('/ocr', ''); // Get base URL
     
     try {

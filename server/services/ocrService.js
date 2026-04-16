@@ -5,7 +5,8 @@ const { OpenAI } = require('openai');
 
 let openaiClient = null;
 
-const PYTHON_OCR_URL = process.env.PYTHON_OCR_URL || 'http://localhost:8000/ocr';
+const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:8000';
+const PYTHON_OCR_URL = process.env.PYTHON_OCR_URL || `${pythonServiceUrl.replace(/\/$/, '')}/ocr`;
 
 const PROCESSING_MODES = {
     REAL: 'real'
@@ -14,12 +15,9 @@ const PROCESSING_MODES = {
 try {
     if (process.env.OPENAI_API_KEY) {
         openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        console.log('✅ OpenAI Client initialized');
-    } else {
-        console.warn('⚠️ OPENAI_API_KEY not set - parsing will return empty medications');
     }
 } catch (error) {
-    console.warn('⚠️ OpenAI Client not initialized:', error.message);
+    openaiClient = null;
 }
 
 async function preprocessImage(buffer) {
@@ -49,37 +47,156 @@ function normalizePrescriptionResult(result = {}) {
         rawText: typeof result.rawText === 'string' ? result.rawText.trim() : '',
         medications,
         doctorName: typeof result.doctorName === 'string' ? result.doctorName.trim() : '',
+        prescriptionDate: typeof result.prescriptionDate === 'string' ? result.prescriptionDate.trim() : '',
         warnings: Array.isArray(result.warnings)
             ? result.warnings.filter((warning) => typeof warning === 'string' && warning.trim())
             : []
     };
 }
 
-function assessOcrQuality({ rawText = '', medications = [], warnings = [] }) {
+function isMeaningfulField(value = '') {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    const normalized = value.trim();
+    if (!normalized) {
+        return false;
+    }
+
+    return !/^(UNCLEAR|NONE|N\/A)$/i.test(normalized);
+}
+
+function parseMedicationLine(rawLine = '', sigInstruction = '') {
+    if (typeof rawLine !== 'string') {
+        return null;
+    }
+
+    const line = rawLine.replace(/^[-*•\s]+/, '').trim();
+    if (!line || /^UNCLEAR$/i.test(line) || /^NONE$/i.test(line)) {
+        return null;
+    }
+
+    const parts = line.split('|').map((part) => part.trim());
+    if (parts.length >= 2) {
+        const name = parts[0] || '';
+        if (!name) {
+            return null;
+        }
+
+        return {
+            name,
+            dosage: parts[1] || 'N/A',
+            frequency: parts[2] || sigInstruction || 'N/A',
+            duration: parts[3] || 'N/A'
+        };
+    }
+
+    const dosageMatch = line.match(/\b\d+(?:\.\d+)?\s?(?:mg|ml|g|mcg|units?|tab(?:let)?s?|cap(?:sule)?s?)\b/i);
+    const dosage = dosageMatch ? dosageMatch[0].trim() : 'N/A';
+    const name = dosageMatch
+        ? line.replace(dosageMatch[0], '').replace(/\s{2,}/g, ' ').trim()
+        : line;
+
+    if (!name) {
+        return null;
+    }
+
+    return {
+        name,
+        dosage,
+        frequency: sigInstruction || 'N/A',
+        duration: 'N/A'
+    };
+}
+
+function parseStructuredOcrText(rawText = '') {
+    if (typeof rawText !== 'string' || !rawText.trim()) {
+        return {
+            doctorName: '',
+            prescriptionDate: '',
+            medications: [],
+            warnings: []
+        };
+    }
+
+    const lines = rawText
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+    const getFieldValue = (label) => {
+        const line = lines.find((item) => new RegExp(`^${label}\\s*:`, 'i').test(item));
+        if (!line) {
+            return '';
+        }
+
+        return line.replace(new RegExp(`^${label}\\s*:`, 'i'), '').trim();
+    };
+
+    const doctorName = getFieldValue('DOCTOR');
+    const prescriptionDate = getFieldValue('DATE');
+
+    const sigLine = lines.find((line) => /^(SIG|SIGNA|DIRECTIONS?)\s*:/i.test(line)) || '';
+    const sigInstruction = sigLine ? sigLine.replace(/^(SIG|SIGNA|DIRECTIONS?)\s*:/i, '').trim() : '';
+
+    const medHeaderIndex = lines.findIndex((line) => /^MEDICATIONS\s*:/i.test(line));
+    const medications = [];
+
+    if (medHeaderIndex !== -1) {
+        for (let i = medHeaderIndex + 1; i < lines.length; i += 1) {
+            const line = lines[i];
+
+            if (/^(INVESTIGATIONS|OTHER|DIAGNOSIS|PATIENT|DOCTOR|AGE|DATE)\s*:/i.test(line)) {
+                break;
+            }
+
+            const medication = parseMedicationLine(line, sigInstruction);
+            if (medication && medication.name) {
+                medications.push(medication);
+            }
+        }
+    }
+
+    return {
+        doctorName,
+        prescriptionDate,
+        medications,
+        warnings: []
+    };
+}
+
+function assessOcrQuality({ rawText = '', medications = [], doctorName = '', prescriptionDate = '' }) {
     const qualityFlags = [];
     const recommendationSet = new Set();
 
-    let confidenceScore = 85;
+    const medicationCount = Array.isArray(medications) ? medications.length : 0;
+    let confidenceScore = 0;
 
-    if (rawText.length < 80) {
-        confidenceScore -= 15;
-        qualityFlags.push('short-text');
-        recommendationSet.add('Retake the image in better lighting so OCR can read more text.');
+    if (medicationCount >= 1) {
+        confidenceScore = Math.min(90, 70 + ((medicationCount - 1) * 5));
     }
 
-    if (!Array.isArray(medications) || medications.length === 0) {
-        confidenceScore -= 20;
+    if (isMeaningfulField(doctorName)) {
+        confidenceScore += 5;
+    }
+
+    if (isMeaningfulField(prescriptionDate)) {
+        confidenceScore += 5;
+    }
+
+    confidenceScore = Math.min(100, confidenceScore);
+
+    if (typeof rawText === 'string' && rawText.trim().length > 0) {
+        confidenceScore = Math.max(40, confidenceScore);
+    }
+
+    if (medicationCount === 0) {
         qualityFlags.push('no-medications-detected');
         recommendationSet.add('Please manually review and add medicine names before verifying.');
     }
 
-    if (warnings.length > 0) {
-        confidenceScore -= Math.min(15, warnings.length * 5);
-        qualityFlags.push('ocr-warnings-present');
-    }
-
-    confidenceScore = Math.max(0, Math.min(100, confidenceScore));
-    const confidenceLevel = confidenceScore >= 80 ? 'high' : confidenceScore >= 55 ? 'medium' : 'low';
+    const confidenceLevel = confidenceScore >= 80 ? 'high' : confidenceScore >= 60 ? 'medium' : 'low';
 
     return {
         confidenceScore,
@@ -110,26 +227,13 @@ async function extractTextWithPythonService(imageBuffer) {
 
             const text = response?.data?.text;
             const extractedText = typeof text === 'string' ? text.trim() : '';
-            const geminiError = response?.data?.error;
-
-            if (geminiError) {
-                console.error('❌ GPT-4o Vision OCR reported error:', geminiError);
-            }
-
-            console.log('OCR text received from Groq Vision:', extractedText);
             return extractedText;
         } catch (error) {
             lastError = error;
-            console.error(`❌ Python OCR service error (attempt ${attempt}/${maxAttempts}):`, error.message);
-            if (attempt < maxAttempts) {
-                console.log('Retrying OCR request to Python service...');
-            }
+            console.error(`Python OCR service error (attempt ${attempt}/${maxAttempts}):`, error.message);
         }
     }
 
-    console.error(
-        `❌ Failed to extract text from Python OCR service after retries: ${lastError?.message || 'unknown error'}`
-    );
     return '';
 }
 
@@ -186,7 +290,7 @@ ${prescriptionText}`;
             error: parsed.error || null
         };
     } catch (error) {
-        console.error('❌ OpenAI parsing error:', error.message);
+        console.error('OpenAI parsing error:', error.message);
         return {
             medications: [],
             doctorName: '',
@@ -209,7 +313,8 @@ async function recognizeHandwriting(imageBuffer) {
     const quality = assessOcrQuality({
         rawText,
         medications: [],
-        warnings
+        doctorName: '',
+        prescriptionDate: ''
     });
 
     return {
@@ -224,15 +329,14 @@ async function digitizePrescription(imageBuffer, parserPromptOverride = null) {
     try {
         await preprocessImage(imageBuffer);
 
-        console.log('Image received, sending to Python OCR...');
         const ocrText = await extractTextWithPythonService(imageBuffer);
-        console.log('OCR text received from Gemini:', ocrText);
 
         if (!ocrText || ocrText.trim().length < 10) {
             return {
                 rawText: ocrText || '',
                 medications: [],
                 doctorName: '',
+                prescriptionDate: '',
                 warnings: ['Could not read prescription'],
                 error: 'Could not read prescription',
                 processingMode: PROCESSING_MODES.REAL,
@@ -240,54 +344,54 @@ async function digitizePrescription(imageBuffer, parserPromptOverride = null) {
                 quality: assessOcrQuality({
                     rawText: ocrText || '',
                     medications: [],
-                    warnings: ['Could not read prescription']
+                    doctorName: '',
+                    prescriptionDate: ''
                 })
             };
         }
 
-        console.log('Sending to GPT-4o for parsing...');
-        const promptToUse = parserPromptOverride
-            ? parserPromptOverride.replace('{{PRESCRIPTION_TEXT}}', ocrText)
-            : null;
-        const aiExtraction = await extractMedicinesWithOpenAI(ocrText, promptToUse);
+        const structuredExtraction = parseStructuredOcrText(ocrText);
+
+        let medications = structuredExtraction.medications;
+        let doctorName = structuredExtraction.doctorName;
+        let prescriptionDate = structuredExtraction.prescriptionDate;
+        let warningsFromParsers = structuredExtraction.warnings;
+
+        if ((!medications || medications.length === 0) && openaiClient) {
+            const promptToUse = parserPromptOverride
+                ? parserPromptOverride.replace('{{PRESCRIPTION_TEXT}}', ocrText)
+                : null;
+            const aiExtraction = await extractMedicinesWithOpenAI(ocrText, promptToUse);
+
+            medications = Array.isArray(aiExtraction.medications) && aiExtraction.medications.length
+                ? aiExtraction.medications
+                : medications;
+            doctorName = doctorName || aiExtraction.doctorName || '';
+            warningsFromParsers = [...warningsFromParsers, ...(aiExtraction.warnings || [])];
+        }
 
         const normalizedResult = normalizePrescriptionResult({
             rawText: ocrText,
-            medications: aiExtraction.medications,
-            doctorName: aiExtraction.doctorName,
-            warnings: aiExtraction.warnings
+            medications,
+            doctorName,
+            prescriptionDate,
+            warnings: warningsFromParsers
         });
-
-        console.log('Parsed medications: ' + JSON.stringify(normalizedResult.medications));
-
-        if ((aiExtraction.error || '').toLowerCase().includes('could not read prescription')) {
-            return {
-                ...normalizedResult,
-                medications: [],
-                error: 'Could not read prescription',
-                processingMode: PROCESSING_MODES.REAL,
-                fallbackReason: null,
-                quality: assessOcrQuality({
-                    rawText: normalizedResult.rawText,
-                    medications: [],
-                    warnings: [...normalizedResult.warnings, 'Could not read prescription']
-                })
-            };
-        }
 
         return {
             ...normalizedResult,
-            error: aiExtraction.error || null,
+            error: null,
             processingMode: PROCESSING_MODES.REAL,
             fallbackReason: null,
             quality: assessOcrQuality({
                 rawText: normalizedResult.rawText,
                 medications: normalizedResult.medications,
-                warnings: normalizedResult.warnings
+                doctorName: normalizedResult.doctorName,
+                prescriptionDate: normalizedResult.prescriptionDate
             })
         };
     } catch (error) {
-        console.error('❌ OCR processing error:', error.message);
+        console.error('OCR processing error:', error.message);
         throw error;
     }
 }

@@ -1,11 +1,36 @@
-# OS cruft
-.DS_Store
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
 
-# Cloud SDK archives/binaries
+# Environment files
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Python
+python-service/venv/
+python-service/__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.pytest_cache/
+
+# Build outputs
+client/dist/
+client/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Existing project ignores
 google-cloud-sdk/
 google-cloud-cli-*.tar.gz
 source ~*/
-node_modules
-
-# Vercel local link output
 .vercel/

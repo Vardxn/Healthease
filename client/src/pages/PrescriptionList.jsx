@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FileDown } from 'lucide-react';
 import { prescriptionAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import ReminderModal from '../components/ReminderModal';
+import { exportPrescriptionPDF } from '../utils/pdfExport';
 
 const PrescriptionList = () => {
   const { isAuthenticated } = useContext(AuthContext);
@@ -143,6 +145,14 @@ const PrescriptionList = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => exportPrescriptionPDF(prescription)}
+                    className="inline-flex items-center gap-1 border border-cyan-500 text-cyan-600 hover:bg-cyan-50 px-3 py-1 rounded-md font-medium text-sm transition"
+                    title="Export prescription as PDF"
+                  >
+                    <FileDown size={14} />
+                    Export PDF
+                  </button>
                   <button
                     onClick={() => handleOpenReminderModal(prescription)}
                     className="text-blue-600 hover:text-blue-800 font-medium text-sm hover:bg-blue-50 px-3 py-1 rounded transition"

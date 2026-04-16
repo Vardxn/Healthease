@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.getMe();
       setUser(response.data.data);
     } catch (error) {
-      console.error('Load user error:', error);
       logout();
     } finally {
       setLoading(false);

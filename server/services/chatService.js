@@ -6,12 +6,8 @@ let openaiClient = null;
 try {
     if (process.env.OPENAI_API_KEY) {
         openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        console.log('✅ OpenAI Chat Client initialized');
-    } else {
-        console.warn('⚠️ OPENAI_API_KEY not set - chat will use demo mode');
     }
 } catch (error) {
-    console.warn('⚠️ OpenAI Chat client not initialized:', error.message);
     openaiClient = null;
 }
 
@@ -184,7 +180,6 @@ class ChatService {
             }
 
             // DEMO MODE fallback
-            console.log('🎭 DEMO MODE: Processing chat message...');
 
             const lowerMessage = text.toLowerCase();
 
@@ -211,9 +206,6 @@ class ChatService {
                 response = this.getRandomResponse('general');
             }
 
-            console.log('✅ DEMO: Response generated');
-            console.log('💡 This is DEMO data - to enable real AI, add OpenAI API key to .env file');
-            
             return response;
 
         } catch (error) {

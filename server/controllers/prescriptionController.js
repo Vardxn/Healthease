@@ -40,8 +40,6 @@ exports.uploadPrescription = async (req, res) => {
             });
         }
 
-        console.log('📤 Processing prescription upload for user:', req.user.id);
-
         const parserPrompt = GEMINI_STRUCTURED_PARSING_PROMPT_TEMPLATE;
 
         // 1. Process Image via AI Service
@@ -49,6 +47,7 @@ exports.uploadPrescription = async (req, res) => {
             rawText,
             medications,
             doctorName,
+            prescriptionDate,
             processingMode,
             warnings = [],
             fallbackReason = null,
@@ -59,30 +58,31 @@ exports.uploadPrescription = async (req, res) => {
         const rawTextValue = typeof rawText === 'string' ? rawText : '';
         const trimmedOcrText = rawTextValue.trim();
         const textLength = rawTextValue.length;
-        const hasStructuredKeywords = /DOCTOR:|MEDICATIONS:/i.test(rawTextValue);
-        const hasMedicationKeywords = /MEDICATIONS:|TAB|CAP|MG|ML|TABLET|CAPSULE|OD|BD|TDS|SOS|DAILY|MORNING|NIGHT|TWICE|THRICE/i.test(rawTextValue);
-        const minimumConfidenceThreshold = 20;
-        const confidenceScore = hasStructuredKeywords
-            ? 90
-            : (trimmedOcrText.length > 20 ? minimumConfidenceThreshold : 0);
+        const medCount = Array.isArray(medications) ? medications.length : 0;
+        const hasDoctorName = typeof doctorName === 'string' && doctorName.trim() && !/^UNCLEAR$/i.test(doctorName.trim());
+        const hasDate = typeof prescriptionDate === 'string' && prescriptionDate.trim() && !/^UNCLEAR$/i.test(prescriptionDate.trim());
 
-        console.log('OCR text length:', textLength);
-        console.log('Confidence score:', confidenceScore);
+        let confidenceScore = medCount >= 1
+            ? Math.min(90, 70 + ((medCount - 1) * 5))
+            : 0;
 
-        let normalizedMedications = Array.isArray(medications) ? medications : [];
-        if (!normalizedMedications.length && hasMedicationKeywords && trimmedOcrText.length > 20) {
-            normalizedMedications = [
-                {
-                    name: 'UNCLEAR',
-                    dosage: '',
-                    frequency: '',
-                    duration: ''
-                }
-            ];
+        if (hasDoctorName) {
+            confidenceScore += 5;
         }
 
-        const extractionError = trimmedOcrText.length > 20
-            ? null
+        if (hasDate) {
+            confidenceScore += 5;
+        }
+
+        confidenceScore = Math.min(100, confidenceScore);
+        if (trimmedOcrText.length > 0) {
+            confidenceScore = Math.max(40, confidenceScore);
+        }
+
+        const normalizedMedications = Array.isArray(medications) ? medications : [];
+
+        const extractionError = trimmedOcrText.length > 0
+            ? (ocrError || null)
             : (ocrError || 'Could not read prescription');
 
         // 2. Save to Database (Draft mode, user should verify)

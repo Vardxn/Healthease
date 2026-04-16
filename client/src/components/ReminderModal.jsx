@@ -33,7 +33,6 @@ const ReminderModal = ({
         );
       }
     } catch (err) {
-      console.error('Error fetching reminder config:', err);
       // Use defaults if fetch fails
       setEnabled(false);
       setReminderTimes(['08:00', '14:00', '21:00']);

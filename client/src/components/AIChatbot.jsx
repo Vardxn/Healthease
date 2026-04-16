@@ -183,7 +183,6 @@ const AIChatbot = () => {
       const reply = res?.data?.reply ?? '';
       if (reply) setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
-      console.error('Chat error', err);
       setMessages((prev) => [
         ...prev,
         {

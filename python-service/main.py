@@ -2,11 +2,14 @@ import os
 import base64
 import io
 from contextlib import asynccontextmanager
+from typing import Optional
 
 import PIL.Image
+from PIL.Image import Resampling
 import groq
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo import MongoClient
 
@@ -16,33 +19,40 @@ from analytics.analytics import (
     get_medication_frequency,
     get_prescription_timeline,
     get_top_medications,
+    get_top_diagnoses,
+    get_recent_prescriptions,
 )
 
 # Load environment variables
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-groq_client = groq.Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+groq_client: Optional[groq.Groq] = groq.Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
 
 OCR_PROMPT = """
-You are a medical OCR expert specializing 
-                       in reading handwritten Indian prescriptions.
-                       
-                       Extract ALL visible text from this prescription carefully.
-                       
-                       Return EXACTLY in this format:
-                       DOCTOR: [name or UNCLEAR]
-                       PATIENT: [name or UNCLEAR]
-                       AGE: [age or UNCLEAR]
-                       DATE: [date or UNCLEAR]
-                       DIAGNOSIS: [diagnosis or UNCLEAR]
-                       MEDICATIONS:
-                       - [med name] | [dosage] | [frequency] | [duration]
-                       INVESTIGATIONS: [tests ordered or NONE]
-                       OTHER: [other instructions or NONE]
-                       
-                       Read every handwritten word carefully.
-                       Return only the structured text, no explanations.
+You are a medical OCR expert. Extract ALL text from this prescription image carefully.
+
+This may be any prescription format - handwritten, printed, Indian, Western, or military.
+
+Return EXACTLY in this format:
+DOCTOR: [name or UNCLEAR]
+PATIENT: [name or UNCLEAR]
+AGE: [age or UNCLEAR]
+DATE: [date or UNCLEAR]
+DIAGNOSIS: [diagnosis or UNCLEAR]
+MEDICATIONS:
+- [med name] | [dosage] | [frequency] | [duration]
+INVESTIGATIONS: [tests ordered or NONE]
+OTHER: [other instructions or NONE]
+
+IMPORTANT RULES:
+- For MEDICATIONS: map any instruction line (Signa, Sig, directions) to frequency/duration
+- Extract EVERY drug/medicine name visible, even if format is unusual
+- If dosage is written as volume (e.g. 5ml), keep it as-is
+- Never return empty MEDICATIONS if drug names are visible
+- Read every handwritten word carefully
+- Return only the structured text, no explanations.
 """
 
 
@@ -52,8 +62,6 @@ async def lifespan(app: FastAPI):
     """FastAPI lifespan context manager for startup and shutdown events"""
     if GROQ_API_KEY:
         print("Groq Vision OCR service ready ✅")
-    else:
-        print("WARNING: GROQ_API_KEY missing")
 
     # Startup
     start_scheduler()
@@ -66,6 +74,19 @@ app = FastAPI(
     title="HealthEase OCR Service",
     version="1.0.0",
     lifespan=lifespan
+)
+
+allowed_origins = [
+    "http://localhost:3000",
+    os.getenv("CLIENT_URL", ""),
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o for o in allowed_origins if o],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -98,7 +119,7 @@ async def ocr(file: UploadFile = File(...)):
             max_size = 2000
             ratio = min(max_size / image.width, max_size / image.height, 1)
             new_size = (int(image.width * ratio), int(image.height * ratio))
-            image = image.resize(new_size, PIL.Image.LANCZOS)
+            image = image.resize(new_size, Resampling.LANCZOS)
 
             # Convert to base64
             jpeg_buffer = io.BytesIO()
@@ -106,8 +127,9 @@ async def ocr(file: UploadFile = File(...)):
             image_bytes = jpeg_buffer.getvalue()
             image_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
+            assert groq_client is not None
             response = groq_client.chat.completions.create(
-                model="llama-3.2-11b-vision-preview",
+                model="meta-llama/llama-4-scout-17b-16e-instruct",
                 messages=[
                     {
                         "role": "user",
@@ -125,8 +147,12 @@ async def ocr(file: UploadFile = File(...)):
                 max_tokens=1000
             )
             extracted_text = response.choices[0].message.content
-            print("GROQ OCR RESULT:", extracted_text)
-            print("TEXT LENGTH:", len(extracted_text or ""))
+            if DEBUG:
+                print("=" * 50)
+                print("GROQ RAW RESPONSE:")
+                print(extracted_text)
+                print("TEXT LENGTH:", len(extracted_text or ""))
+                print("=" * 50)
             return {"text": extracted_text}
         except Exception as exc:
             return {"text": "", "error": str(exc)}
@@ -238,12 +264,16 @@ async def analytics_dashboard(user_id: str):
         timeline = get_prescription_timeline(user_id)
         top_medications = get_top_medications(user_id)
         medication_frequency = get_medication_frequency(user_id)
+        top_diagnoses = get_top_diagnoses(user_id)
+        recent_prescriptions = get_recent_prescriptions(user_id)
         summary = get_health_summary(user_id)
 
         return {
             "timeline": timeline,
             "top_medications": top_medications,
             "medication_frequency": medication_frequency,
+            "top_diagnoses": top_diagnoses,
+            "recent_prescriptions": recent_prescriptions,
             "summary": summary,
         }
     except Exception as exc:

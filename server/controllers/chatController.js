@@ -16,8 +16,6 @@ exports.askQuestion = async (req, res) => {
             });
         }
 
-        console.log('💬 Processing chat message for user:', req.user.id);
-
         const reply = await chatService.processMessage(
             req.user.id,
             message,
