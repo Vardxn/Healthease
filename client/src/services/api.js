@@ -24,6 +24,28 @@ api.interceptors.request.use(
   }
 );
 
+// Create axios instance for doctor endpoints (uses doctorToken)
+const doctorApiInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add doctorToken to doctor requests
+doctorApiInstance.interceptors.request.use(
+  (config) => {
+    const doctorToken = localStorage.getItem('doctorToken');
+    if (doctorToken) {
+      config.headers['Authorization'] = `Bearer ${doctorToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Auth API
 export const authAPI = {
   register: (name, email, password) => 
@@ -113,7 +135,8 @@ export const patientAPI = {
   updateProfile: (data) => api.put('/patient/profile', data),
   deleteProfile: () => api.delete('/patient/profile'),
   addVitals: (data) => api.post('/patient/vitals', data),
-  getVitals: () => api.get('/patient/vitals')
+  getVitals: () => api.get('/patient/vitals'),
+  getCareTimeline: (patientId) => api.get(`/patients/${patientId}/care-timeline`)
 };
 
 // Interaction API
@@ -126,4 +149,33 @@ export const analyticsAPI = {
   getDashboard: () =>
     api.get('/analytics/dashboard')
 };
+
+// Doctor API
+export const doctorAPI = {
+  getAll: (params = {}) => api.get('/doctors', { params }),
+  getById: (id) => api.get(`/doctors/${id}`)
+};
+
+// Payments API
+export const paymentAPI = {
+  createOrder: (data) => api.post('/payments/create-order', data),
+  verify: (data) => api.post('/payments/verify', data)
+};
+
+// Consultation API (for patients - uses patient token)
+export const consultationAPI = {
+  getMy: () => api.get('/consultations/my'),
+  getById: (id) => api.get(`/consultations/${id}`),
+  updateStatus: (id, status) => api.patch(`/consultations/${id}/status`, { status }),
+  addNotes: (id, notes) => api.patch(`/consultations/${id}/notes`, notes)
+};
+
+// Doctor Consultation API (for doctors - uses doctorToken)
+export const doctorConsultationAPI = {
+  getById: (id) => doctorApiInstance.get(`/consultations/${id}`),
+  getQueue: (doctorId) => doctorApiInstance.get(`/consultations/queue/${doctorId}`),
+  updateStatus: (id, status) => doctorApiInstance.patch(`/consultations/${id}/status`, { status }),
+  addNotes: (id, notes) => doctorApiInstance.patch(`/consultations/${id}/notes`, notes)
+};
+
 export default api;

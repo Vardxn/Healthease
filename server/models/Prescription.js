@@ -1,10 +1,25 @@
 const mongoose = require('mongoose');
 
 const PrescriptionSchema = new mongoose.Schema({
+    source: {
+        type: String,
+        enum: ['patient-uploaded', 'doctor-issued'],
+        default: 'patient-uploaded'
+    },
     patientId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', 
         required: true 
+    },
+    doctorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Doctor',
+        default: null
+    },
+    consultationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Consultation',
+        default: null
     },
     imageUrl: { 
         type: String, 
@@ -20,7 +35,8 @@ const PrescriptionSchema = new mongoose.Schema({
         name: String,
         dosage: String,
         frequency: String,
-        duration: String
+        duration: String,
+        notes: String
     }],
     
     doctorName: String,

@@ -2,14 +2,28 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 const connectDB = require('./config/db');
+const socketInstance = require('./socket/socketInstance');
 
 const app = express();
+const httpServer = createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
   process.env.CLIENT_URL,
 ].filter(Boolean);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    credentials: true
+  }
+});
+
+socketInstance.init(io);
+require('./socket/consultationSocket')(io);
 
 // Middleware
 app.use(cors({
@@ -30,8 +44,13 @@ connectDB();
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/doctors', require('./routes/doctorAuthRoutes'));
+app.use('/api/doctors', require('./routes/doctorRoutes'));
+app.use('/api/consultations', require('./routes/consultationRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/patient', require('./routes/patientRoutes'));
+app.use('/api/patients', require('./routes/careTimelineRoutes'));
 app.use('/api/interactions', require('./routes/interactionsRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/voice-chat', require('./routes/voiceChatRoutes'));
@@ -74,7 +93,7 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 5001;
 
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
 
 module.exports = app;

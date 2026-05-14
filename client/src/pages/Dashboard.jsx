@@ -72,6 +72,45 @@ const Dashboard = () => {
             Update your medical history and personal information for better care
           </p>
         </Link>
+
+        <Link 
+          to="/doctors"
+          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+        >
+          <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
+            📹
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">Consult a Doctor</h3>
+          <p className="text-gray-600 leading-relaxed">
+            Browse specialists and start a secure video, audio, or chat consultation
+          </p>
+        </Link>
+
+        <Link 
+          to="/consultations/my"
+          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+        >
+          <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
+            📅
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">My Consultations</h3>
+          <p className="text-gray-600 leading-relaxed">
+            Track upcoming and past consultations with doctors in one timeline
+          </p>
+        </Link>
+
+        <Link 
+          to="/timeline"
+          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+        >
+          <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
+            🕒
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">Health Timeline</h3>
+          <p className="text-gray-600 leading-relaxed">
+            View your complete health journey including consultations, tests, and prescriptions
+          </p>
+        </Link>
       </div>
 
       {/* Features Section */}

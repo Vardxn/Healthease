@@ -1,0 +1,323 @@
+# HealthEase - Future Things To Be Completed (Roadmap Todo)
+
+Use this file as the active checklist for pending work.
+
+Update rule:
+- When a feature is completed, add it to final summary of the project.txt.
+- Then remove that completed item from this file.
+- Keep this file inside project-summary-docs.
+
+Recommended build order:
+- Start with Medicine Tracker -> Vitals Dashboard -> Lab Reports -> Symptom Checker -> then scale to Doctor Portal and Telemedicine.
+
+---
+
+## High Priority (Core Healthcare Value)
+
+- [x] CORE Doctor Consultation Platform (80% Complete - BACKEND ENDPOINTS PENDING)
+	- [x] Enable doctor consultation via WebRTC video call, audio call, and secure text chat (Socket.io + PeerJS)
+	- [x] Add Razorpay payment integration with transparent fee display before booking
+	- [x] Maintain unified doctor directory with search, filters, and online status
+	- [x] Doctor authentication and dashboard with consultation queue
+	- [x] Store consultation history with diagnosis, notes, prescriptions, follow-ups
+	- [x] Create comprehensive doctor notes form with medicines, tests, follow-up tracking
+	- [x] Socket.io real-time events for consultation notifications
+	- [ ] CRITICAL: Backend endpoints still pending (NEXT PRIORITY):
+		- [x] GET /api/consultations/my (fetch patient's consultation history)
+		- [x] GET /api/consultations/queue/:doctorId (fetch doctor's queue)
+		- [x] POST /api/consultations (create consultation after payment success)
+
+- [ ] Common Diseases Clinical Guidance Module
+	- [ ] Curate top 30 most common diseases in the country
+	- [ ] For each disease, add identification guidance (symptoms and risk indicators)
+	- [ ] For each disease, define recommended diagnostic tests after initial identification
+	- [ ] Add immediate next-step care guidance (home care, doctor visit, emergency triggers)
+	- [ ] Add follow-up workflow (when to retest, specialist referral criteria)
+	- [ ] Add data validation review with medical references before publishing guidance
+
+- [ ] Appointment and Doctor Management
+	- [ ] Book appointments with doctors (calendar integration)
+	- [ ] Doctor profile pages with specialization, ratings, availability
+	- [ ] Video consultation via WebRTC or Twilio
+	- [ ] Appointment reminders via SMS/email/push notifications
+
+- [ ] Medicine Tracker and Smart Reminders
+	- [ ] Daily pill tracker with check-off system
+	- [ ] Missed dose alerts via push notifications
+	- [ ] Refill reminders based on dosage duration
+	- [ ] Drug interaction checker (OpenFDA API)
+
+- [ ] Health Vitals Dashboard
+	- [ ] Log vitals: BP, sugar, weight, SpO2, heart rate
+	- [ ] Historical graphs with trend analysis (Chart.js / Recharts)
+	- [ ] Abnormality detection with alerts (for example, BP > 140)
+	- [ ] Export vitals as PDF report for doctor visits
+
+- [ ] Emergency SOS and Medical ID
+	- [ ] One-tap SOS button calls emergency contact and shares live location
+	- [ ] Offline Medical ID card (blood group, allergies, conditions, emergency contacts)
+	- [ ] QR code on profile for quick scan by paramedics
+
+- [ ] Family Health Management
+	- [ ] Add family members under one account (parent/child/spouse)
+	- [ ] Separate health profiles per member
+	- [ ] Unified family dashboard for caregivers
+
+---
+
+## Medium Priority (Engagement and Depth)
+
+- [ ] Lab Report Digitization
+	- [ ] Upload blood test or lab reports (PDF or image)
+	- [ ] OCR plus AI parsing of test values (Hemoglobin, HbA1c, etc.)
+	- [ ] Flag out-of-range values with reference ranges
+	- [ ] Track lab values over time with graphs
+
+- [ ] Symptom Checker
+	- [ ] Input symptoms and AI suggests probable conditions
+	- [ ] Urgency rating: Self-care / See a doctor / Emergency
+	- [ ] Powered by a medical LLM prompt or Infermedica API
+
+- [ ] Health Insurance Wallet
+	- [ ] Store insurance card details and policy documents
+	- [ ] Claim tracking and history
+	- [ ] Hospital network search by insurer
+
+- [ ] Diet and Nutrition Tracker
+	- [ ] Log meals with calorie and macro info (Nutritionix API)
+	- [ ] Condition-specific diet plans (diabetic, hypertensive, etc.)
+	- [ ] Integration with prescriptions to flag food-drug interactions
+
+- [ ] Mental Health Module
+	- [ ] Daily mood tracker
+	- [ ] Guided breathing exercises and meditation timers
+	- [ ] Stress/anxiety self-assessment (PHQ-9, GAD-7 scales)
+	- [ ] Anonymous journaling with AI sentiment feedback
+
+- [ ] Multilingual and Accessibility Support
+	- [ ] UI in Hindi, Urdu, Bengali, Tamil, etc. (i18next)
+	- [ ] Voice interface in regional languages (Bhashini/Sarvam integration)
+	- [ ] Screen reader compatibility (ARIA labels)
+	- [ ] High-contrast and font-size settings
+
+- [ ] Health News and Education Feed
+	- [ ] Curated health articles by user conditions/profile
+	- [ ] Medication info cards (side effects, usage tips)
+	- [ ] Weekly health tips from AI based on user data
+
+---
+
+## Low Priority (Premium and Future Growth)
+
+- [ ] Doctor/Clinician Portal
+	- [ ] Separate doctor login with patient management dashboard
+	- [ ] Doctors can verify/update prescriptions digitally
+	- [ ] Patient history visible only to assigned doctors
+	- [ ] E-prescription generation and digital signature
+
+- [ ] Wearable and IoT Integration
+	- [ ] Sync with Apple Health / Google Fit / Fitbit
+	- [ ] Auto-import step count, sleep data, heart rate
+	- [ ] Smartwatch alerts for medicine reminders
+
+- [ ] Telemedicine Marketplace
+	- [ ] Browse and book verified doctors by specialty
+	- [ ] Secure in-app messaging with doctors
+	- [ ] Payment gateway (Razorpay / Stripe) for consultations
+	- [ ] Prescription issuance post-consultation
+
+- [ ] Gamification and Health Score
+	- [ ] Personal Health Score (0-100) based on vitals, adherence, activity
+	- [ ] Streak rewards for logging vitals consistently
+	- [ ] Badges and milestones for health goals
+
+- [ ] Audit Logs and Compliance
+	- [ ] Full activity log (who accessed what, when)
+	- [ ] HIPAA/DPDP Act compliance hardening
+	- [ ] Data export (right to portability)
+	- [ ] Account deletion with data purge
+
+- [ ] Admin and Analytics Panel
+	- [ ] Platform usage metrics
+	- [ ] User growth, prescription uploads, chatbot usage
+	- [ ] Flagged/abnormal health reports review
+	- [ ] Moderation tools for doctor verification
+
+---
+
+## UX/UI Improvements (Cross-Cutting)
+
+- [ ] Onboarding flow: guided 3-step setup after registration (profile -> add family -> upload first prescription)
+- [ ] Dark/Light mode toggle
+- [ ] Progressive Web App (PWA): installable on mobile, offline support
+- [ ] Skeleton loaders instead of spinners for perceived speed
+- [ ] Drag-and-drop prescription upload with preview before submit
+- [ ] In-app notifications center: all alerts in one place
+- [ ] Search everything: global search bar across prescriptions, medicines, reports
+- [ ] Data visualization: unified health timeline for uploads, vitals, appointments
+
+---
+
+## Third-Party Integrations Worth Adding
+
+- [ ] Razorpay / Stripe (payments for consultations)
+- [ ] Twilio (SMS reminders, video calls)
+- [ ] Firebase Cloud Messaging (push notifications)
+- [ ] OpenFDA API (drug interaction and recall data)
+- [ ] Infermedica API (symptom checker engine)
+- [ ] Apple Health / Google Fit (wearable data sync)
+- [ ] Cloudinary / AWS S3 (scalable image/file storage)
+- [ ] Sentry (error monitoring)
+- [ ] PostHog (product analytics)
+
+---
+
+# HealthEase — Feature Expansion Roadmap (Merged Addition)
+
+Here's a comprehensive breakdown of all features that can be added, prioritized by impact and feasibility.
+
+---
+
+## 🔴 HIGH PRIORITY (Core Healthcare Value)
+
+**1. Appointment & Doctor Management**
+- Book appointments with doctors (calendar integration)
+- Doctor profile pages with specialization, ratings, availability
+- Video consultation via WebRTC or Twilio
+- Appointment reminders via SMS/email/push notifications
+
+**2. Medicine Tracker & Smart Reminders**
+- Daily pill tracker with check-off system
+- Missed dose alerts via push notifications
+- Refill reminders based on dosage duration
+- Drug interaction checker (OpenFDA API)
+
+**3. Health Vitals Dashboard**
+- Log vitals: BP, sugar, weight, SpO2, heart rate
+- Historical graphs with trend analysis (Chart.js / Recharts)
+- Abnormality detection with alerts (e.g., BP > 140)
+- Export vitals as PDF report for doctor visits
+
+**4. Emergency SOS & Medical ID**
+- One-tap SOS button → calls emergency contact + shares live location
+- Offline Medical ID card (blood group, allergies, conditions, emergency contacts)
+- QR code on profile for quick scan by paramedics
+
+**5. Family Health Management**
+- Add family members under one account (parent/child/spouse)
+- Separate health profiles per member
+- Unified family dashboard for caregivers
+
+---
+
+## 🟡 MEDIUM PRIORITY (Engagement & Depth)
+
+**6. Lab Report Digitization**
+- Upload blood test / lab reports (PDF or image)
+- OCR + AI parsing of test values (Hemoglobin, HbA1c, etc.)
+- Flag out-of-range values with reference ranges
+- Track lab values over time with graphs
+
+**7. Symptom Checker**
+- Input symptoms → AI suggests probable conditions
+- Urgency rating: Self-care / See a doctor / Emergency
+- Powered by a medical LLM prompt or Infermedica API
+
+**8. Health Insurance Wallet**
+- Store insurance card details and policy documents
+- Claim tracking and history
+- Hospital network search by insurer
+
+**9. Diet & Nutrition Tracker**
+- Log meals with calorie/macro info (Nutritionix API)
+- Condition-specific diet plans (diabetic, hypertensive, etc.)
+- Integration with prescriptions to flag food-drug interactions
+
+**10. Mental Health Module**
+- Daily mood tracker (emoji-based)
+- Guided breathing exercises and meditation timers
+- Stress/anxiety self-assessment (PHQ-9, GAD-7 scales)
+- Anonymous journaling with AI sentiment feedback
+
+**11. Multilingual & Accessibility Support**
+- UI in Hindi, Urdu, Bengali, Tamil, etc. (i18next)
+- Voice interface in regional languages (Bhashini/Sarvam already integrated)
+- Screen reader compatibility (ARIA labels)
+- High-contrast and font-size settings
+
+**12. Health News & Education Feed**
+- Curated health articles by user's conditions/profile
+- Medication info cards (side effects, usage tips)
+- Weekly health tips from AI based on user data
+
+---
+
+## 🟢 LOW PRIORITY (Premium / Future Growth)
+
+**13. Doctor/Clinician Portal**
+- Separate doctor login with patient management dashboard
+- Doctors can verify/update prescriptions digitally
+- Patient history visible to assigned doctors only
+- E-prescription generation and digital signature
+
+**14. Wearable & IoT Integration**
+- Sync with Apple Health / Google Fit / Fitbit
+- Auto-import step count, sleep data, heart rate
+- Smartwatch alerts for medicine reminders
+
+**15. Telemedicine Marketplace**
+- Browse and book verified doctors by specialty
+- Secure in-app messaging with doctors
+- Payment gateway (Razorpay / Stripe) for consultations
+- Prescription issuance post-consultation
+
+**16. Gamification & Health Score**
+- Personal "Health Score" (0–100) based on vitals, medication adherence, activity
+- Streak rewards for logging vitals consistently
+- Badges and milestones for health goals
+
+**17. Audit Logs & Compliance**
+- Full activity log (who accessed what, when)
+- HIPAA/DPDP Act compliance hardening
+- Data export (right to portability)
+- Account deletion with data purge
+
+**18. Admin & Analytics Panel**
+- Platform usage metrics
+- User growth, prescription uploads, chatbot usage
+- Flagged/abnormal health reports review
+- Moderation tools for doctor verification
+
+---
+
+## 💡 UX/UI Improvements (Cross-Cutting)
+
+- **Onboarding flow** — guided 3-step setup after registration (profile → add family → upload first prescription)
+- **Dark/Light mode toggle** — already dark-first, add toggle
+- **Progressive Web App (PWA)** — installable on mobile, offline support
+- **Skeleton loaders** instead of spinners for perceived speed
+- **Drag-and-drop prescription upload** with preview before submit
+- **In-app notifications center** — all alerts in one place
+- **Search everything** — global search bar across prescriptions, medicines, reports
+- **Data visualization** — unified health timeline showing all events (uploads, vitals, appointments)
+
+---
+
+## 🧩 Third-Party Integrations Worth Adding
+
+| Service | Purpose |
+|---|---|
+| Razorpay / Stripe | Payments for consultations |
+| Twilio | SMS reminders, video calls |
+| Firebase Cloud Messaging | Push notifications |
+| OpenFDA API | Drug interaction + recall data |
+| Infermedica API | Symptom checker engine |
+| Apple Health / Google Fit | Wearable data sync |
+| Cloudinary / AWS S3 | Scalable image/file storage |
+| Sentry | Error monitoring |
+| PostHog | Product analytics |
+
+---
+
+**Recommended Build Order:**
+Start with Medicine Tracker → Vitals Dashboard → Lab Reports → Symptom Checker → then scale to Doctor Portal and Telemedicine. This gives maximum user retention early while building toward a full platform.

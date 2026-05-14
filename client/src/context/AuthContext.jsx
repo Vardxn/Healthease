@@ -1,4 +1,5 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
 import { authAPI } from '../services/api';
 
 export const AuthContext = createContext();
@@ -7,6 +8,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null);
+
+  const normalizeUser = (payload) => {
+    if (!payload) return null;
+    return {
+      ...payload,
+      _id: payload._id || payload.id,
+      id: payload.id || payload._id
+    };
+  };
 
   useEffect(() => {
     if (token) {
@@ -19,7 +31,7 @@ export const AuthProvider = ({ children }) => {
   const loadUser = async () => {
     try {
       const response = await authAPI.getMe();
-      setUser(response.data.data);
+      setUser(normalizeUser(response.data.data));
     } catch (error) {
       logout();
     } finally {
@@ -34,7 +46,7 @@ export const AuthProvider = ({ children }) => {
       
       localStorage.setItem('token', token);
       setToken(token);
-      setUser(user);
+      setUser(normalizeUser(user));
       
       return { success: true };
     } catch (error) {
@@ -52,7 +64,7 @@ export const AuthProvider = ({ children }) => {
       
       localStorage.setItem('token', token);
       setToken(token);
-      setUser(user);
+      setUser(normalizeUser(user));
       
       return { success: true };
     } catch (error) {
@@ -64,6 +76,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+    setSocket(null);
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
@@ -72,7 +89,7 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (profileData) => {
     try {
       const response = await authAPI.updateProfile(profileData);
-      setUser(response.data.data);
+      setUser(normalizeUser(response.data.data));
       return { success: true };
     } catch (error) {
       return { 
@@ -81,6 +98,41 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
+
+  useEffect(() => {
+    if (!token || !user?._id || user?.role !== 'patient') {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      setSocket(null);
+      return;
+    }
+
+    const socketClient = io(window.location.origin, {
+      withCredentials: true,
+      transports: ['websocket']
+    });
+
+    socketRef.current = socketClient;
+    setSocket(socketClient);
+
+    const joinPatientRoom = () => {
+      socketClient.emit('join-patient-room', { patientId: user._id });
+    };
+
+    socketClient.on('connect', joinPatientRoom);
+    joinPatientRoom();
+
+    return () => {
+      socketClient.off('connect', joinPatientRoom);
+      socketClient.disconnect();
+      if (socketRef.current === socketClient) {
+        socketRef.current = null;
+      }
+      setSocket(null);
+    };
+  }, [token, user?._id, user?.role]);
 
   return (
     <AuthContext.Provider
@@ -92,6 +144,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateProfile,
+        socket,
         isAuthenticated: !!token
       }}
     >
