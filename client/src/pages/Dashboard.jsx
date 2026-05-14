@@ -111,6 +111,19 @@ const Dashboard = () => {
             View your complete health journey including consultations, tests, and prescriptions
           </p>
         </Link>
+
+        <Link 
+          to="/medicine-tracker"
+          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+        >
+          <div className="bg-gradient-accent text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
+            💊
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">Medicine Tracker</h3>
+          <p className="text-gray-600 leading-relaxed">
+            Track daily medicines, mark doses as taken, and see refill alerts in one place
+          </p>
+        </Link>
       </div>
 
       {/* Features Section */}

@@ -6,6 +6,8 @@ const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 const Prescription = require('../models/Prescription');
 const Consultation = require('../models/Consultation');
+const Medicine = require('../models/Medicine');
+const MedicineReminder = require('../models/MedicineReminder');
 
 const seedData = async () => {
   try {
@@ -20,6 +22,8 @@ const seedData = async () => {
     await User.deleteMany({});
     await Prescription.deleteMany({});
     await Consultation.deleteMany({});
+    await Medicine.deleteMany({});
+    await MedicineReminder.deleteMany({});
     console.log('✅ Data cleared\n');
 
     // ========================
@@ -570,6 +574,163 @@ const seedData = async () => {
     console.log(`✅ 4 consultations created`);
 
     // ========================
+    // CREATE MEDICINES (6)
+    // ========================
+    console.log('\n💊 Creating 6 medicines...');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const medicineSeedData = [
+      {
+        userId: createdPatients[0]._id,
+        name: 'Metformin',
+        dosage: '500mg',
+        frequency: 'twice daily',
+        duration: 90,
+        reminderTime: '08:00',
+        sideEffects: ['Nausea', 'Loose stools'],
+        instructions: 'Take after breakfast and dinner',
+        takeWithFood: true,
+        quantityRemaining: 20,
+        refillThreshold: 7,
+        status: 'active'
+      },
+      {
+        userId: createdPatients[0]._id,
+        name: 'Amlodipine',
+        dosage: '5mg',
+        frequency: 'once daily',
+        duration: 90,
+        reminderTime: '21:00',
+        sideEffects: ['Dizziness'],
+        instructions: 'Take at bedtime',
+        takeWithFood: false,
+        quantityRemaining: 14,
+        refillThreshold: 7,
+        status: 'active'
+      },
+      {
+        userId: createdPatients[0]._id,
+        name: 'Calcium + D3',
+        dosage: '1 tablet',
+        frequency: 'once daily',
+        duration: 30,
+        reminderTime: '13:00',
+        sideEffects: [],
+        instructions: 'Take after lunch',
+        takeWithFood: true,
+        quantityRemaining: 4,
+        refillThreshold: 7,
+        status: 'active'
+      },
+      {
+        userId: createdPatients[1]._id,
+        name: 'Salbutamol Inhaler',
+        dosage: '2 puffs',
+        frequency: 'as needed',
+        duration: 30,
+        reminderTime: '22:00',
+        sideEffects: ['Tremor', 'Palpitations'],
+        instructions: 'Use only when wheezing starts',
+        takeWithFood: false,
+        quantityRemaining: 8,
+        refillThreshold: 5,
+        status: 'active'
+      },
+      {
+        userId: createdPatients[2]._id,
+        name: 'Sertraline',
+        dosage: '25mg',
+        frequency: 'once daily',
+        duration: 60,
+        reminderTime: '22:30',
+        sideEffects: ['Sleepiness'],
+        instructions: 'Take after dinner',
+        takeWithFood: false,
+        quantityRemaining: 12,
+        refillThreshold: 7,
+        status: 'paused'
+      },
+      {
+        userId: createdPatients[2]._id,
+        name: 'Levothyroxine',
+        dosage: '50mcg',
+        frequency: 'once daily',
+        duration: 180,
+        reminderTime: '07:00',
+        sideEffects: ['Palpitations if overdosed'],
+        instructions: 'Take on empty stomach, 30 minutes before breakfast',
+        takeWithFood: false,
+        quantityRemaining: 25,
+        refillThreshold: 10,
+        status: 'active'
+      },
+      {
+        userId: createdPatients[3]._id,
+        name: 'Atorvastatin',
+        dosage: '20mg',
+        frequency: 'once daily',
+        duration: 90,
+        reminderTime: '20:30',
+        sideEffects: ['Muscle aches'],
+        instructions: 'Take in the evening',
+        takeWithFood: false,
+        quantityRemaining: 6,
+        refillThreshold: 7,
+        status: 'active'
+      },
+      {
+        userId: createdPatients[3]._id,
+        name: 'Vitamin D3',
+        dosage: '60,000 IU',
+        frequency: 'weekly',
+        duration: 8,
+        reminderTime: '09:00',
+        sideEffects: [],
+        instructions: 'Take after lunch on Sundays',
+        takeWithFood: true,
+        quantityRemaining: 2,
+        refillThreshold: 1,
+        status: 'active'
+      }
+    ];
+
+    const createdMedicines = await Medicine.insertMany(
+      medicineSeedData.map(medicine => ({
+        ...medicine,
+        startDate: today,
+        endDate: new Date(today.getTime() + medicine.duration * 24 * 60 * 60 * 1000)
+      }))
+    );
+
+    createdMedicines.forEach(medicine => {
+      console.log(`✅ ${medicine.name} created`);
+    });
+
+    const remindersToInsert = [];
+    for (const medicine of createdMedicines) {
+      for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+        const reminderDate = new Date(today);
+        reminderDate.setDate(reminderDate.getDate() + dayOffset);
+        remindersToInsert.push({
+          medicineId: medicine._id,
+          userId: medicine.userId,
+          reminderDate,
+          reminderTime: medicine.reminderTime,
+          status: 'pending',
+          notificationSent: false,
+          emailSent: false,
+          smsSent: false,
+          notificationCount: 0
+        });
+      }
+    }
+
+    await MedicineReminder.insertMany(remindersToInsert);
+    console.log(`✅ ${remindersToInsert.length} medicine reminders created`);
+
+    // ========================
     // SUCCESS SUMMARY
     // ========================
     console.log('\n🎉 Seed complete! Summary:');
@@ -577,6 +738,8 @@ const seedData = async () => {
     console.log('   - 4 Patients');
     console.log('   - 6 Prescriptions');
     console.log('   - 4 Consultations');
+    console.log('   - 8 Medicines');
+    console.log('   - 56 Reminders');
 
     console.log('\n📋 LOGIN CREDENTIALS:');
     console.log('\nPATIENTS:');

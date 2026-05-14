@@ -128,6 +128,28 @@ export const reminderAPI = {
     api.get(`/reminders/${prescriptionId}`)
 };
 
+// Medicine API
+export const medicineAPI = {
+  getAll: () => api.get('/medicines'),
+  getActive: () => api.get('/medicines/active'),
+  getById: (id) => api.get(`/medicines/${id}`),
+  add: (data) => api.post('/medicines', data),
+  update: (id, data) => api.put(`/medicines/${id}`, data),
+  remove: (id) => api.delete(`/medicines/${id}`),
+  complete: (id) => api.patch(`/medicines/${id}/complete`),
+  stop: (id) => api.patch(`/medicines/${id}/stop`),
+  pause: (id) => api.patch(`/medicines/${id}/pause`),
+  updateQuantity: (id, data) => api.patch(`/medicines/${id}/quantity`, data),
+  getTodayReminders: () => api.get('/medicines/reminders/today'),
+  getReminderHistory: (params = {}) => api.get('/medicines/reminders/list', { params }),
+  getReminderStatsToday: () => api.get('/medicines/stats/today'),
+  markReminderTaken: (reminderId, notes = '') =>
+    api.put(`/medicines/reminders/${reminderId}/taken`, { notes }),
+  markReminderSkipped: (reminderId, notes = '') =>
+    api.put(`/medicines/reminders/${reminderId}/skip`, { notes }),
+  getRefillNeeded: () => api.get('/medicines/refill/needed')
+};
+
 // Patient API
 export const patientAPI = {
   getProfile: () => api.get('/patient/profile'),

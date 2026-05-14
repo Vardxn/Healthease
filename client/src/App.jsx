@@ -17,6 +17,8 @@ import DoctorDashboard from './pages/DoctorDashboard';
 import MyConsultations from './pages/MyConsultations';
 import DoctorConsultationNotes from './pages/DoctorConsultationNotes';
 import CareTimeline from './pages/CareTimeline';
+import MedicineTracker from './pages/MedicineTracker';
+import ReminderHistory from './pages/ReminderHistory';
 import AIChatbot from './components/AIChatbot';
 
 function App() {
@@ -38,6 +40,8 @@ function App() {
               <Route path="/doctors" element={<DoctorDirectory />} />
               <Route path="/consultations/my" element={<MyConsultations />} />
               <Route path="/timeline" element={<CareTimeline />} />
+              <Route path="/medicine-tracker" element={<MedicineTracker />} />
+              <Route path="/medicine-history" element={<ReminderHistory />} />
               <Route path="/doctor/login" element={<DoctorLogin />} />
               <Route path="/doctor/register" element={<DoctorRegister />} />
               <Route path="/doctor/dashboard" element={<DoctorDashboard />} />

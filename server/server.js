@@ -7,6 +7,8 @@ const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 const socketInstance = require('./socket/socketInstance');
 
+const reminderScheduler = require('./services/reminderScheduler');
+
 const app = express();
 const httpServer = createServer(app);
 
@@ -42,6 +44,11 @@ app.use(express.urlencoded({ extended: true }));
 // Connect Database
 connectDB();
 
+// Start reminder scheduler (checks every minute)
+if (!process.env.VERCEL) {
+  reminderScheduler.startReminderScheduler();
+}
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/doctors', require('./routes/doctorAuthRoutes'));
@@ -49,6 +56,7 @@ app.use('/api/doctors', require('./routes/doctorRoutes'));
 app.use('/api/consultations', require('./routes/consultationRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
+app.use('/api/medicines', require('./routes/medicineRoutes'));
 app.use('/api/patient', require('./routes/patientRoutes'));
 app.use('/api/patients', require('./routes/careTimelineRoutes'));
 app.use('/api/interactions', require('./routes/interactionsRoutes'));

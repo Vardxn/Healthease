@@ -88,6 +88,20 @@ const Navbar = () => {
                   <span className="text-lg group-hover:scale-110 transition-transform">🕒</span>
                   <span>Care Timeline</span>
                 </Link>
+                <Link 
+                  to="/medicine-tracker" 
+                  className="flex items-center gap-2 text-gray-700 hover:text-primary-600 transition-all font-medium group"
+                >
+                  <span className="text-lg group-hover:scale-110 transition-transform">💊</span>
+                  <span>Medicine Tracker</span>
+                </Link>
+                <Link 
+                  to="/medicine-history" 
+                  className="flex items-center gap-2 text-gray-700 hover:text-primary-600 transition-all font-medium group"
+                >
+                  <span className="text-lg group-hover:scale-110 transition-transform">🧾</span>
+                  <span>History</span>
+                </Link>
                 <div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-300">
                   <div className="bg-primary-50 px-3 py-2 rounded-lg">
                     <span className="text-sm text-primary-800 font-semibold">
