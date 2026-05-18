@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import { useContext } from 'react';
+import SidebarLayout from './components/SidebarLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -20,38 +21,101 @@ import CareTimeline from './pages/CareTimeline';
 import MedicineTracker from './pages/MedicineTracker';
 import ReminderHistory from './pages/ReminderHistory';
 import AIChatbot from './components/AIChatbot';
+import SymptomChecker from './pages/SymptomChecker';
+import VitalsDashboard from './pages/VitalsDashboard';
+
+function AppContent() {
+  const { user } = useContext(AuthContext);
+
+  return (
+    <>
+      <Routes>
+        {/* Auth Pages - No Sidebar */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/doctor/login" element={<DoctorLogin />} />
+        <Route path="/doctor/register" element={<DoctorRegister />} />
+
+        {/* Dashboard redirect */}
+        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+
+        {/* Protected Routes - With Sidebar */}
+        <Route
+          path="/dashboard"
+          element={user ? <SidebarLayout><Dashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/upload"
+          element={user ? <SidebarLayout><UploadPrescription /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/prescriptions"
+          element={user ? <SidebarLayout><PrescriptionList /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/profile"
+          element={user ? <SidebarLayout><PatientProfile /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/dashboard/analytics"
+          element={user ? <SidebarLayout><AnalyticsDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/interactions"
+          element={user ? <SidebarLayout><DrugInteractions /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/doctors"
+          element={user ? <SidebarLayout><DoctorDirectory /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/consultations/my"
+          element={user ? <SidebarLayout><MyConsultations /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/timeline"
+          element={user ? <SidebarLayout><CareTimeline /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/medicine-tracker"
+          element={user ? <SidebarLayout><MedicineTracker /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/medicine-history"
+          element={user ? <SidebarLayout><ReminderHistory /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/vitals"
+          element={user ? <SidebarLayout><VitalsDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/symptom-checker"
+          element={user ? <SidebarLayout><SymptomChecker /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/doctor/dashboard"
+          element={user ? <SidebarLayout><DoctorDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/consultation/:id"
+          element={user ? <SidebarLayout><ConsultationRoom /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/consultation/:id/notes"
+          element={user ? <SidebarLayout><DoctorConsultationNotes /></SidebarLayout> : <Navigate to="/login" replace />}
+        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+      <AIChatbot />
+    </>
+  );
+}
 
 function App() {
   return (
     <AuthProvider>
       <Router basename={import.meta.env.BASE_URL}>
-        <div className="min-h-screen">
-          <Navbar />
-          <main className="container mx-auto px-4 py-8 animate-fadeIn">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/upload" element={<UploadPrescription />} />
-              <Route path="/prescriptions" element={<PrescriptionList />} />
-              <Route path="/dashboard/analytics" element={<AnalyticsDashboard />} />
-              <Route path="/profile" element={<PatientProfile />} />
-              <Route path="/interactions" element={<DrugInteractions />} />
-              <Route path="/doctors" element={<DoctorDirectory />} />
-              <Route path="/consultations/my" element={<MyConsultations />} />
-              <Route path="/timeline" element={<CareTimeline />} />
-              <Route path="/medicine-tracker" element={<MedicineTracker />} />
-              <Route path="/medicine-history" element={<ReminderHistory />} />
-              <Route path="/doctor/login" element={<DoctorLogin />} />
-              <Route path="/doctor/register" element={<DoctorRegister />} />
-              <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-              <Route path="/consultation/:id" element={<ConsultationRoom />} />
-              <Route path="/consultation/:id/notes" element={<DoctorConsultationNotes />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <AIChatbot />
-        </div>
+        <AppContent />
       </Router>
     </AuthProvider>
   );

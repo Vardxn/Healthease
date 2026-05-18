@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -14,6 +15,7 @@ const httpServer = createServer(app);
 
 const allowedOrigins = [
   'http://localhost:3000',
+  'http://localhost:3001',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
@@ -60,11 +62,13 @@ app.use('/api/medicines', require('./routes/medicineRoutes'));
 app.use('/api/patient', require('./routes/patientRoutes'));
 app.use('/api/patients', require('./routes/careTimelineRoutes'));
 app.use('/api/interactions', require('./routes/interactionsRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/voice-chat', require('./routes/voiceChatRoutes'));
 app.use('/api/ocr', require('./routes/ocrRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/wellness', require('./routes/wellnessRoutes'));
 
 // Centralized file upload error mapping (multer, file type, file size)
 app.use((err, req, res, next) => {
@@ -98,7 +102,24 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'node-backend' });
 });
 
+// Development convenience: redirect root to frontend dev server
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/', (req, res) => {
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    return res.redirect(clientUrl);
+  });
+}
+
 const PORT = process.env.PORT || 5001;
+
+// Serve built frontend in production
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientDist));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 if (!process.env.VERCEL) {
   httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));

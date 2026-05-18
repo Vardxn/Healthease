@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, ChevronDown, Loader2, Plus, Trash2, X } from 'lucide-react';
-import { interactionsAPI, prescriptionAPI } from '../services/api';
+import { AlertTriangle, CheckCircle2, ChevronDown, Loader2, Plus, X } from 'lucide-react';
+import { aiAPI, prescriptionAPI } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
 const severityRank = { HIGH: 0, MODERATE: 1, LOW: 2 };
 
@@ -11,7 +12,22 @@ const pillClasses = {
   LOW: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30'
 };
 
+function normalizeMedicationName(value) {
+  return String(value || '').trim();
+}
+
+function normalizeMedicationPayload(medications) {
+  return Array.isArray(medications)
+    ? medications.map((medication) => ({
+      name: normalizeMedicationName(medication),
+      dosage: '',
+      frequency: ''
+    })).filter((medication) => medication.name)
+    : [];
+}
+
 const DrugInteractions = () => {
+  const { user } = useContext(AuthContext);
   const location = useLocation();
   const [input, setInput] = useState('');
   const [medications, setMedications] = useState([]);
@@ -20,13 +36,18 @@ const DrugInteractions = () => {
   const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
   const [checking, setChecking] = useState(false);
   const [results, setResults] = useState(null);
+  const [warnings, setWarnings] = useState([]);
+  const [showWarningsModal, setShowWarningsModal] = useState(false);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [hasAttemptedCheck, setHasAttemptedCheck] = useState(false);
 
   const sortedResults = useMemo(() => {
-    const interactions = Array.isArray(results?.interactions) ? [...results.interactions] : [];
-    return interactions.sort((a, b) => (severityRank[a?.severity] ?? 99) - (severityRank[b?.severity] ?? 99));
-  }, [results]);
+    const interactionWarnings = Array.isArray(warnings) ? [...warnings] : [];
+    return interactionWarnings.sort(
+      (a, b) => (severityRank[(a?.severity || '').toUpperCase()] ?? 99) - (severityRank[(b?.severity || '').toUpperCase()] ?? 99)
+    );
+  }, [warnings]);
 
   const loadPrescriptions = async () => {
     try {
@@ -37,6 +58,64 @@ const DrugInteractions = () => {
       setError(err.response?.data?.msg || 'Failed to load prescriptions');
     } finally {
       setLoadingPrescriptions(false);
+    }
+  };
+
+  const resetInteractionState = () => {
+    setResults(null);
+    setWarnings([]);
+    setShowWarningsModal(false);
+    setError('');
+    setStatusMessage('');
+    setHasAttemptedCheck(false);
+  };
+
+  const verifyInteractions = async (medicationList = medications) => {
+    const normalizedMedications = Array.from(
+      new Set(normalizeMedicationPayload(medicationList).map((item) => item.name))
+    );
+
+    if (!user?._id || normalizedMedications.length < 2) {
+      return;
+    }
+
+    try {
+      setChecking(true);
+      setError('');
+      setStatusMessage('');
+      setHasAttemptedCheck(true);
+
+      const response = await aiAPI.verifyInteractions(user._id, normalizedMedications);
+      const payload = response?.data?.data || response?.data || {};
+      const nextWarnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+
+      setResults(payload);
+      setWarnings(nextWarnings);
+
+      if (payload.conflictsFound) {
+        setShowWarningsModal(true);
+        setStatusMessage(payload.summary || 'Potential interactions found.');
+      } else {
+        setShowWarningsModal(false);
+        setStatusMessage(payload.summary || 'No known interactions detected.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.msg || 'Failed to verify interactions');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const loadImportedMedications = async (nextMedications, statusText) => {
+    const normalized = Array.from(new Set(nextMedications.map((item) => normalizeMedicationName(item)).filter(Boolean)));
+    setMedications(normalized);
+    resetInteractionState();
+    if (statusText) {
+      setStatusMessage(statusText);
+    }
+
+    if (normalized.length >= 2) {
+      await verifyInteractions(normalized);
     }
   };
 
@@ -53,8 +132,7 @@ const DrugInteractions = () => {
             ? parsed.medications
             : [];
         if (pendingMedications.length) {
-          setMedications(Array.from(new Set(pendingMedications.map((item) => String(item).trim()).filter(Boolean))));
-          setStatusMessage('Medications loaded from your recent upload.');
+          void loadImportedMedications(pendingMedications, 'Medications loaded from your recent upload.');
         }
       } catch {
         const fallback = pending
@@ -62,8 +140,7 @@ const DrugInteractions = () => {
           .map((item) => item.trim())
           .filter(Boolean);
         if (fallback.length) {
-          setMedications(Array.from(new Set(fallback)));
-          setStatusMessage('Medications loaded from your recent upload.');
+          void loadImportedMedications(fallback, 'Medications loaded from your recent upload.');
         }
       }
       localStorage.removeItem('pendingInteractionCheck');
@@ -74,7 +151,7 @@ const DrugInteractions = () => {
     if (!medications.length && queryMeds) {
       const parsed = queryMeds.split(',').map((item) => item.trim()).filter(Boolean);
       if (parsed.length) {
-        setMedications(Array.from(new Set(parsed)));
+        void loadImportedMedications(parsed, 'Medications loaded from the selected prescription.');
       }
     }
   }, []);
@@ -82,11 +159,14 @@ const DrugInteractions = () => {
   const addMedication = () => {
     const value = input.trim();
     if (!value) return;
-    setMedications((prev) => Array.from(new Set([...prev, value])));
+
+    const nextMedications = Array.from(new Set([...medications, value]));
+    setMedications(nextMedications);
     setInput('');
-    setError('');
-    setResults(null);
-    setStatusMessage('');
+    resetInteractionState();
+    if (user?._id && nextMedications.length >= 2) {
+      void verifyInteractions(nextMedications);
+    }
   };
 
   const removeMedication = (name) => {
@@ -96,9 +176,7 @@ const DrugInteractions = () => {
   const clearAll = () => {
     setMedications([]);
     setSelectedPrescriptionId('');
-    setResults(null);
-    setError('');
-    setStatusMessage('');
+    resetInteractionState();
   };
 
   const handlePrescriptionChange = (prescriptionId) => {
@@ -112,34 +190,18 @@ const DrugInteractions = () => {
           .filter(Boolean)
       : [];
 
-    setMedications(Array.from(new Set(meds.map((item) => String(item).trim()).filter(Boolean))));
-    setResults(null);
-    setError('');
-    setStatusMessage('Medications imported from selected prescription.');
+    void loadImportedMedications(meds, 'Medications imported from selected prescription.');
   };
 
   const handleCheckInteractions = async () => {
-    if (medications.length < 2) return;
-    try {
-      setChecking(true);
-      setError('');
-      setStatusMessage('');
-      const response = await interactionsAPI.check(medications);
-      const interactions = Array.isArray(response.data.interactions) ? response.data.interactions : [];
-      setResults({
-        ...response.data,
-        interactions: interactions.sort((a, b) => (severityRank[a?.severity] ?? 99) - (severityRank[b?.severity] ?? 99))
-      });
-    } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.msg || 'Failed to check interactions');
-    } finally {
-      setChecking(false);
-    }
+    await verifyInteractions(medications);
   };
 
   const hasEnoughMedications = medications.length >= 2;
+  const hasNoKnownInteractions = hasAttemptedCheck && results && !results.conflictsFound;
 
   return (
+    <>
     <div className="max-w-6xl mx-auto text-white space-y-6">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold">Drug Interaction Checker</h1>
@@ -239,28 +301,28 @@ const DrugInteractions = () => {
       </div>
 
       <div className="space-y-4">
-        {results?.interactions?.length === 0 && results && (
+        {hasNoKnownInteractions && (
           <div className="bg-emerald-900/30 border border-emerald-700 text-emerald-200 rounded-2xl p-4 flex items-center gap-3">
             <CheckCircle2 size={18} />
-            <span>No interactions found between these medications</span>
+            <span>No known interactions detected</span>
           </div>
         )}
 
-        {results?.interactions?.length > 0 && (
+        {!showWarningsModal && warnings.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-cyan-500/15 text-cyan-200 border border-cyan-500/30 font-semibold text-sm">
-                {results.interactions.length} interactions found
+                {warnings.length} warnings found
               </span>
             </div>
 
             <div className="space-y-4">
               {sortedResults.map((interaction, index) => (
-                <div key={`${interaction.drug1}-${interaction.drug2}-${index}`} className="bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-lg">
+                <div key={`${interaction.subject || interaction.detail}-${index}`} className="bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-lg">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
                     <div>
                       <h3 className="text-lg font-semibold text-white">
-                        {interaction.drug1} ↔ {interaction.drug2}
+                        {interaction.subject || 'Medication warning'}
                       </h3>
                       <p className="text-gray-400 text-sm mt-1">Medication interaction detected</p>
                     </div>
@@ -269,12 +331,7 @@ const DrugInteractions = () => {
                     </span>
                   </div>
 
-                  <p className="text-gray-200 leading-relaxed">{interaction.description || 'No description provided.'}</p>
-
-                  <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-cyan-50">
-                    <p className="text-sm font-semibold mb-1">Recommendation</p>
-                    <p className="text-sm leading-relaxed">{interaction.recommendation || 'Consult your clinician or pharmacist.'}</p>
-                  </div>
+                  <p className="text-gray-200 leading-relaxed">{interaction.detail || 'No details provided.'}</p>
                 </div>
               ))}
             </div>
@@ -282,6 +339,65 @@ const DrugInteractions = () => {
         )}
       </div>
     </div>
+
+    {showWarningsModal && (
+      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4 py-6">
+        <div className="w-full max-w-2xl rounded-3xl bg-white text-slate-900 shadow-2xl overflow-hidden border border-amber-200">
+          <div className="bg-gradient-to-r from-amber-500 to-red-500 px-6 py-5 text-white">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-6 w-6 shrink-0 mt-1" />
+              <div>
+                <h2 className="text-2xl font-bold">Interaction warning</h2>
+                <p className="mt-1 text-sm text-amber-50/90">
+                  We found possible medication conflicts. Review these before proceeding.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6 py-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <p className="text-sm text-slate-600">
+              {results?.summary || 'One or more medication warnings were returned by the backend.'}
+            </p>
+
+            <div className="space-y-3">
+              {sortedResults.map((warning, index) => (
+                <div key={`${warning.subject || warning.detail}-${index}`} className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800 uppercase tracking-wide">
+                        {String(warning.type || 'warning').replace(/-/g, ' ')}
+                      </p>
+                      <h3 className="mt-1 text-base font-bold text-slate-900">
+                        {warning.subject || 'Medication warning'}
+                      </h3>
+                    </div>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold ${pillClasses[(warning.severity || '').toUpperCase()] || pillClasses.MODERATE}`}>
+                      {(warning.severity || 'MODERATE').toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-700 leading-relaxed">{warning.detail}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowWarningsModal(false);
+                  setStatusMessage(results?.summary || 'Warnings reviewed.');
+                }}
+                className="rounded-xl bg-slate-950 px-5 py-3 text-white font-semibold hover:bg-slate-800"
+              >
+                Review complete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

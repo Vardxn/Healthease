@@ -13,6 +13,7 @@
     "start:server": "cd server && npm start",
     "start:client": "cd client && npm start",
     "build:client": "cd client && npm run build"
+    ,"start:prod": "npm run build:client && cd server && NODE_ENV=production npm start"
   },
   "keywords": [
     "healthcare",

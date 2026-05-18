@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Mic, MicOff, Send, ImagePlus } from 'lucide-react';
-import { chatAPI, prescriptionAPI, voiceChatAPI } from '../services/api';
+import { AlertTriangle, ExternalLink, Mic, MicOff, Send, ImagePlus } from 'lucide-react';
+import { aiAPI, prescriptionAPI, voiceChatAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 function cx(...classes) {
@@ -136,6 +136,7 @@ const AIChatbot = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [error, setError] = useState('');
   const [recordedMs, setRecordedMs] = useState(0);
+  const [crisisPayload, setCrisisPayload] = useState(null);
 
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -153,6 +154,17 @@ const AIChatbot = () => {
   useEffect(() => {
     scrollToEnd();
   }, [messages, loading, isTranscribing, isOpen, scrollToEnd]);
+
+  useEffect(() => {
+    if (!crisisPayload) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [crisisPayload]);
 
   useEffect(() => {
     return () => {
@@ -179,9 +191,21 @@ const AIChatbot = () => {
     setError('');
 
     try {
-      const res = await chatAPI.ask(text, conversationHistoryForApi(newMessages));
-      const reply = res?.data?.reply ?? '';
-      if (reply) setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+      const res = await aiAPI.mentalHealthChat({
+        userId: user?.id,
+        message: text,
+        chatHistory: conversationHistoryForApi(newMessages)
+      });
+      const reply = res?.data?.data;
+
+      if (reply?.crisisTriggered) {
+        setCrisisPayload(reply);
+        return;
+      }
+
+      if (reply?.text) {
+        setMessages((prev) => [...prev, { role: 'assistant', content: reply.text }]);
+      }
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -296,8 +320,11 @@ const AIChatbot = () => {
 
   if (!isAuthenticated) return null;
 
+  const crisisHelplines = Array.isArray(crisisPayload?.helplines) ? crisisPayload.helplines : [];
+
   return (
-    <div className="fixed bottom-5 right-5 z-50">
+    <>
+      <div className="fixed bottom-5 right-5 z-50">
       {!isOpen && (
         <button
           type="button"
@@ -453,7 +480,72 @@ const AIChatbot = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+
+      {crisisPayload && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center px-4 py-6">
+          <div className="w-full max-w-xl rounded-3xl border border-red-300/30 bg-white shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-red-700 to-rose-600 text-white px-6 py-5">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-white/15 p-3">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Emergency support needed</h2>
+                  <p className="mt-1 text-sm text-red-50/90">
+                    The assistant detected crisis language and paused the normal chat flow.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-6 space-y-5 text-slate-800">
+              <p className="text-sm leading-relaxed">
+                {crisisPayload?.text || 'Please contact emergency support right now.'}
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {crisisHelplines.map((helpline, index) => (
+                  <a
+                    key={`${helpline.label || helpline.contact || index}`}
+                    href={helpline.contact ? `tel:${String(helpline.contact).replace(/[^\d+]/g, '')}` : undefined}
+                    className="group rounded-2xl border border-red-200 bg-red-50 px-4 py-4 hover:bg-red-100 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Emergency line</p>
+                        <p className="mt-1 text-base font-bold text-slate-900">{helpline.label || 'Helpline'}</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-red-600 opacity-70 group-hover:opacity-100" />
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-red-700">{helpline.contact}</p>
+                  </a>
+                ))}
+              </div>
+
+              {Array.isArray(crisisPayload?.recommendations) && crisisPayload.recommendations.length > 0 && (
+                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Immediate steps</p>
+                  <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                    {crisisPayload.recommendations.map((step, index) => (
+                      <li key={`${step}-${index}`} className="flex gap-2">
+                        <span className="mt-1 h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500">
+                This screen is intentionally non-dismissible to reduce the risk of accidental navigation away from
+                emergency guidance.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

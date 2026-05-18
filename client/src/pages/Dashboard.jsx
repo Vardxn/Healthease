@@ -2,7 +2,6 @@ import { useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import AchievementsSection from '../components/AchievementsSection';
-import ProjectObjectivesSection from '../components/ProjectObjectivesSection';
 
 const Dashboard = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
@@ -17,13 +16,13 @@ const Dashboard = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* Hero Section */}
       <div className="gradient-primary text-white rounded-2xl p-10 mb-8 shadow-glow relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-16 -mb-16"></div>
         <div className="relative z-10">
-          <h1 className="text-5xl font-bold mb-3 flex items-center gap-3">
+          <h1 className="text-5xl font-heading font-bold mb-3 flex items-center gap-3">
             Welcome back, {user?.name}! <span className="text-4xl">👋</span>
           </h1>
           <p className="text-primary-50 text-xl font-light">
@@ -33,10 +32,10 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Link 
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3">
+        <Link
           to="/upload"
-          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
         >
           <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
             📤
@@ -47,9 +46,9 @@ const Dashboard = () => {
           </p>
         </Link>
 
-        <Link 
+        <Link
           to="/prescriptions"
-          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
         >
           <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
             📋
@@ -60,9 +59,9 @@ const Dashboard = () => {
           </p>
         </Link>
 
-        <Link 
+        <Link
           to="/profile"
-          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
         >
           <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
             👤
@@ -73,9 +72,9 @@ const Dashboard = () => {
           </p>
         </Link>
 
-        <Link 
+        <Link
           to="/doctors"
-          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
         >
           <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
             📹
@@ -86,9 +85,9 @@ const Dashboard = () => {
           </p>
         </Link>
 
-        <Link 
+        <Link
           to="/consultations/my"
-          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
         >
           <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
             📅
@@ -99,9 +98,9 @@ const Dashboard = () => {
           </p>
         </Link>
 
-        <Link 
+        <Link
           to="/timeline"
-          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
         >
           <div className="bg-gradient-primary text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
             🕒
@@ -112,9 +111,9 @@ const Dashboard = () => {
           </p>
         </Link>
 
-        <Link 
+        <Link
           to="/medicine-tracker"
-          className="glass-effect rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-primary-400 group transform hover:-translate-y-1"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
         >
           <div className="bg-gradient-accent text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
             💊
@@ -124,55 +123,81 @@ const Dashboard = () => {
             Track daily medicines, mark doses as taken, and see refill alerts in one place
           </p>
         </Link>
+
+        <Link
+          to="/vitals"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
+        >
+          <div className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
+            📈
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">Vitals Dashboard</h3>
+          <p className="text-gray-600 leading-relaxed">
+            Log and visualize blood pressure, glucose, SpO2, and weight trends over time
+          </p>
+        </Link>
+
+        <Link
+          to="/symptom-checker"
+          className="bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:border-gray-200 group transform hover:-translate-y-1"
+        >
+          <div className="bg-gradient-to-r from-rose-500 to-amber-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg group-hover:scale-110 transition-transform">
+            🩺
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">Symptom Checker</h3>
+          <p className="text-gray-600 leading-relaxed">
+            Convert plain symptom text into a structured triage result with color-coded urgency guidance
+          </p>
+        </Link>
       </div>
 
       {/* Features Section */}
-      <div className="glass-effect rounded-2xl p-10 shadow-xl">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+      <div className="bg-white w-full rounded-2xl p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+        <h2 className="mb-8 flex items-center gap-3 text-2xl font-heading font-bold text-gray-800 md:text-3xl">
           <span className="text-4xl">🚀</span>
           Platform Features
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="flex gap-5 items-start group">
+        <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="flex w-full flex-col items-start gap-4 group sm:flex-row">
             <div className="bg-primary-100 w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
               🔍
             </div>
             <div>
               <h4 className="font-bold text-gray-800 mb-2 text-lg">Smart OCR Technology</h4>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed text-gray-600 md:text-base">
                 Advanced image preprocessing and Google Vision API for accurate text extraction from any prescription
               </p>
             </div>
           </div>
-          <div className="flex gap-5 items-start group">
+          <div className="flex w-full flex-col items-start gap-4 group sm:flex-row">
             <div className="bg-accent-100 w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
               🤖
             </div>
             <div>
               <h4 className="font-bold text-gray-800 mb-2 text-lg">AI Medical Assistant</h4>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed text-gray-600 md:text-base">
                 Get instant answers to your medical queries with context-aware AI powered by GPT-4o
               </p>
             </div>
           </div>
-          <div className="flex gap-5 items-start group">
+          <div className="flex w-full flex-col items-start gap-4 group sm:flex-row">
             <div className="bg-primary-100 w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
               📊
             </div>
             <div>
               <h4 className="font-bold text-gray-800 mb-2 text-lg">Structured Data</h4>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed text-gray-600 md:text-base">
                 Medications parsed into searchable format with dosage, frequency, and duration tracking
               </p>
             </div>
           </div>
-          <div className="flex gap-5 items-start group">
+          <div className="flex w-full flex-col items-start gap-4 group sm:flex-row">
             <div className="bg-accent-100 w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
               🔒
             </div>
             <div>
               <h4 className="font-bold text-gray-800 mb-2 text-lg">Secure & Private</h4>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed text-gray-600 md:text-base">
                 Your health records are encrypted and protected with enterprise-grade security and privacy standards
               </p>
             </div>
@@ -180,11 +205,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 mt-10">
-        <ProjectObjectivesSection />
-      </div>
-
-      <div className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 mt-0">
+      <div className="mt-10 w-full">
         <AchievementsSection />
       </div>
     </div>

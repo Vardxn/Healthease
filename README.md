@@ -1,7 +1,7 @@
-# HealthEase — AI-Powered Healthcare Platform
+# HEALTHEASE — AI-Powered Healthcare Platform
 
 ## Overview
-HealthEase is an AI-powered healthcare platform that helps users digitize prescriptions, manage medications, and track treatment trends.
+HEALTHEASE is an AI-powered healthcare platform that helps users digitize prescriptions, manage medications, and track treatment trends.
 It combines OCR, reminders, analytics, and assistant features into one workflow for patients.
 The platform is built as a full-stack system with React, Node.js, MongoDB, and a FastAPI AI service.
 
@@ -156,3 +156,21 @@ health-ease/
 ├── package.json
 └── README.md
 ```
+
+## Development Progress
+
+- Latest sprint update: May 18, 2026 (Steps 2 and 3 completed)
+- Detailed engineering log and near-term roadmap: [PROGRESS.md](PROGRESS.md)
+
+### Sprint Highlights (May 18, 2026)
+
+- Step 2 AI features completed end-to-end:
+	- Symptom triage
+	- Drug conflict checks
+	- Dietary recommendations
+	- Mental health chatbot with crisis override
+- Step 3 wellness features completed end-to-end:
+	- Vitals logging and trend dashboards
+	- Family/dependent profile management
+	- Gamification and streak logic
+- Wellness route alignment finalized under /api/wellness.

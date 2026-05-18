@@ -85,27 +85,27 @@ export default function AchievementsSection() {
       aria-labelledby="achievements-title"
       className="w-full bg-[#111827] text-white py-20"
     >
-      <div className="mx-auto max-w-7xl px-6 sm:px-8">
+      <div className="mx-auto w-full max-w-7xl px-6 sm:px-8">
         <h1
           id="achievements-title"
-          className="text-4xl sm:text-5xl font-medium tracking-tight text-white"
+          className="text-2xl font-medium tracking-tight text-white md:text-3xl"
         >
           What We Have Achieved
         </h1>
 
-        <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid w-full grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {ACHIEVEMENTS.map((item) => {
             const Icon = item.icon;
             return (
               <article
                 key={item.textLabel}
-                className="flex flex-col items-start rounded-xl bg-[#1f2937] p-6 ring-1 ring-white/10"
+                className="flex w-full flex-col items-start gap-4 rounded-xl bg-[#1f2937] p-6 ring-1 ring-white/10 sm:flex-row"
               >
-                <div className="rounded-lg bg-white/5 p-3 ring-1 ring-white/10">
+                <div className="shrink-0 rounded-lg bg-white/5 p-3 ring-1 ring-white/10">
                   <Icon className="h-7 w-7 text-primary-200" />
                 </div>
 
-                <p className="mt-4 text-lg leading-relaxed text-gray-100">
+                <p className="text-sm leading-relaxed text-gray-100 md:text-base">
                   <span className="font-semibold text-white">{item.textLabel}</span>{' '}
                   <span className="text-gray-200">{item.text}</span>
                 </p>

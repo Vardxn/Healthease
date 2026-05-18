@@ -161,9 +161,22 @@ export const patientAPI = {
   getCareTimeline: (patientId) => api.get(`/patients/${patientId}/care-timeline`)
 };
 
+export const logVitals = (data) => api.post('/wellness/log-vitals', data);
+export const addDependent = (data) => api.post('/wellness/add-dependent', data);
+export const syncWearableData = (data) => api.post('/wellness/wearable-sync', data);
+export const getWellnessDashboard = (userId) => api.get(`/wellness/dashboard-summary/${userId}`);
+
 // Interaction API
 export const interactionsAPI = {
   check: (medications) => api.post('/interactions/check', { medications })
+};
+
+// Step 2 AI API
+export const aiAPI = {
+  symptomCheck: (symptoms) => api.post('/ai/symptom-check', { symptoms }),
+  verifyInteractions: (userId, newMedications) => api.post('/ai/verify-interactions', { userId, newMedications }),
+  nutritionPlan: (userId) => api.get(`/ai/nutrition-plan/${userId}`),
+  mentalHealthChat: (payload) => api.post('/ai/mental-health-chat', payload)
 };
 
 // Analytics API
