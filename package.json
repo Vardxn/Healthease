@@ -14,7 +14,7 @@
     "start:client": "cd client && npm start",
     "build:client": "cd client && npm run build",
     "start:prod": "npm run build:client && cd server && NODE_ENV=production npm start",
-    "vercel-build": "cd client && npm install && ./node_modules/.bin/vite build"
+    "vercel-build": "cd client && npm install --include=dev && ./node_modules/.bin/vite build"
   },
   "keywords": [
     "healthcare",
