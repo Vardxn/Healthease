@@ -27,7 +27,7 @@ exports.startReminderScheduler = () => {
   // Run every minute to check for reminders
   cron.schedule('* * * * *', async () => {
     try {
-      await checkAndSendReminders();
+      await exports.checkAndSendReminders();
     } catch (error) {
       console.error('Error in reminder scheduler:', error);
     }
@@ -47,7 +47,7 @@ exports.stopReminderScheduler = () => {
 /**
  * Check for pending reminders and send them
  */
-async function checkAndSendReminders() {
+exports.checkAndSendReminders = async function checkAndSendReminders() {
   try {
     const now = new Date();
     const currentTime = formatTime(now); // HH:mm format

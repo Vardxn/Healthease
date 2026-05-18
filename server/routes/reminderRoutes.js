@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Prescription = require('../models/Prescription');
 const axios = require('axios');
+const reminderScheduler = require('../services/reminderScheduler');
 
 /**
  * @route   POST /api/reminders/set
@@ -135,6 +136,27 @@ router.get('/:prescriptionId', auth, async (req, res) => {
       msg: 'Server error while fetching reminder',
       error: err.message
     });
+  }
+});
+
+/**
+ * @route   GET|POST /api/reminders/trigger
+ * @desc    Trigger reminder checks (for Vercel Cron)
+ * @access  Public with Secret
+ */
+router.all('/trigger', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ success: false, msg: 'Unauthorized cron trigger' });
+    }
+    
+    await reminderScheduler.checkAndSendReminders();
+    
+    res.json({ success: true, msg: 'Reminders triggered successfully' });
+  } catch (err) {
+    console.error('Error triggering reminders:', err.message);
+    res.status(500).json({ success: false, msg: 'Server error' });
   }
 });
 

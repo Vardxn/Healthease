@@ -26,8 +26,12 @@ const io = new Server(httpServer, {
   }
 });
 
-socketInstance.init(io);
-require('./socket/consultationSocket')(io);
+if (!process.env.VERCEL) {
+  socketInstance.init(io);
+  require('./socket/consultationSocket')(io);
+} else {
+  console.log('Skipping WebSocket initialization on Vercel');
+}
 
 // Middleware
 app.use(cors({
