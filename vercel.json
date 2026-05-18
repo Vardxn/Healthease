@@ -2,11 +2,5 @@
   "outputDirectory": "client/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "crons": [
-    {
-      "path": "/api/reminders/trigger",
-      "schedule": "0 0 * * *"
-    }
   ]
 }
