@@ -50,9 +50,18 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      const responseData = error.response?.data;
+      const message =
+        responseData?.msg ||
+        responseData?.message ||
+        responseData?.error ||
+        (error.response
+          ? 'Unable to sign in. Please check your credentials and try again.'
+          : 'Unable to reach the server. Please make sure the API is running.')
+
       return { 
         success: false, 
-        message: error.response?.data?.msg || 'Login failed' 
+        message 
       };
     }
   };

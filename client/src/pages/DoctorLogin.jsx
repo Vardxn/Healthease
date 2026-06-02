@@ -53,7 +53,15 @@ const DoctorLogin = () => {
 
       navigate('/doctor/dashboard');
     } catch (err) {
-      setError(err.response?.data?.msg || 'Doctor login failed');
+      const responseData = err.response?.data;
+      setError(
+        responseData?.msg ||
+          responseData?.message ||
+          responseData?.error ||
+          (err.response
+            ? 'Unable to sign in. Please check your doctor credentials and try again.'
+            : 'Unable to reach the server. Please make sure the API is running.')
+      );
       setLoading(false);
     }
   };

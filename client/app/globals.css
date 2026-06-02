@@ -1,0 +1,44 @@
+:root {
+  --color-brand: #0d9488;         /* teal-600 */
+  --color-brand-light: #99f6e4;   /* teal-200 */
+  --color-brand-dark: #0f766e;    /* teal-700 */
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-surface-3: #f1f5f9;
+  --color-border: rgba(0,0,0,0.08);
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-hover: 0 4px 24px rgba(13,148,136,0.12);
+}
+
+.dark {
+  --color-brand: #2dd4bf;
+  --color-brand-light: #0d9488;
+  --color-brand-dark: #5eead4;
+  --color-surface: #0f172a;
+  --color-surface-2: #1e293b;
+  --color-surface-3: #334155;
+  --color-border: rgba(255,255,255,0.08);
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  --shadow-hover: 0 4px 24px rgba(45,212,191,0.12);
+}
+
+/* Basic global resets and utility mappings to Tailwind tokens if needed */
+html, body {
+  height: 100%;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+a { color: inherit; }
+
+/* Example class to apply brand background */
+.bg-brand { background-color: var(--color-brand); }
+.text-brand { color: var(--color-brand); }
