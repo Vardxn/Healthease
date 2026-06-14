@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useNotifications } from '../context/NotificationContext';
 import {
   LayoutDashboard,
   FileText,
@@ -23,24 +24,42 @@ import {
   ChevronRight,
   Sparkles,
   Printer,
-  ShieldCheck
+  ShieldCheck,
+  Eye,
+  Trash
 } from 'lucide-react';
 
 export default function SidebarLayout({ children }) {
   const location = useLocation();
   const { logout, user } = useContext(AuthContext);
   const { theme, toggleTheme } = useTheme();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer open
   const [isCollapsed, setIsCollapsed] = useState(false); // Desktop/tablet collapsed status
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Prescription OCR Extracted', message: 'Lisinopril 10mg dosage parsed successfully.', read: false, category: 'prescription', time: '10m ago' },
-    { id: 2, title: 'Doctor Credentials Approved', message: 'Dr. Sarah Jenkins has been certified for teleconsultations.', read: false, category: 'doctor', time: '2h ago' },
-    { id: 3, title: 'High Compliance Reached', message: 'Excellent progress! Adherence ratio reached 94% this week.', read: true, category: 'insight', time: '1d ago' },
-    { id: 4, title: 'Vitals Warning logged', message: 'Heart rate reading logged higher than baseline (98 bpm).', read: false, category: 'vitals', time: '2d ago' }
-  ]);
 
   const isActive = (path) => location.pathname === path;
+
+  const getGroupedNotifications = () => {
+    const today = [];
+    const yesterday = [];
+    const earlier = [];
+    const now = Date.now();
+
+    notifications.forEach((n) => {
+      const diff = now - new Date(n.timestamp).getTime();
+      const diffHours = diff / (1000 * 60 * 60);
+      if (diffHours < 24) {
+        today.push(n);
+      } else if (diffHours < 48) {
+        yesterday.push(n);
+      } else {
+        earlier.push(n);
+      }
+    });
+
+    return { today, yesterday, earlier };
+  };
 
   // Auto-collapse on tablet viewport
   useEffect(() => {
@@ -99,7 +118,7 @@ export default function SidebarLayout({ children }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white dark:bg-card">
+    <div className="flex flex-col h-full bg-surface">
       {/* Brand Header */}
       <div className={`h-[72px] px-6 border-b border-border flex items-center justify-between`}>
         <div className="flex items-center gap-3 overflow-hidden">
@@ -116,7 +135,7 @@ export default function SidebarLayout({ children }) {
         {/* Toggle Collapse Button for Large Screens */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary transition-colors"
+          className="hidden md:flex p-1.5 rounded-lg hover:bg-surface-secondary text-text-secondary hover:text-text-primary transition-colors"
         >
           {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
@@ -142,8 +161,8 @@ export default function SidebarLayout({ children }) {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 rounded-[14px] transition-all duration-200 border-l-4 ${
                       active
-                        ? 'bg-[#E6FFFA] dark:bg-primary/15 text-primary border-primary font-semibold'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-slate-50 dark:hover:bg-slate-800 border-transparent'
+                        ? 'bg-[rgba(20,184,166,0.12)] text-primary-dark border-primary font-medium'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary border-transparent'
                     }`}
                   >
                     <Icon size={20} className="flex-shrink-0" />
@@ -180,8 +199,8 @@ export default function SidebarLayout({ children }) {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 rounded-[14px] transition-all duration-200 border-l-4 ${
                       active
-                        ? 'bg-[#E6FFFA] dark:bg-primary/15 text-primary border-primary font-semibold'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-slate-50 dark:hover:bg-slate-800 border-transparent'
+                        ? 'bg-[rgba(20,184,166,0.12)] text-primary-dark border-primary font-medium'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary border-transparent'
                     }`}
                   >
                     <Icon size={20} className="flex-shrink-0" />
@@ -202,14 +221,14 @@ export default function SidebarLayout({ children }) {
       </div>
 
       {/* Logout Footer */}
-      <div className="p-4 border-t border-border bg-slate-50/50 dark:bg-slate-900/30">
+      <div className="p-4 border-t border-border bg-surface-secondary/50">
         <div className="relative group">
           <button
             onClick={logout}
             className={`flex items-center gap-3 px-3 py-3 rounded-[14px] text-text-secondary hover:text-danger hover:bg-danger/5 transition-all duration-200 border-l-4 border-transparent w-full`}
           >
             <LogOut size={20} className="flex-shrink-0" />
-            {!isCollapsed && <span className="text-sm font-bold">Log Out</span>}
+            {!isCollapsed && <span className="text-sm font-medium">Log Out</span>}
           </button>
           
           {/* Tooltip for collapsed mode */}
@@ -227,8 +246,8 @@ export default function SidebarLayout({ children }) {
     <div className="flex h-screen bg-background font-sans overflow-hidden">
       {/* 1. Desktop Sidebar */}
       <aside
-        className={`hidden md:block bg-white dark:bg-card border-r border-border h-full flex-shrink-0 transition-all duration-300 ${
-          isCollapsed ? 'w-20' : 'w-[280px]'
+        className={`hidden md:block bg-surface border-r border-border h-full flex-shrink-0 transition-all duration-300 ${
+          isCollapsed ? 'w-20' : 'w-[260px]'
         }`}
       >
         <SidebarContent />
@@ -244,10 +263,10 @@ export default function SidebarLayout({ children }) {
           />
           
           {/* Drawer body */}
-          <div className="relative w-[280px] h-full bg-white dark:bg-card shadow-xl animate-slideUp flex flex-col">
+          <div className="relative w-[260px] h-full bg-surface shadow-xl animate-slideUp flex flex-col">
             <button
               onClick={() => setSidebarOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-lg bg-slate-50 border border-border text-text-secondary hover:text-text-primary transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-lg bg-surface-secondary border border-border text-text-secondary hover:text-text-primary transition-colors"
             >
               <X size={16} />
             </button>
@@ -259,12 +278,12 @@ export default function SidebarLayout({ children }) {
       {/* 3. Main View Area (Wrapper) */}
       <div className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Sticky Top Navigation Bar */}
-        <header className="h-[72px] sticky top-0 bg-white dark:bg-card border-b border-border px-6 flex items-center justify-between z-30 flex-shrink-0">
+        <header className="h-[72px] sticky top-0 bg-surface border-b border-border px-6 flex items-center justify-between z-30 flex-shrink-0">
           <div className="flex items-center gap-4">
             {/* Hamburger Trigger for Mobile */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 border border-border text-text-secondary hover:text-text-primary transition-colors md:hidden"
+              className="p-2 rounded-xl hover:bg-surface-secondary border border-border text-text-secondary hover:text-text-primary transition-colors md:hidden"
             >
               <Menu size={18} />
             </button>
@@ -277,12 +296,12 @@ export default function SidebarLayout({ children }) {
           {/* Search, Notifications, Avatar, Theme toggle */}
           <div className="flex items-center gap-4">
             {/* Search Bar - hidden on small screens */}
-            <div className="hidden sm:flex items-center relative w-60">
+            <div className="hidden sm:flex items-center relative w-60 max-w-[420px]">
               <Search size={16} className="absolute left-3 text-text-secondary" />
               <input
                 type="text"
                 placeholder="Search anything..."
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-border rounded-[14px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all duration-200 text-text-primary"
+                className="w-full bg-surface-secondary border border-border rounded-[14px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:bg-surface transition-all duration-200 text-text-primary"
               />
             </div>
 
@@ -290,11 +309,11 @@ export default function SidebarLayout({ children }) {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2.5 rounded-[14px] hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200 relative"
+                className="p-2.5 rounded-[14px] hover:bg-surface-secondary text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200 relative"
                 aria-label="View Notifications"
               >
                 <Bell size={18} />
-                {notifications.some(n => !n.read) && (
+                {unreadCount > 0 && (
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-danger ring-2 ring-white dark:ring-slate-900"></span>
                 )}
               </button>
@@ -302,37 +321,71 @@ export default function SidebarLayout({ children }) {
               {showNotifications && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-card border border-border shadow-lg rounded-custom z-50 p-4 space-y-3 animate-slideUp">
+                  <div className="absolute right-0 mt-2 w-80 sm:w-[400px] bg-surface border border-border shadow-lg rounded-custom z-50 p-4 space-y-3 animate-slideUp">
                     <div className="flex items-center justify-between border-b border-border pb-2">
-                      <span className="font-extrabold text-xs text-text-primary">Notifications</span>
-                      <button
-                        onClick={() => {
-                          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                        }}
-                        className="text-[10px] font-bold text-primary hover:underline bg-transparent border-0"
-                      >
-                        Mark all as read
-                      </button>
+                      <span className="font-extrabold text-xs text-text-primary">Notifications ({unreadCount})</span>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllAsRead}
+                          className="text-[10px] font-bold text-primary hover:underline bg-transparent border-0"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
                     </div>
 
-                    <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1 divide-y divide-border/50">
-                      {notifications.map(n => (
-                        <div
-                          key={n.id}
-                          onClick={() => {
-                            setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item));
-                          }}
-                          className={`pt-2.5 first:pt-0 flex flex-col gap-0.5 cursor-pointer group ${n.read ? 'opacity-65' : ''}`}
-                        >
-                          <div className="flex justify-between items-start gap-1">
-                            <span className={`font-bold text-[11px] group-hover:text-primary transition-colors ${n.read ? 'text-text-secondary' : 'text-text-primary'}`}>
-                              {n.title}
-                            </span>
-                            <span className="text-[9px] text-text-secondary/70 whitespace-nowrap">{n.time}</span>
-                          </div>
-                          <p className="text-[10px] text-text-secondary leading-relaxed">{n.message}</p>
+                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 divide-y divide-border/50">
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center text-text-secondary text-xs flex flex-col items-center justify-center gap-2">
+                          <Bell size={24} className="text-text-secondary/35" />
+                          <p className="font-bold">No notifications yet</p>
+                          <p className="text-[10px] opacity-75">New healthcare updates will appear here.</p>
                         </div>
-                      ))}
+                      ) : (
+                        Object.entries(getGroupedNotifications()).map(([groupName, items]) => {
+                          if (items.length === 0) return null;
+                          return (
+                            <div key={groupName} className="pt-2.5 first:pt-0">
+                              <p className="text-[9px] font-black text-text-secondary/65 uppercase tracking-wider mb-2">
+                                {groupName}
+                              </p>
+                              <div className="space-y-2">
+                                {items.map(n => (
+                                  <div
+                                    key={n.id}
+                                    onClick={() => {
+                                      markAsRead(n.id);
+                                    }}
+                                    className={`p-2 rounded-lg flex gap-2.5 cursor-pointer hover:bg-surface-secondary transition-colors relative ${n.read ? 'opacity-65' : ''}`}
+                                  >
+                                    {!n.read && (
+                                      <div className="absolute left-0 top-2 bottom-2 w-0.75 bg-primary rounded-r" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex justify-between items-start gap-1">
+                                        <p className={`font-bold text-[11px] truncate ${n.read ? 'text-text-secondary' : 'text-text-primary'}`}>
+                                          {n.title}
+                                        </p>
+                                      </div>
+                                      <p className="text-[10px] text-text-secondary mt-0.5 leading-relaxed">{n.message}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <div className="border-t border-border pt-2 text-center">
+                      <Link
+                        to="/notifications"
+                        onClick={() => setShowNotifications(false)}
+                        className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1"
+                      >
+                        View All Notifications <ChevronRight size={12} />
+                      </Link>
                     </div>
                   </div>
                 </>
@@ -342,7 +395,7 @@ export default function SidebarLayout({ children }) {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-[14px] hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200"
+              className="p-2.5 rounded-[14px] hover:bg-surface-secondary text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200"
               aria-label="Toggle Theme"
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}

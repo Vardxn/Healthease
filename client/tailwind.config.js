@@ -14,6 +14,7 @@ export default {
         primary: {
           DEFAULT: 'var(--primary)',
           hover: 'var(--primary-hover)',
+          dark: 'var(--primary-dark)',
           50: '#e6f7f5',
           100: '#c4ebe6',
           200: '#96d8cf',
@@ -29,6 +30,8 @@ export default {
         accent: 'var(--accent)',
         background: 'var(--background)',
         card: 'var(--card)',
+        surface: 'var(--surface)',
+        'surface-secondary': 'var(--surface-secondary)',
         'text-primary': 'var(--text-primary)',
         'text-secondary': 'var(--text-secondary)',
         border: 'var(--border)',

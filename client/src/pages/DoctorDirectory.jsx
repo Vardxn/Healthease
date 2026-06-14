@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Phone, Search, Star, Video, Award, Globe, ShieldCheck, ChevronRight, Activity } from 'lucide-react';
+import { MessageSquare, Phone, Search, Star, Video, Award, Globe, ShieldCheck, ChevronRight, Activity, Loader2 } from 'lucide-react';
 import BookingModal from '../components/BookingModal';
 import { AuthContext } from '../context/AuthContext';
 import { doctorAPI } from '../services/api';
@@ -188,13 +188,13 @@ const DoctorDirectory = () => {
           <p className="text-text-secondary text-sm">Book consultations with verified healthcare professionals online.</p>
         </div>
         
-        <div className="flex gap-4 text-xs font-bold text-text-secondary">
-          <div className="bg-slate-50 border border-border px-4 py-2 rounded-custom text-center">
-            <span className="text-text-primary text-base font-black block">{doctors.length}</span>
+        <div className="flex gap-3 text-xs font-semibold text-text-secondary">
+          <div className="bg-surface-secondary border border-border px-4 py-2 rounded-custom text-center">
+            <span className="text-text-primary text-lg font-bold block leading-none mb-1">{doctors.length}</span>
             Total Specialists
           </div>
-          <div className="bg-green-50/50 border border-green-200 px-4 py-2 rounded-custom text-center text-green-700">
-            <span className="text-green-600 text-base font-black block">{onlineCount}</span>
+          <div className="bg-surface-secondary border border-border px-4 py-2 rounded-custom text-center">
+            <span className="text-success text-lg font-bold block leading-none mb-1">{onlineCount}</span>
             Online Now
           </div>
         </div>
@@ -209,7 +209,7 @@ const DoctorDirectory = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search doctors, specialties, symptoms..."
-            className="w-full pl-11 pr-4 py-3 bg-slate-50/70 border border-border rounded-[14px] text-sm focus:outline-none focus:border-primary focus:bg-white transition-all duration-200"
+            className="w-full pl-11 pr-4 py-3 bg-surface-secondary border border-border rounded-[14px] text-sm focus:outline-none focus:border-primary focus:bg-surface transition-all duration-200 text-text-primary"
           />
         </div>
 
@@ -225,8 +225,8 @@ const DoctorDirectory = () => {
                   onClick={() => setSpecialization(pill)}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-200 border ${
                     specialization === pill
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-white text-text-secondary hover:border-text-secondary/50'
+                      ? 'border-primary bg-primary text-white hover:bg-primary-dark'
+                      : 'border-border bg-surface-secondary text-text-secondary hover:border-text-secondary/50'
                   }`}
                 >
                   {pill}
@@ -252,8 +252,8 @@ const DoctorDirectory = () => {
                       onClick={() => setConsultationType(type)}
                       className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-200 border ${
                         isActive
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border bg-white text-text-secondary hover:border-text-secondary/50'
+                          ? 'border-primary bg-primary text-white hover:bg-primary-dark'
+                          : 'border-border bg-surface-secondary text-text-secondary hover:border-text-secondary/50'
                       }`}
                     >
                       {Icon ? <Icon size={12} /> : null}
@@ -274,8 +274,8 @@ const DoctorDirectory = () => {
                     onClick={() => setLanguage(pill)}
                     className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-200 border ${
                       language === pill
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-white text-text-secondary hover:border-text-secondary/50'
+                        ? 'border-primary bg-primary text-white hover:bg-primary-dark'
+                        : 'border-border bg-surface-secondary text-text-secondary hover:border-text-secondary/50'
                     }`}
                   >
                     {pill}
@@ -299,7 +299,7 @@ const DoctorDirectory = () => {
                 step="50"
                 value={maxFee}
                 onChange={(e) => setMaxFee(Number(e.target.value))}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 accent-primary"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-surface-secondary accent-primary"
               />
             </div>
 
@@ -317,7 +317,7 @@ const DoctorDirectory = () => {
       </Card>
 
       {error && (
-        <div className="bg-red-50 border border-danger/30 text-danger p-4 rounded-custom text-sm font-semibold">
+        <div className="bg-danger/10 border border-danger/30 text-danger p-4 rounded-custom text-sm font-semibold">
           {error}
         </div>
       )}
@@ -344,9 +344,9 @@ const DoctorDirectory = () => {
               return (
                 <Card
                   key={doctor._id}
-                  className="hover:translate-y-[-4px] transition-custom border border-border overflow-hidden flex flex-col justify-between"
+                  className="hover:shadow-lg hover:-translate-y-1 transition-custom border border-border overflow-hidden flex flex-col justify-between"
                 >
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col h-full space-y-4">
                     {/* Top Row: Avatar & status */}
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-4">
@@ -361,59 +361,37 @@ const DoctorDirectory = () => {
                           <p className="text-xs text-secondary font-bold mt-1 uppercase tracking-wider">
                             {doctor.specialization || 'General Medicine'}
                           </p>
-                          <div className="flex items-center gap-1.5 text-xs text-text-secondary mt-1">
-                            <Award size={13} />
-                            <span>{doctor.experience || 0} years experience</span>
-                          </div>
+                          <p className="text-xs text-text-secondary mt-1">
+                            {doctor.experience || 0} years experience
+                          </p>
                         </div>
                       </div>
 
                       {/* Online status indicator */}
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-full border ${
                         isOnline
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-slate-50 text-text-secondary border-border'
+                          ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                          : 'bg-surface-secondary text-text-secondary border-border'
                       }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-600 animate-pulse' : 'bg-slate-400'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-600' : 'bg-slate-400'}`} />
                         {isOnline ? 'Online' : 'Offline'}
                       </span>
                     </div>
 
                     {/* Middle details */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-4 border-t border-border text-xs text-text-secondary">
-                      <div className="space-y-1">
-                        <p className="font-bold uppercase tracking-wider text-[10px]">Languages</p>
-                        <p className="text-text-primary font-medium flex items-center gap-1">
-                          <Globe size={12} className="text-text-secondary" />
+                    <div className="space-y-2 text-xs text-text-secondary pt-2">
+                      <div className="flex justify-between">
+                        <span>Languages</span>
+                        <span className="font-bold text-text-primary truncate max-w-[200px]">
                           {Array.isArray(doctor.languages) && doctor.languages.length
                             ? doctor.languages.join(', ')
                             : 'English, Hindi'}
-                        </p>
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="font-bold uppercase tracking-wider text-[10px]">Consultation Channels</p>
-                        <div className="flex flex-wrap gap-1.5 mt-0.5">
-                          {(doctor.consultationType || []).map((type) => {
-                            const config = consultationTypeConfig[type];
-                            if (!config) return null;
-                            const Icon = config.Icon;
-                            return (
-                              <span
-                                key={type}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-border bg-slate-50 font-bold"
-                              >
-                                <Icon size={10} />
-                                <span className="text-[9px] uppercase">{config.label}</span>
-                              </span>
-                            );
-                          })}
-                        </div>
+                        </span>
                       </div>
                     </div>
 
                     {/* Bottom Details (Fee & reviews) */}
-                    <div className="flex items-center justify-between gap-4 mt-6 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between gap-4 pt-2">
                       <div>
                         <span className="text-[10px] font-bold text-text-secondary uppercase">Consultation Fee</span>
                         <p className="text-base font-black text-primary">
@@ -435,7 +413,7 @@ const DoctorDirectory = () => {
                   <button
                     type="button"
                     onClick={() => openBooking(doctor)}
-                    className="w-full bg-slate-50 hover:bg-primary/5 hover:text-primary border-t border-border py-4 font-bold text-sm text-text-primary flex items-center justify-center gap-1 transition-all duration-200 cursor-pointer"
+                    className="w-full bg-primary hover:bg-primary-dark text-white py-3.5 font-bold text-sm flex items-center justify-center gap-1 transition-all duration-200 cursor-pointer"
                   >
                     Book Consultation <ChevronRight size={16} />
                   </button>

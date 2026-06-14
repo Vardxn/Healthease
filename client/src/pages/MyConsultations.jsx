@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { consultationAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import { calculateConsultationScore } from '../utils/healthScoreEngine';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -127,6 +128,10 @@ const MyConsultations = () => {
       else if (c.status === 'cancelled') counts.cancelled++;
     });
     return counts;
+  }, [consultations]);
+
+  const consultationPoints = useMemo(() => {
+    return calculateConsultationScore(consultations);
   }, [consultations]);
 
   // Group by Month (for timeline view)
@@ -330,7 +335,11 @@ const MyConsultations = () => {
             </button>
           </div>
 
-          <div className="flex gap-3 text-xs font-bold text-text-secondary">
+          <div className="flex flex-wrap gap-3 text-xs font-bold text-text-secondary items-center">
+            <div className="bg-primary/10 border border-primary/20 px-3.5 py-1.5 rounded-custom text-center">
+              <span className="text-primary text-sm font-black block">{consultationPoints} / 20</span>
+              Compliance Points
+            </div>
             <div className="bg-slate-50 border border-border px-3.5 py-1.5 rounded-custom text-center">
               <span className="text-text-primary text-sm font-black block">{stats.upcoming}</span>
               Upcoming

@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { 
@@ -17,7 +17,7 @@ import {
 import Button from '../components/ui/Button';
 
 const Register = () => {
-  const { register, isAuthenticated } = useContext(AuthContext);
+  const { register, isAuthenticated, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -29,10 +29,11 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  if (isAuthenticated) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate('/');
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e) => {
     setFormData({

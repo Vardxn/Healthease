@@ -2,9 +2,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { useContext } from 'react';
 import SidebarLayout from './components/SidebarLayout';
-import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -25,6 +25,8 @@ import MedicineTracker from './pages/MedicineTracker';
 import ReminderHistory from './pages/ReminderHistory';
 import SymptomChecker from './pages/SymptomChecker';
 import VitalsDashboard from './pages/VitalsDashboard';
+import Notifications from './pages/Notifications';
+import HealthScore from './pages/HealthScore';
 
 // Premium SaaS Features
 import HealthAssistant from './pages/HealthAssistant';
@@ -33,7 +35,15 @@ import AdminDashboard from './pages/AdminDashboard';
 import { WebSocketProvider } from './context/WebSocketContext';
 
 function AppContent() {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-100">
+        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -44,7 +54,7 @@ function AppContent() {
       <Route path="/doctor/register" element={<DoctorRegister />} />
 
       {/* Landing Page */}
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
 
       {/* Protected Routes - With Sidebar */}
       <Route
@@ -111,6 +121,14 @@ function AppContent() {
         path="/consultation/:id/notes"
         element={user ? <SidebarLayout><DoctorConsultationNotes /></SidebarLayout> : <Navigate to="/login" replace />}
       />
+      <Route
+        path="/notifications"
+        element={user ? <SidebarLayout><Notifications /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/health-score"
+        element={user ? <SidebarLayout><HealthScore /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
 
       {/* New SaaS Portfolio Routes */}
       <Route
@@ -135,13 +153,15 @@ function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
-        <WebSocketProvider>
-          <AuthProvider>
-            <Router basename={import.meta.env.BASE_URL}>
-              <AppContent />
-            </Router>
-          </AuthProvider>
-        </WebSocketProvider>
+        <NotificationProvider>
+          <WebSocketProvider>
+            <AuthProvider>
+              <Router basename={import.meta.env.BASE_URL}>
+                <AppContent />
+              </Router>
+            </AuthProvider>
+          </WebSocketProvider>
+        </NotificationProvider>
       </ToastProvider>
     </ThemeProvider>
   );

@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import {
   prescriptionAPI,
   medicineAPI,
@@ -23,13 +24,16 @@ import {
   ShieldCheck,
   CheckCircle2,
   CalendarCheck2,
-  FileCheck
+  FileCheck,
+  Bell
 } from 'lucide-react';
 
 import HealthScoreModal from '../components/HealthScoreModal';
+import { calculateHealthScore } from '../utils/healthScoreEngine';
 
 const Dashboard = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
+  const { notifications, addNotification } = useNotifications();
   const navigate = useNavigate();
   const [isScoreOpen, setIsScoreOpen] = useState(false);
 
@@ -127,13 +131,27 @@ const Dashboard = () => {
   }, [consultations]);
 
   // Dynamic adherence/health score calculation
-  const healthScore = useMemo(() => {
-    if (medicines.length === 0) return 88; // Default good base score
-    // base calculation on active medicines and refills needed
-    const refillDeduction = refills.length * 5;
-    const score = 95 - refillDeduction;
-    return Math.max(50, Math.min(100, score));
-  }, [medicines, refills]);
+  const healthData = useMemo(() => {
+    return calculateHealthScore(medicines, vitals, consultations);
+  }, [medicines, vitals, consultations]);
+
+  const healthScore = healthData.score;
+
+  useEffect(() => {
+    if (loading) return;
+    const lastScore = localStorage.getItem('last_health_score');
+    const currentScore = healthData.score;
+    if (lastScore && parseInt(lastScore, 10) !== currentScore) {
+      const diff = currentScore - parseInt(lastScore, 10);
+      const direction = diff > 0 ? 'improved' : 'decreased';
+      addNotification(
+        `Health Score Updated`,
+        `Your Health Score has ${direction} to ${currentScore} (${healthData.status}).`,
+        'ai'
+      );
+    }
+    localStorage.setItem('last_health_score', currentScore.toString());
+  }, [healthData.score, healthData.status, loading]);
 
   // Format Helper
   const formatDateTime = (isoString) => {
@@ -184,15 +202,15 @@ const Dashboard = () => {
 
         {/* Health Score Card */}
         <Card 
-          onClick={() => setIsScoreOpen(true)}
-          className="flex flex-col justify-between p-8 text-center relative overflow-hidden cursor-pointer hover:shadow-hover hover:scale-[1.01] transition-all duration-200"
+          onClick={() => navigate('/health-score')}
+          className="flex flex-col justify-between p-6 text-center relative overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
         >
           <div className="space-y-2">
             <p className="text-text-secondary text-sm font-bold uppercase tracking-wider">Health Score</p>
-            <p className="text-xs text-text-secondary">Based on medication adherence and health indicators</p>
+            <p className="text-xs text-text-secondary">Based on adherence and diagnostic indicators</p>
           </div>
 
-          <div className="my-4 relative flex items-center justify-center">
+          <div className="my-3 relative flex items-center justify-center">
             {/* Score Display */}
             <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-8 border-slate-100">
               <div className="absolute inset-0 rounded-full border-8 border-primary border-t-transparent animate-pulse-slow"></div>
@@ -200,16 +218,22 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-success bg-success/10 px-3 py-1.5 rounded-full mx-auto">
-            <ShieldCheck size={14} />
-            Excellent Status
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+              Status: {healthData.status}
+            </div>
+            {healthData.recommendations?.[0] && (
+              <p className="text-[10px] text-text-secondary truncate max-w-[200px] mx-auto">
+                💡 {healthData.recommendations[0].text}
+              </p>
+            )}
           </div>
         </Card>
       </div>
 
       {/* SECTION 2: Analytics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <Card className="flex items-center gap-4 p-5 hover:translate-y-[-4px] transition-custom">
+        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
           <div className="w-12 h-12 rounded-[14px] bg-primary/10 text-primary flex items-center justify-center">
             <FileCheck size={22} />
           </div>
@@ -219,7 +243,7 @@ const Dashboard = () => {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-5 hover:translate-y-[-4px] transition-custom">
+        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
           <div className="w-12 h-12 rounded-[14px] bg-secondary/10 text-secondary flex items-center justify-center">
             <CheckCircle2 size={22} />
           </div>
@@ -229,7 +253,7 @@ const Dashboard = () => {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-5 hover:translate-y-[-4px] transition-custom">
+        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
           <div className="w-12 h-12 rounded-[14px] bg-accent/10 text-accent flex items-center justify-center">
             <Calendar size={22} />
           </div>
@@ -239,7 +263,7 @@ const Dashboard = () => {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-5 hover:translate-y-[-4px] transition-custom">
+        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
           <div className="w-12 h-12 rounded-[14px] bg-[#6366F1]/10 text-[#6366F1] flex items-center justify-center">
             <CalendarCheck2 size={22} />
           </div>
@@ -282,13 +306,13 @@ const Dashboard = () => {
                   if (status === 'cancelled') statusVariant = 'danger';
 
                   return (
-                    <div key={item._id || item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 border border-border rounded-custom gap-3">
+                    <div key={item._id || item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface-secondary border border-border rounded-custom gap-3">
                       <div>
                         <p className="font-bold text-text-primary text-sm">Dr. {item.doctorId?.name || item.doctorName || 'Doctor'}</p>
                         <p className="text-xs text-text-secondary mt-0.5">{item.doctorId?.specialization || 'General Medicine'}</p>
                         <div className="flex items-center gap-3 mt-2 text-xs text-text-secondary">
                           <span className="flex items-center gap-1 font-medium"><Clock size={12} /> {schedule.date} @ {schedule.time}</span>
-                          <span className="capitalize px-2 py-0.5 bg-slate-200/50 rounded-full font-semibold">{item.consultationType || 'video'}</span>
+                          <span className="capitalize px-2 py-0.5 bg-surface border border-border rounded-full font-semibold">{item.consultationType || 'video'}</span>
                         </div>
                       </div>
                       <div className="flex sm:flex-col items-start sm:items-end justify-between sm:justify-center gap-2">
@@ -305,14 +329,14 @@ const Dashboard = () => {
               </div>
             )}
           </Card>
-
+ 
           {/* SECTION 3: Recent Activity */}
           <Card className="p-6">
             <h3 className="font-bold text-text-primary text-lg mb-4 border-b border-border pb-3 flex items-center gap-2">
               <Activity size={18} className="text-primary" />
               Recent Health Activity
             </h3>
-
+ 
             <div className="relative border-l border-border ml-3.5 space-y-6 py-2">
               {/* Prescription Activity */}
               {prescriptions.length > 0 && (
@@ -331,7 +355,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
-
+ 
               {/* Consultation Activity */}
               {consultations.length > 0 && (
                 <div className="relative pl-6">
@@ -349,7 +373,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
-
+ 
               {/* Vitals Activity */}
               {vitals.length > 0 && (
                 <div className="relative pl-6">
@@ -367,7 +391,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
-
+ 
               {/* Fallback when no activities */}
               {prescriptions.length === 0 && consultations.length === 0 && vitals.length === 0 && (
                 <p className="text-sm text-text-secondary text-center py-2">No recent health activity logs yet.</p>
@@ -375,7 +399,7 @@ const Dashboard = () => {
             </div>
           </Card>
         </div>
-
+ 
         {/* RIGHT COLUMN */}
         <div className="space-y-6">
           {/* SECTION 5: Medicine Reminders */}
@@ -384,7 +408,7 @@ const Dashboard = () => {
               <Clock size={18} className="text-primary" />
               Medicine Reminders
             </h3>
-
+ 
             {/* Next Reminders List */}
             <div className="space-y-3">
               <p className="text-xs font-bold text-text-secondary uppercase">Today's Schedule</p>
@@ -392,7 +416,7 @@ const Dashboard = () => {
                 <p className="text-xs text-text-secondary py-1">No medication scheduled for today.</p>
               ) : (
                 reminders.slice(0, 3).map((rem) => (
-                  <div key={rem._id} className="flex items-center justify-between p-2.5 bg-slate-50 border border-border rounded-[14px]">
+                  <div key={rem._id} className="flex items-center justify-between p-2.5 bg-surface-secondary border border-border rounded-[14px]">
                     <div className="overflow-hidden">
                       <p className="font-bold text-text-primary text-xs truncate">{rem.medicineId?.name || 'Medicine'}</p>
                       <p className="text-[11px] text-text-secondary">{rem.medicineId?.dosage} • {rem.reminderTime}</p>
@@ -404,7 +428,7 @@ const Dashboard = () => {
                 ))
               )}
             </div>
-
+ 
             {/* Refill alerts */}
             <div className="mt-5 pt-4 border-t border-border space-y-3">
               <p className="text-xs font-bold text-text-secondary uppercase flex items-center gap-1">
@@ -415,10 +439,10 @@ const Dashboard = () => {
                 <p className="text-xs text-text-secondary py-1">All medications are adequately stocked.</p>
               ) : (
                 refills.slice(0, 2).map((med) => (
-                  <div key={med._id} className="p-2.5 bg-amber-50 border border-amber-200 rounded-[14px] flex justify-between items-center text-xs">
+                  <div key={med._id} className="p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-[14px] flex justify-between items-center text-xs">
                     <div>
-                      <p className="font-bold text-amber-900">{med.name}</p>
-                      <p className="text-amber-700 text-[10px]">Only {med.quantityRemaining ?? 0} doses left</p>
+                      <p className="font-bold text-amber-900 dark:text-amber-200">{med.name}</p>
+                      <p className="text-amber-700 dark:text-amber-400 text-[10px]">Only {med.quantityRemaining ?? 0} doses left</p>
                     </div>
                     <Link to="/medicine-tracker">
                       <span className="text-[10px] font-bold text-primary hover:underline">Manage</span>
@@ -427,6 +451,39 @@ const Dashboard = () => {
                 ))
               )}
             </div>
+          </Card>
+
+          {/* SECTION 5.5: Recent Notifications */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4 border-b border-border pb-3">
+              <h3 className="font-bold text-text-primary text-lg flex items-center gap-2">
+                <Bell size={18} className="text-primary" />
+                Recent Alerts
+              </h3>
+              <Link to="/notifications" className="text-xs font-bold text-primary hover:underline">
+                View All
+              </Link>
+            </div>
+            {notifications.length === 0 ? (
+              <p className="text-xs text-text-secondary py-2">No notifications found.</p>
+            ) : (
+              <div className="space-y-3">
+                {notifications.slice(0, 5).map((notif) => (
+                  <div
+                    key={notif.id}
+                    className={`p-3 border rounded-custom flex flex-col gap-1 transition-all ${
+                      notif.read ? 'border-border bg-surface-secondary/40 opacity-75' : 'border-primary/10 bg-surface'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <p className={`font-bold text-xs ${notif.read ? 'text-text-secondary' : 'text-text-primary'}`}>{notif.title}</p>
+                      {!notif.read && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                    </div>
+                    <p className="text-[11px] text-text-secondary leading-relaxed truncate">{notif.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* SECTION 6: Quick Actions */}
@@ -438,34 +495,34 @@ const Dashboard = () => {
             
             <div className="grid grid-cols-2 gap-3">
               <Link to="/upload">
-                <div className="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
+                <div className="flex flex-col items-center justify-center p-4 bg-surface-secondary hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
                   <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                     <Upload size={16} />
                   </div>
                   <span className="text-xs font-bold text-text-primary">Upload Record</span>
                 </div>
               </Link>
-
+ 
               <Link to="/doctors">
-                <div className="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
+                <div className="flex flex-col items-center justify-center p-4 bg-surface-secondary hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
                   <div className="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
                     <Calendar size={16} />
                   </div>
                   <span className="text-xs font-bold text-text-primary">Book Doctor</span>
                 </div>
               </Link>
-
+ 
               <Link to="/vitals">
-                <div className="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
+                <div className="flex flex-col items-center justify-center p-4 bg-surface-secondary hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
                   <div className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center">
                     <Activity size={16} />
                   </div>
                   <span className="text-xs font-bold text-text-primary">Log Vitals</span>
                 </div>
               </Link>
-
+ 
               <Link to="/profile">
-                <div className="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
+                <div className="flex flex-col items-center justify-center p-4 bg-surface-secondary hover:bg-primary/5 border border-border hover:border-primary/20 rounded-[14px] text-center gap-2 transition-custom cursor-pointer h-full">
                   <div className="w-8 h-8 rounded-full bg-[#6366F1]/10 text-[#6366F1] flex items-center justify-center">
                     <User size={16} />
                   </div>

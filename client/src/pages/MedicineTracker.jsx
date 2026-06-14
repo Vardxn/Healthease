@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { medicineAPI } from '../services/api';
+import { calculateMedicineScore } from '../utils/healthScoreEngine';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -159,6 +160,10 @@ const MedicineTracker = () => {
     if (total === 0) return 92; // Default starting adherence
     return Math.round((stats.taken / total) * 100);
   }, [stats]);
+
+  const medicinePoints = useMemo(() => {
+    return calculateMedicineScore(medicines);
+  }, [medicines]);
 
   const resetForm = () => {
     setForm(initialForm);
@@ -338,24 +343,27 @@ const MedicineTracker = () => {
               <span className="text-3xl font-extrabold">{complianceScore}%</span>
             </div>
             <span className="text-[10px] uppercase font-bold tracking-wider mt-2.5 opacity-80">Compliance Ratio</span>
+            <span className="text-xs font-bold mt-1.5 bg-white/20 px-2.5 py-0.5 rounded-full text-center">
+              Medication Adherence: {medicinePoints} / 25 points
+            </span>
           </div>
         </div>
 
         {/* Stats Grid */}
         <Card className="p-6 grid grid-cols-2 gap-4">
-          <div className="bg-slate-50 border border-border p-3 rounded-custom text-center">
+          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
             <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Today's Doses</span>
             <span className="text-xl font-black text-text-primary mt-1 block">{stats.total || reminders.length}</span>
           </div>
-          <div className="bg-slate-50 border border-border p-3 rounded-custom text-center">
+          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
             <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Completed</span>
             <span className="text-xl font-black text-success mt-1 block">{stats.taken || 0}</span>
           </div>
-          <div className="bg-slate-50 border border-border p-3 rounded-custom text-center">
+          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
             <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Missed</span>
             <span className="text-xl font-black text-danger mt-1 block">{stats.missed || 0}</span>
           </div>
-          <div className="bg-slate-50 border border-border p-3 rounded-custom text-center">
+          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
             <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Pending</span>
             <span className="text-xl font-black text-accent mt-1 block">{stats.pending || 0}</span>
           </div>
@@ -363,7 +371,7 @@ const MedicineTracker = () => {
       </div>
 
       {(error || success) && (
-        <div className={`p-4 rounded-custom text-sm font-semibold border ${error ? 'bg-red-50 border-danger/30 text-danger' : 'bg-green-50 border-success/30 text-green-700'}`}>
+        <div className={`p-4 rounded-custom text-sm font-semibold border ${error ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-success/10 border-success/30 text-success'}`}>
           {error || success}
         </div>
       )}
@@ -375,12 +383,12 @@ const MedicineTracker = () => {
         <div className="xl:col-span-2 space-y-4">
           {/* Reusable Form */}
           {showForm && (
-            <Card className="p-6 border-2 border-primary/20 bg-white/95 space-y-4 animate-slideUp">
+            <Card className="p-6 border border-border bg-surface/95 space-y-4 animate-slideUp">
               <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
                 <h3 className="font-bold text-text-primary text-base">
                   {editingId ? 'Modify Medication Record' : 'Log New Medication'}
                 </h3>
-                <button type="button" onClick={resetForm} className="p-1 rounded-full hover:bg-slate-100 text-text-secondary">
+                <button type="button" onClick={resetForm} className="p-1 rounded-full hover:bg-surface-secondary text-text-secondary">
                   <X size={16} />
                 </button>
               </div>
@@ -395,7 +403,7 @@ const MedicineTracker = () => {
                     <select
                       value={form.frequency}
                       onChange={(e) => handleChange('frequency', e.target.value)}
-                      className="px-3.5 py-2.5 border border-border bg-white rounded-[14px] text-sm focus:outline-none focus:border-primary"
+                      className="px-3.5 py-2.5 border border-border bg-surface text-text-primary rounded-[14px] text-sm focus:outline-none focus:border-primary"
                     >
                       {frequencyOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
@@ -457,27 +465,27 @@ const MedicineTracker = () => {
                 const progressRatio = Math.round((Math.random() * 40) + 60); // Mock progress percent
                 
                 return (
-                  <Card key={medicine._id} className="hover:translate-y-[-2px] transition-custom border border-border p-5">
+                  <Card key={medicine._id} className="hover:shadow-lg hover:-translate-y-1 transition-custom border border-border p-6">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2.5 flex-wrap">
-                          <h3 className="text-lg font-bold text-text-primary leading-tight">{medicine.name}</h3>
+                           <h3 className="text-lg font-bold text-text-primary leading-tight">{medicine.name}</h3>
                           <Badge variant={statusBadgeVariants[medicine.status] || 'secondary'}>{medicine.status}</Badge>
                         </div>
                         
                         <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-text-secondary font-semibold">
-                          <span className="flex items-center gap-1 bg-slate-50 border border-border px-2.5 py-0.5 rounded-full"><Pill size={12} /> {medicine.dosage}</span>
-                          <span className="flex items-center gap-1 bg-slate-50 border border-border px-2.5 py-0.5 rounded-full"><Clock3 size={12} /> {medicine.reminderTime}</span>
-                          <span className="flex items-center gap-1 bg-slate-50 border border-border px-2.5 py-0.5 rounded-full"><CalendarDays size={12} /> Ends: {formatDate(medicine.endDate)}</span>
+                          <span className="flex items-center gap-1 bg-surface-secondary border border-border px-2.5 py-0.5 rounded-full"><Pill size={12} /> {medicine.dosage}</span>
+                          <span className="flex items-center gap-1 bg-surface-secondary border border-border px-2.5 py-0.5 rounded-full"><Clock3 size={12} /> {medicine.reminderTime}</span>
+                          <span className="flex items-center gap-1 bg-surface-secondary border border-border px-2.5 py-0.5 rounded-full"><CalendarDays size={12} /> Ends: {formatDate(medicine.endDate)}</span>
                         </div>
                       </div>
 
                       {/* Action buttons inside card */}
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <button onClick={() => startEdit(medicine)} className="p-2 hover:bg-slate-100 rounded-custom text-text-secondary hover:text-text-primary transition-colors" title="Edit"><PencilLine size={15} /></button>
-                        <button onClick={() => handlePauseToggle(medicine)} className="p-2 hover:bg-slate-100 rounded-custom text-text-secondary hover:text-warning transition-colors" title={medicine.status === 'paused' ? 'Resume' : 'Pause'}><PauseCircle size={15} /></button>
-                        <button onClick={() => handleComplete(medicine._id)} className="p-2 hover:bg-slate-100 rounded-custom text-text-secondary hover:text-success transition-colors" title="Complete"><CheckCircle2 size={15} /></button>
-                        <button onClick={() => handleDelete(medicine._id)} className="p-2 hover:bg-red-50 rounded-custom text-text-secondary hover:text-danger transition-colors" title="Delete"><Trash2 size={15} /></button>
+                        <button onClick={() => startEdit(medicine)} className="p-2 hover:bg-surface-secondary rounded-custom text-text-secondary hover:text-text-primary transition-colors" title="Edit"><PencilLine size={15} /></button>
+                        <button onClick={() => handlePauseToggle(medicine)} className="p-2 hover:bg-surface-secondary rounded-custom text-text-secondary hover:text-warning transition-colors" title={medicine.status === 'paused' ? 'Resume' : 'Pause'}><PauseCircle size={15} /></button>
+                        <button onClick={() => handleComplete(medicine._id)} className="p-2 hover:bg-surface-secondary rounded-custom text-text-secondary hover:text-success transition-colors" title="Complete"><CheckCircle2 size={15} /></button>
+                        <button onClick={() => handleDelete(medicine._id)} className="p-2 hover:bg-danger/10 rounded-custom text-text-secondary hover:text-danger transition-colors" title="Delete"><Trash2 size={15} /></button>
                       </div>
                     </div>
 
@@ -488,7 +496,7 @@ const MedicineTracker = () => {
                           <span>Adherence Progress</span>
                           <span className="text-text-primary font-bold">{progressRatio}%</span>
                         </div>
-                        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-full bg-surface-secondary rounded-full h-1.5 overflow-hidden">
                           <div className="bg-primary h-1.5 rounded-full" style={{ width: `${progressRatio}%` }} />
                         </div>
                       </div>
@@ -509,7 +517,7 @@ const MedicineTracker = () => {
                     </div>
 
                     {medicine.instructions && (
-                      <p className="text-xs text-[#0F766E] bg-[#E6FFFA] border border-primary/20 rounded-custom p-3 mt-4">
+                      <p className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-custom p-3 mt-4">
                         <strong>Guidelines:</strong> {medicine.instructions}
                       </p>
                     )}
@@ -517,7 +525,7 @@ const MedicineTracker = () => {
                     {medicine.sideEffects?.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/50">
                         {medicine.sideEffects.map((eff) => (
-                          <span key={eff} className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/50 px-2 py-0.5 rounded-full">
+                          <span key={eff} className="text-[10px] font-bold text-danger bg-danger/10 border border-danger/20 px-2 py-0.5 rounded-full">
                             {eff}
                           </span>
                         ))}
@@ -543,7 +551,7 @@ const MedicineTracker = () => {
             ) : (
               <div className="space-y-3">
                 {reminders.map((rem) => (
-                  <div key={rem._id} className="p-3 border border-border bg-slate-50 rounded-custom flex justify-between items-start gap-3">
+                  <div key={rem._id} className="p-3 border border-border bg-surface-secondary rounded-custom flex justify-between items-start gap-3">
                     <div className="overflow-hidden">
                       <p className="font-bold text-text-primary text-xs truncate">{rem.medicineId?.name || 'Medication'}</p>
                       <p className="text-[10px] text-text-secondary mt-0.5">{rem.medicineId?.dosage} • {rem.reminderTime}</p>
@@ -556,14 +564,14 @@ const MedicineTracker = () => {
                         <div className="flex gap-1.5">
                           <button
                             onClick={() => handleMarkTaken(rem._id)}
-                            className="p-1 bg-white hover:bg-green-50 border border-border hover:border-success/30 text-success rounded-lg"
+                            className="p-1 bg-surface hover:bg-success/10 border border-border hover:border-success/30 text-success rounded-lg"
                             title="Mark Taken"
                           >
                             <CheckCircle2 size={13} />
                           </button>
                           <button
                             onClick={() => handleMarkSkipped(rem._id)}
-                            className="p-1 bg-white hover:bg-amber-50 border border-border hover:border-warning/30 text-warning rounded-lg"
+                            className="p-1 bg-surface hover:bg-warning/10 border border-border hover:border-warning/30 text-warning rounded-lg"
                             title="Skip Dose"
                           >
                             <RotateCcw size={13} />
@@ -588,12 +596,12 @@ const MedicineTracker = () => {
             ) : (
               <div className="space-y-3">
                 {refillAlerts.map((med) => (
-                  <div key={med._id} className="p-3 bg-red-50 border border-danger/20 rounded-custom flex justify-between items-center text-xs">
+                  <div key={med._id} className="p-3 bg-danger/10 border border-danger/20 rounded-custom flex justify-between items-center text-xs">
                     <div>
-                      <p className="font-bold text-red-900">{med.name}</p>
-                      <p className="text-red-700 text-[10px] mt-0.5">Only {med.quantityRemaining ?? 0} doses left</p>
+                      <p className="font-bold text-danger">{med.name}</p>
+                      <p className="text-danger opacity-85 text-[10px] mt-0.5">Only {med.quantityRemaining ?? 0} doses left</p>
                     </div>
-                    <span className="text-[10px] font-bold text-red-600 bg-red-100 border border-red-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-danger bg-danger/20 border border-danger/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
                       Stock Low
                     </span>
                   </div>

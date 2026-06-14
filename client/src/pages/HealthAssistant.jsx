@@ -16,9 +16,12 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { AuthContext } from '../context/AuthContext';
+import { medicineAPI, patientAPI, consultationAPI } from '../services/api';
+import { calculateHealthScore } from '../utils/healthScoreEngine';
 
 export default function HealthAssistant() {
   const { user } = useContext(AuthContext);
+  const [healthScoreData, setHealthScoreData] = useState(null);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -30,6 +33,56 @@ export default function HealthAssistant() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    const fetchHealthData = async () => {
+      try {
+        const [medicinesRes, vitalsRes, consultationsRes] = await Promise.allSettled([
+          medicineAPI.getAll(),
+          patientAPI.getVitals(),
+          consultationAPI.getMy()
+        ]);
+        
+        let meds = [];
+        let vits = [];
+        let consults = [];
+        
+        if (medicinesRes.status === 'fulfilled') meds = medicinesRes.value.data?.medicines || [];
+        if (vitalsRes.status === 'fulfilled') vits = vitalsRes.value.data?.vitals || [];
+        if (consultationsRes.status === 'fulfilled') {
+          const payload = consultationsRes.value.data;
+          consults = Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload?.consultations)
+              ? payload.consultations
+              : Array.isArray(payload) ? payload : [];
+        }
+        
+        const calculated = calculateHealthScore(meds, vits, consults);
+        setHealthScoreData(calculated);
+        
+        setMessages(prev => {
+          if (prev.length > 0 && prev[0].id === 1) {
+            const updated = [...prev];
+            updated[0] = {
+              ...updated[0],
+              text: `Hello ${user?.name || 'there'}! I am your HealthEase AI Assistant. Your current Health Score is ${calculated.score} (${calculated.status}). ${
+                calculated.score < 90 
+                  ? 'Improving medication adherence or scheduling missing consultations can increase it to 90+.' 
+                  : 'Keep maintaining your excellent vitals and adherence!'
+              } How can I help you today?`
+            };
+            return updated;
+          }
+          return prev;
+        });
+      } catch (err) {
+        console.error('Error fetching health score for assistant:', err);
+      }
+    };
+    
+    fetchHealthData();
+  }, [user]);
 
   const suggestedPrompts = [
     { text: 'Summarize my health history', icon: Calendar },
@@ -128,6 +181,51 @@ export default function HealthAssistant() {
             </p>
           </div>
         );
+      } else if (lowerText.includes('score') || lowerText.includes('health score') || lowerText.includes('adherence') || lowerText.includes('compliance')) {
+        const scoreVal = healthScoreData ? healthScoreData.score : 84;
+        const statusVal = healthScoreData ? healthScoreData.status : 'Good';
+        aiResponseText = `Your Health Score is ${scoreVal} (${statusVal}). Improving medication adherence can increase it to 90+.`;
+        if (healthScoreData) {
+          aiElement = (
+            <div className="mt-3 space-y-3">
+              <div className="border border-border p-3.5 rounded-custom bg-slate-50 dark:bg-slate-900/30">
+                <p className="font-bold text-xs text-text-primary mb-2">Score Breakdown</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span>Medication Adherence (25%):</span>
+                    <span className="font-bold text-text-primary">{healthScoreData.factors.medicine.score}/25</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Consultation Attendance (20%):</span>
+                    <span className="font-bold text-text-primary">{healthScoreData.factors.consultation.score}/20</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Blood Pressure Stability (15%):</span>
+                    <span className="font-bold text-text-primary">{healthScoreData.factors.bp.score}/15</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Blood Sugar Stability (15%):</span>
+                    <span className="font-bold text-text-primary">{healthScoreData.factors.sugar.score}/15</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Weight Consistency (10%):</span>
+                    <span className="font-bold text-text-primary">{healthScoreData.factors.weight.score}/10</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Vitals Logging Consistency (15%):</span>
+                    <span className="font-bold text-text-primary">{healthScoreData.factors.consistency.score}/15</span>
+                  </div>
+                </div>
+              </div>
+              {healthScoreData.recommendations.length > 0 && (
+                <div className="border border-border p-3.5 rounded-custom bg-slate-50 dark:bg-slate-900/30">
+                  <p className="font-bold text-xs text-text-primary mb-1">Top Recommendation</p>
+                  <p className="text-xs text-text-secondary">{healthScoreData.recommendations[0].text}</p>
+                </div>
+              )}
+            </div>
+          );
+        }
       } else {
         aiResponseText = `I have logged your question regarding: "${text}". I will run this request through the parsing core and reply with structured metrics shortly. Let me know if you would like me to compile a standard medical summary or show active drug interaction reports.`;
       }
