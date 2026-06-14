@@ -57,7 +57,8 @@ export function WebSocketProvider({ children }) {
         setStatus('disconnected');
       });
 
-      activeSocket.on('connect_error', () => {
+      activeSocket.on('connect_error', (err) => {
+        console.warn("Socket unavailable");
         setStatus('disconnected');
         // Graceful local simulation fallback
         startLocalSimulation();

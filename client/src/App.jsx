@@ -33,6 +33,7 @@ import HealthAssistant from './pages/HealthAssistant';
 import ExportEngine from './pages/ExportEngine';
 import AdminDashboard from './pages/AdminDashboard';
 import { WebSocketProvider } from './context/WebSocketContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent() {
   const { user, loading } = useContext(AuthContext);
@@ -151,19 +152,21 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <NotificationProvider>
-          <WebSocketProvider>
-            <AuthProvider>
-              <Router basename={import.meta.env.BASE_URL}>
-                <AppContent />
-              </Router>
-            </AuthProvider>
-          </WebSocketProvider>
-        </NotificationProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ToastProvider>
+          <NotificationProvider>
+            <WebSocketProvider>
+              <AuthProvider>
+                <Router basename={import.meta.env.BASE_URL}>
+                  <AppContent />
+                </Router>
+              </AuthProvider>
+            </WebSocketProvider>
+          </NotificationProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

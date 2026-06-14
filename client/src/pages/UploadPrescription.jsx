@@ -22,7 +22,8 @@ import {
   Loader2,
   Trash2,
   Plus,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
