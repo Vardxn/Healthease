@@ -53,31 +53,32 @@
 
 .dark {
   --primary: #14B8A6;
-  --primary-hover: #0D9488;
-  --secondary: #0D9488;
-  --accent: #06B6D4;
+  --primary-dark: #0F766E;
+  --primary-hover: #0F766E;
+  --secondary: #14B8A6;
+  --accent: #14B8A6;
 
-  --bg: #0F172A;
-  --background: #0F172A;
+  --bg: #08111F;
+  --background: #08111F;
 
-  --surface: #1E293B;
-  --card: #1E293B;
+  --surface: #0F172A;
+  --card: #0F172A;
 
-  --surface-secondary: #334155;
+  --surface-secondary: #162033;
 
   --text: #F8FAFC;
   --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
+  --text-secondary: #94A3B8;
 
-  --border: #334155;
+  --border: rgba(255,255,255,0.05);
 
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
 
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  --shadow-custom: 0 8px 24px rgba(0, 0, 0, 0.2);
-  --shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.35);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-custom: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.6);
 }
 
 @layer base {

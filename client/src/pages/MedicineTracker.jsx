@@ -18,7 +18,9 @@ import {
   Trash2,
   X,
   TrendingUp,
-  Percent
+  Percent,
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { medicineAPI } from '../services/api';
@@ -28,6 +30,7 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
 import SectionHeading from '../components/ui/SectionHeading';
+import ComplianceCircle from '../components/ui/ComplianceCircle';
 
 const initialForm = {
   name: '',
@@ -322,52 +325,95 @@ const MedicineTracker = () => {
       {/* Adherence Header Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Banner Adherence Status */}
-        <div className="lg:col-span-2 bg-gradient-to-r from-primary to-[#14B8A6] rounded-custom p-8 text-white relative overflow-hidden flex flex-col sm:flex-row justify-between items-center gap-6 shadow-custom">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-16 -mb-16"></div>
-          
-          <div className="relative z-10 space-y-3">
-            <div className="inline-flex items-center gap-1 bg-white/10 px-3 py-1 rounded-full text-xs font-bold">
-              <TrendingUp size={12} /> Live Adherence Metrics
+        <div 
+          className="lg:col-span-2 rounded-[24px] p-8 text-white relative overflow-hidden flex flex-col sm:flex-row justify-between items-center gap-6 shadow-custom"
+          style={{
+            background: 'linear-gradient(135deg, #14B8A6, #10B981)'
+          }}
+        >
+          {/* Radial overlays */}
+          <div className="absolute top-0 left-0 w-72 h-72 rounded-full bg-white/10 blur-[60px] -translate-x-12 -translate-y-12 pointer-events-none"></div>
+          <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-white/5 blur-[60px] translate-x-12 translate-y-12 pointer-events-none"></div>
+
+          <div className="relative z-10 space-y-4">
+            <div 
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium"
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.15)'
+              }}
+            >
+              <TrendingUp size={14} /> Live Adherence Metrics
             </div>
-            <h3 className="text-2xl font-bold">Adherence Score & Consistency</h3>
-            <p className="text-teal-50 text-sm max-w-md font-light leading-relaxed">
+            
+            <h3 className="text-3xl md:text-[40px] font-bold leading-[1.1] tracking-tight">
+              Adherence Score & Consistency
+            </h3>
+            
+            <p className="text-white/85 text-base leading-[1.7] max-w-[550px] font-light">
               Stay on schedule by marking your reminders as taken. Tracking refills prevents missed dosages.
             </p>
+
+            {/* Glass pill for score contribution */}
+            <div 
+              className="inline-flex items-center gap-2 px-4.5 py-2.5 rounded-full text-xs font-semibold backdrop-blur-[10px]"
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.12)'
+              }}
+            >
+              <Pill size={14} /> Medication Adherence: {medicinePoints} / 25 points
+            </div>
           </div>
 
-          {/* Adherence Circular compliance score */}
-          <div className="relative z-10 flex-shrink-0 flex flex-col items-center justify-center">
-            <div className="w-24 h-24 rounded-full border-8 border-white/20 flex items-center justify-center relative">
-              <div className="absolute inset-0 rounded-full border-8 border-white border-t-transparent animate-pulse-slow"></div>
-              <span className="text-3xl font-extrabold">{complianceScore}%</span>
-            </div>
-            <span className="text-[10px] uppercase font-bold tracking-wider mt-2.5 opacity-80">Compliance Ratio</span>
-            <span className="text-xs font-bold mt-1.5 bg-white/20 px-2.5 py-0.5 rounded-full text-center">
-              Medication Adherence: {medicinePoints} / 25 points
-            </span>
+          {/* Adherence Circular compliance score component */}
+          <div className="relative z-10 flex-shrink-0">
+            <ComplianceCircle percentage={complianceScore} />
           </div>
         </div>
 
         {/* Stats Grid */}
-        <Card className="p-6 grid grid-cols-2 gap-4">
-          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
-            <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Today's Doses</span>
-            <span className="text-xl font-black text-text-primary mt-1 block">{stats.total || reminders.length}</span>
+        <div className="grid grid-cols-2 gap-4 lg:col-span-1">
+          <div className="bg-[#0F172A] border border-white/5 h-[120px] rounded-[24px] p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-[#14B8A6]/10 flex items-center justify-center text-primary shrink-0">
+              <Calendar size={18} />
+            </div>
+            <div>
+              <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Today's Doses</span>
+              <span className="text-2xl font-black text-text-primary mt-1 block">{stats.total || reminders.length}</span>
+            </div>
           </div>
-          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
-            <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Completed</span>
-            <span className="text-xl font-black text-success mt-1 block">{stats.taken || 0}</span>
+
+          <div className="bg-[#0F172A] border border-white/5 h-[120px] rounded-[24px] p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success shrink-0">
+              <CheckCircle2 size={18} />
+            </div>
+            <div>
+              <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Completed</span>
+              <span className="text-2xl font-black text-success mt-1 block">{stats.taken || 0}</span>
+            </div>
           </div>
-          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
-            <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Missed</span>
-            <span className="text-xl font-black text-danger mt-1 block">{stats.missed || 0}</span>
+
+          <div className="bg-[#0F172A] border border-white/5 h-[120px] rounded-[24px] p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center text-danger shrink-0">
+              <AlertCircle size={18} />
+            </div>
+            <div>
+              <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Missed</span>
+              <span className="text-2xl font-black text-danger mt-1 block">{stats.missed || 0}</span>
+            </div>
           </div>
-          <div className="bg-surface-secondary border border-border p-3 rounded-custom text-center">
-            <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Pending</span>
-            <span className="text-xl font-black text-accent mt-1 block">{stats.pending || 0}</span>
+
+          <div className="bg-[#0F172A] border border-white/5 h-[120px] rounded-[24px] p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-primary shrink-0">
+              <Clock3 size={18} />
+            </div>
+            <div>
+              <span className="text-text-secondary text-[10px] font-bold uppercase tracking-wider block">Pending</span>
+              <span className="text-2xl font-black text-accent mt-1 block">{stats.pending || 0}</span>
+            </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {(error || success) && (
@@ -465,7 +511,7 @@ const MedicineTracker = () => {
                 const progressRatio = Math.round((Math.random() * 40) + 60); // Mock progress percent
                 
                 return (
-                  <Card key={medicine._id} className="hover:shadow-lg hover:-translate-y-1 transition-custom border border-border p-6">
+                  <Card key={medicine._id} className="bg-[#0F172A] border border-white/5 rounded-[24px] p-6 hover:shadow-[0_16px_40px_rgba(0,0,0,0.18)] hover:-translate-y-1.5 transition-all duration-200 ease-out">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2.5 flex-wrap">
