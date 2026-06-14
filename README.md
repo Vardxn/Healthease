@@ -13,22 +13,32 @@ HEALTHEASE is a modern clinical SaaS workspace and patient compliance hub. It en
 
 ---
 
-## 🚀 Live Hosting URLs
+## Local Development
 
-- **Live Frontend Application**: [https://healthease-saas.vercel.app](https://healthease-saas.vercel.app)
-- **Live Backend API**: [https://healthease-api.onrender.com](https://healthease-api.onrender.com)
+```bash
+git clone https://github.com/Vardxn/Healthease.git
+cd Healthease
+npm install
+npm run seed
+npm run dev
+```
+
+### Application URLs:
+
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:5001
 
 ---
 
-## 👥 Demo Credentials & Seed Data
+## Demo Credentials
 
-HEALTHEASE includes predefined seed data to let users and reviewers immediately explore the clinical features without manual signup.
+### Admin:
+- **Email**: admin@healthease.demo
+- **Password**: Admin@123
 
-### 🔑 Test Accounts
-| Account Type | Email | Password | Allowed Access Modules |
-| :--- | :--- | :--- | :--- |
-| **System Admin** | `admin@healthease.demo` | `Admin@123` | KPI Analytics, Doctor Certification Verification, System Audit Logs |
-| **Active Patient** | `user@healthease.demo` | `User@123` | AI prescriptions digitizer scanner, Adherence trackers, Vitals logs, Consult bookings |
+### Patient:
+- **Email**: user@healthease.demo
+- **Password**: User@123
 
 ---
 
@@ -113,52 +123,6 @@ GROQ_API_KEY=gsk_xxxxxxxxx
 VITE_API_URL=http://localhost:5001/api
 VITE_WS_URL=http://localhost:5001
 ```
-
----
-
-## 🚀 Installation & Local Development
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/Vardxn/Healthease.git
-   cd healthease
-   ```
-
-2. **Install all Dependencies**
-   ```bash
-   npm run install:all
-   ```
-
-3. **Configure Environment variables**
-   - Create `.env` files in `client/`, `server/`, and `python-service/` matching the environment blueprints above.
-
-4. **Seed Database Demo Data**
-   ```bash
-   npm run seed
-   ```
-   *Note: Automatically drops old tables and seeds fresh mock records.*
-
-5. **Launch Application Workspace**
-   ```bash
-   npm run dev
-   ```
-   *Note: Runs frontend dev server at `http://localhost:3000` and Node API at `http://localhost:5001` concurrently.*
-
----
-
-## 🌍 Production Deployment Guides
-
-### Vercel Deployment (Frontend)
-1. Import the project on Vercel.
-2. Select the root folder or override build directory to `client`.
-3. Set environment variables: `VITE_API_URL` and `VITE_WS_URL`.
-4. Deploy.
-
-### Render Deployment (Backend API)
-1. Create a Web Service linked to the repository.
-2. Build command: `cd server && npm install`.
-3. Start command: `cd server && npm start`.
-4. Define environment configs (`MONGO_URI`, `JWT_SECRET`, etc.).
 
 ---
 
