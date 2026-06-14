@@ -26,9 +26,12 @@ import {
   FileCheck
 } from 'lucide-react';
 
+import HealthScoreModal from '../components/HealthScoreModal';
+
 const Dashboard = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [isScoreOpen, setIsScoreOpen] = useState(false);
 
   // Dashboard state
   const [loading, setLoading] = useState(true);
@@ -180,7 +183,10 @@ const Dashboard = () => {
         </div>
 
         {/* Health Score Card */}
-        <Card className="flex flex-col justify-between p-8 text-center relative overflow-hidden">
+        <Card 
+          onClick={() => setIsScoreOpen(true)}
+          className="flex flex-col justify-between p-8 text-center relative overflow-hidden cursor-pointer hover:shadow-hover hover:scale-[1.01] transition-all duration-200"
+        >
           <div className="space-y-2">
             <p className="text-text-secondary text-sm font-bold uppercase tracking-wider">Health Score</p>
             <p className="text-xs text-text-secondary">Based on medication adherence and health indicators</p>
@@ -471,6 +477,12 @@ const Dashboard = () => {
         </div>
 
       </div>
+
+      <HealthScoreModal 
+        isOpen={isScoreOpen} 
+        onClose={() => setIsScoreOpen(false)} 
+        score={healthScore} 
+      />
     </div>
   );
 };

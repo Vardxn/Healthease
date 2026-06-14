@@ -30,6 +30,7 @@ import VitalsDashboard from './pages/VitalsDashboard';
 import HealthAssistant from './pages/HealthAssistant';
 import ExportEngine from './pages/ExportEngine';
 import AdminDashboard from './pages/AdminDashboard';
+import { WebSocketProvider } from './context/WebSocketContext';
 
 function AppContent() {
   const { user } = useContext(AuthContext);
@@ -134,11 +135,13 @@ function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
-        <AuthProvider>
-          <Router basename={import.meta.env.BASE_URL}>
-            <AppContent />
-          </Router>
-        </AuthProvider>
+        <WebSocketProvider>
+          <AuthProvider>
+            <Router basename={import.meta.env.BASE_URL}>
+              <AppContent />
+            </Router>
+          </AuthProvider>
+        </WebSocketProvider>
       </ToastProvider>
     </ThemeProvider>
   );

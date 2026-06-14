@@ -1,206 +1,141 @@
-# HEALTHEASE — AI-Powered Healthcare Platform
+# HEALTHEASE — AI-Powered Healthcare SaaS Platform
 
-## Overview
-HEALTHEASE is an AI-powered healthcare platform that helps users digitize prescriptions, manage medications, and track treatment trends.
-It combines OCR, reminders, analytics, and assistant features into one workflow for patients.
-The platform is built as a full-stack system with React, Node.js, MongoDB, and a FastAPI AI service.
+[![React](https://img.shields.io/badge/React-18.3-blue?logo=react)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-18.0-green?logo=node.js)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-4.18-lightgrey?logo=express)](https://expressjs.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)](https://mongodb.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-blueviolet?logo=tailwindcss)](https://tailwindcss.com)
+[![Socket.io](https://img.shields.io/badge/Socket.io-4.8-black?logo=socket.io)](https://socket.io)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Python-teal?logo=fastapi)](https://fastapi.tiangolo.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Tech Stack
-- Frontend: React + Vite + Tailwind CSS
-- Backend: Node.js + Express + MongoDB
-- AI Service: Python FastAPI + Groq Vision OCR (meta-llama/llama-4-scout-17b-16e-instruct)
-- Email: Gmail SMTP (Nodemailer)
+HEALTHEASE is a modern clinical SaaS workspace and patient compliance hub. It enables users to digitize handwritten prescriptions using advanced AI OCR extraction pipelines, log vitals, track daily medication schedules with compliance adherence meters, and connect with clinical doctor consults in real-time.
 
-## Features
-- Prescription OCR upload (Groq Vision AI)
-- Medication management
-- Medication reminders via Gmail
-- Health Analytics Dashboard
-- PDF Export (prescriptions + analytics report)
+---
 
-## Getting Started
+## 🏗️ Technical Architecture Diagram
 
-### Prerequisites
-- Node.js 18+
-- Python 3.10+
-- MongoDB running locally
-- Groq API key (free at console.groq.com)
-- Gmail App Password
-
-### Installation
-1. Clone repository
-```bash
-git clone <your-repo-url>
-cd health-ease
-```
-2. Install server dependencies
-```bash
-cd server
-npm install
-cd ..
-```
-3. Install client dependencies
-```bash
-cd client
-npm install
-cd ..
-```
-4. Install python dependencies
-```bash
-cd python-service
-python3 -m pip install -r requirements.txt
-cd ..
-```
-5. Copy environment files
-```bash
-cp server/.env.example server/.env
-cp client/.env.example client/.env
-cp python-service/.env.example python-service/.env
-```
-6. Start all 3 services
-```bash
-npm run dev:all
+```mermaid
+graph TD
+    User([Patient/Doctor Client]) --> |HTTP/WS| FE[React Vite Client]
+    FE --> |JSON API| BE[Node.js Express Server]
+    FE --> |Real-time Sync| WS[Socket.io Hub]
+    BE --> |Data Storage| DB[(MongoDB Atlas)]
+    BE --> |Extract OCR Requests| PY[FastAPI AI OCR Service]
+    PY --> |OCR Extraction| Groq[Groq LLM/Llama Vision API]
+    BE --> |Medicine Reminders| SMTP[Gmail SMTP Server]
 ```
 
-### MongoDB Atlas Setup
-1. Go to https://mongodb.com/atlas and create a free account
-2. Create a new project called "HealthEase"
-3. Create a free M0 cluster (choose any region closest to you)
-4. Under Security > Database Access:
-	Create a user with username: healthease-admin
-	Set a strong password and save it
-5. Under Security > Network Access:
-	Click "Add IP Address" → "Allow Access From Anywhere" (0.0.0.0/0)
-6. Under Deployment > Database:
-	Click "Connect" → "Drivers" → copy the connection string
-	It will look like:
-	mongodb+srv://healthease-admin:<password>@cluster0.xxxxx.mongodb.net/healthease?retryWrites=true&w=majority
-7. Replace <password> with your actual password
-8. Use this full string as your MONGO_URI environment variable
-	in both Railway services (Node + Python)
+---
 
-## Environment Variables
+## 🌟 Key Features
 
-| Service | Variable | Description |
-|---|---|---|
-| server | PORT | Node.js API port |
-| server | MONGO_URI | MongoDB connection string |
-| server | JWT_SECRET | JWT signing secret |
-| server | PYTHON_SERVICE_URL | Base URL for python service |
-| server | GMAIL_USER | Gmail address used for reminders |
-| server | GMAIL_APP_PASSWORD | Gmail app password for SMTP |
-| server | CLIENT_URL | Allowed frontend origin |
-| python-service | GROQ_API_KEY | Groq API key for OCR extraction |
-| python-service | MONGO_URI | MongoDB connection string |
-| python-service | DEBUG | Enables raw OCR debug prints when true |
-| python-service | PORT | FastAPI service port |
-| client | VITE_API_URL | Backend API base URL |
-| client | VITE_PYTHON_URL | Python service base URL |
+1. **AI Prescription OCR Scanner**
+   - Upload handwritten doctor scripts and parse medicines, dosages, and schedules using advanced Groq Vision pipelines.
+2. **Interactive Medication Adherence Tracker**
+   - Daily calendars tracking taken/skipped doses with dynamic stock reminder warnings.
+3. **Smart Health Score Engine**
+   - Dynamic patient scoring (0-100) based on compliance stats, vitals logs consistency, and clinical consultation attendance.
+4. **Telemedicine Marketplace**
+   - Find clinical specialists, consult modes (video, audio, chat), verified ratings, and direct scheduling.
+5. **PDF Report Engine**
+   - Generate, preview, and download branded clinical reports for print and doctor reviews.
+6. **Admin Dashboard**
+   - Comprehensive metrics, audit feeds, and doctor licensing verifications.
+7. **Real-time Updates**
+   - Websocket synchronization tracking status changes, live doctor availabilities, and reminder warnings.
 
-## Deployment
+---
 
-### Vercel (Frontend)
-- Go to vercel.com → New Project → Import from GitHub → Vardxn/Healthease
-- Set Root Directory to: client
-- Framework Preset: Vite
-- Build Command: npm run build
-- Output Directory: dist
-- Add these environment variables on Vercel dashboard:
-	- VITE_API_URL = https://your-railway-node-url.up.railway.app
-	- VITE_PYTHON_URL = https://your-railway-python-url.up.railway.app
-- Click Deploy
-
-### Railway (Node Backend)
-- Go to railway.app → New Project → Deploy from GitHub → Vardxn/Healthease
-- Set Root Directory to: server
-- Add these environment variables in Railway dashboard:
-	- PORT = 5001
-	- MONGO_URI = your_atlas_connection_string
-	- JWT_SECRET = generate a random 32 char string
-	- PYTHON_SERVICE_URL = https://your-railway-python-url.up.railway.app
-	- GMAIL_USER = your_gmail@gmail.com
-	- GMAIL_APP_PASSWORD = your_gmail_app_password
-	- CLIENT_URL = https://your-vercel-url.vercel.app
-- Railway auto-detects Node.js and deploys
-
-### Railway (Python OCR Service)
-- Go to railway.app → same project → New Service → GitHub repo → Vardxn/Healthease
-- Set Root Directory to: python-service
-- Add these environment variables in Railway dashboard:
-	- PORT = 8000
-	- GROQ_API_KEY = your_groq_api_key
-	- MONGO_URI = your_atlas_connection_string
-	- DEBUG = false
-- Railway auto-detects Python and deploys
-
-## Project Structure
+## 📁 Repository Directory Structure
 
 ```text
-health-ease/
-├── client/
+healthease/
+├── client/                 # React + Vite + Tailwind CSS Frontend
 │   ├── src/
-│   ├── package.json
-│   └── vite.config.js
-├── server/
-│   ├── controllers/
-│   ├── routes/
-│   ├── services/
-│   ├── models/
-│   ├── server.js
-│   └── package.json
-├── python-service/
-│   ├── analytics/
-│   ├── reminders/
-│   ├── main.py
+│   │   ├── components/     # Reusable UI Cards, Modals, Forms
+│   │   ├── context/        # Theme, Auth, Toast, WebSocket Contexts
+│   │   ├── pages/          # Dashboard, HealthAssistant, ExportEngine, etc.
+│   │   └── index.css       # Core design tokens configuration
+├── server/                 # Express REST API Server
+│   ├── controllers/        # Route business logic handlers
+│   ├── models/             # Mongoose schemas (User, Prescription, Vitals)
+│   └── index.js            # Node app entry point
+├── python-service/         # FastAPI OCR Extractor Service
+│   ├── main.py             # Groq Vision processing pipeline
 │   └── requirements.txt
-├── package.json
-└── README.md
+└── scripts/                # Start scripts for local MERN setup
 ```
 
-## Development Progress
+---
 
-- Latest sprint update: June 14, 2026 (UI/UX Redesign completed)
-- Detailed engineering log and near-term roadmap: [PROGRESS.md](PROGRESS.md)
+## ⚙️ Environment Configuration
 
-### June 2026 UI/UX Modernization Update
+### Server (`/server/.env`)
+```env
+PORT=5000
+MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/healthease
+JWT_SECRET=super_secret_jwt_sign_key
+PYTHON_SERVICE_URL=http://localhost:8000
+GMAIL_USER=smtp.reminders@gmail.com
+GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+CLIENT_URL=http://localhost:5173
+```
 
-- **Design System & Visual Consistency**:
-  - Implemented a complete CSS variables-based global design system in `index.css`.
-  - Color palette refined: Primary `#0F766E`, hover `#115E59`, Secondary `#14B8A6`, Accent `#06B6D4`, background `#F8FAFC`, text `#0F172A`, success `#22C55E`, warning `#F59E0B`, danger `#EF4444`.
-  - Unified border-radius to `20px`, transitions to `200ms ease`, and custom shadows (`0 8px 24px rgba(15,23,42,0.08)`) with subtle hover-lifting behavior.
-  - Standardized font family to **Inter** globally.
-- **Reusable UI Components**:
-  - Built pure, reusable components (`Button`, `Card`, `Badge`, `Input`, `Modal`, `SectionHeading`) under `client/src/components/ui/` for future development velocity.
-- **Application Shell**:
-  - Upgraded sidebar layout to a Stripe/Linear-style `280px` drawer.
-  - Added MAIN and ACCOUNT logical groups with Lucide React icons.
-  - Supports collapsible icon-only strip on desktop, starts collapsed on tablet, and functions as an overlay drawer on mobile viewports.
-  - Added sticky top navigation bar (72px) with search field, notifications, avatars, and dark mode toggler placeholders.
-- **Analytics Dashboard Redesign**:
-  - Replaced standard feature list card layouts with dynamic stats grids, greeting hero banners, and a circular health score index.
-  - Integrated timeline feeds tracking digitized uploads, appointments, medicine schedules, and vitals.
-- **AI Prescription Upload**:
-  - Reworked upload experience featuring workflow Indicators detailing the AI parsing steps (preprocessing, OCR, parsing, review).
-  - Includes camera/scanning tips and structured metadata review panels.
-- **Premium Prescription Records**:
-  - Turned tabular/raw list outputs into premium medical folders showing doctors, verification tags, drug grids, and pdf export actions.
-- **Doctor Marketplace**:
-  - Designed Practo-style specialist lookup panels equipped with price range sliders, specialization pills, languages, online states, and booking triggers.
-- **Consultation Management**:
-  - Introduced month-grouped chronological appointment timeline and notes drawers highlighting diagnostic transcripts.
-- **Responsive Layouts**:
-  - Verified fluid grid behaviors on mobile, tablet, and desktop viewports.
+### AI Python Service (`/python-service/.env`)
+```env
+PORT=8000
+MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/healthease
+GROQ_API_KEY=gsk_xxxxxxxxx
+```
 
-### Sprint Highlights (May 18, 2026)
+### Client (`/client/.env`)
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_WS_URL=http://localhost:5000
+```
 
-- Step 2 AI features completed end-to-end:
-	- Symptom triage
-	- Drug conflict checks
-	- Dietary recommendations
-	- Mental health chatbot with crisis override
-- Step 3 wellness features completed end-to-end:
-	- Vitals logging and trend dashboards
-	- Family/dependent profile management
-	- Gamification and streak logic
-- Wellness route alignment finalized under /api/wellness.
+---
 
+## 🚀 Installation & Local Development
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/Vardxn/Healthease.git
+   cd healthease
+   ```
+
+2. **Install all Dependencies**
+   ```bash
+   npm run install:all
+   ```
+
+3. **Configure Environment variables**
+   - Create `.env` files in `client/`, `server/`, and `python-service/` matching the environment blueprints above.
+
+4. **Launch Application Workspace**
+   ```bash
+   npm run dev
+   ```
+   *Note: Runs frontend dev server at `http://localhost:5173` and Node API at `http://localhost:5000`.*
+
+---
+
+## 🌍 Production Deployment Guides
+
+### Frontend (Vercel)
+1. Import the project on Vercel.
+2. Select the root folder or override build directory to `client`.
+3. Set environment variable: `VITE_API_URL` and `VITE_WS_URL`.
+4. Deploy.
+
+### Backend (Render)
+1. Create a Web Service linked to the repository.
+2. Build command: `cd server && npm install`.
+3. Start command: `cd server && npm start`.
+4. Define environment configs (`MONGO_URI`, `JWT_SECRET`, etc.).
+
+---
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

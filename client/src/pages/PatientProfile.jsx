@@ -1,27 +1,30 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit3, Plus, Save, X } from 'lucide-react';
+import { 
+  Edit3, 
+  Plus, 
+  Save, 
+  X, 
+  User, 
+  Settings, 
+  Shield, 
+  Bell, 
+  Download, 
+  Trash2, 
+  Heart, 
+  Activity, 
+  FileText,
+  UserPlus
+} from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { patientAPI } from '../services/api';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const genders = ['Male', 'Female', 'Other'];
-
-const emptyCreateForm = {
-  fullName: '',
-  dateOfBirth: '',
-  gender: '',
-  bloodGroup: '',
-  height: '',
-  weight: '',
-  allergiesText: '',
-  chronicConditionsText: '',
-  emergencyContact: {
-    name: '',
-    phone: '',
-    relation: ''
-  }
-};
 
 const emptyDraft = {
   fullName: '',
@@ -32,6 +35,7 @@ const emptyDraft = {
   weight: '',
   allergies: [],
   chronicConditions: [],
+  address: '',
   emergencyContact: {
     name: '',
     phone: '',
@@ -42,15 +46,13 @@ const emptyDraft = {
 const formatDate = (value) => {
   if (!value) return 'Not set';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Not set';
-  return date.toLocaleDateString();
+  return Number.isNaN(date.getTime()) ? 'Not set' : date.toLocaleDateString();
 };
 
 const formatDateTime = (value) => {
   if (!value) return 'N/A';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'N/A';
-  return date.toLocaleString();
+  return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
 };
 
 const calculateAge = (dob) => {
@@ -65,104 +67,21 @@ const calculateAge = (dob) => {
 const toInputDate = (value) => {
   if (!value) return '';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toISOString().split('T')[0];
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
 };
 
-const asNumberInput = (value) => (value === null || value === undefined ? '' : String(value));
-
-const normalizeArray = (value) => {
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => String(item).trim()).filter(Boolean);
-};
-
-const fromProfileToDraft = (profile) => ({
-  fullName: profile?.fullName || '',
-  dateOfBirth: toInputDate(profile?.dateOfBirth),
-  gender: profile?.gender || '',
-  bloodGroup: profile?.bloodGroup || '',
-  height: asNumberInput(profile?.height),
-  weight: asNumberInput(profile?.weight),
-  allergies: normalizeArray(profile?.allergies),
-  chronicConditions: normalizeArray(profile?.chronicConditions),
-  emergencyContact: {
-    name: profile?.emergencyContact?.name || '',
-    phone: profile?.emergencyContact?.phone || '',
-    relation: profile?.emergencyContact?.relation || ''
-  }
-});
-
-const parseCommaSeparated = (value) =>
-  value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const Pill = ({ label, onRemove, removable = false }) => (
-  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/15 text-cyan-200 border border-cyan-500/30 text-sm">
-    {label}
-    {removable ? (
-      <button type="button" onClick={onRemove} className="text-cyan-100 hover:text-white">
-        <X size={14} />
-      </button>
-    ) : null}
-  </span>
-);
-
-const Card = ({ title, action, children, className = '' }) => (
-  <div className={`bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-lg ${className}`}>
-    <div className="flex items-center justify-between gap-4 mb-4">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      {action}
-    </div>
-    {children}
-  </div>
-);
-
-const Field = ({ label, value, editing = false, type = 'text', onChange, placeholder, options = [] }) => (
-  <div>
-    <label className="block text-sm text-gray-400 mb-1">{label}</label>
-    {editing ? (
-      type === 'select' ? (
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-        >
-          <option value="">Select</option>
-          {options.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      ) : (
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-        />
-      )
-    ) : (
-      <p className="text-white font-medium">{value || 'Not set'}</p>
-    )}
-  </div>
-);
-
-const PatientProfile = () => {
+export default function PatientProfile() {
   const { isAuthenticated, loading: authLoading, user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'settings'
   const [profile, setProfile] = useState(null);
   const [draft, setDraft] = useState(emptyDraft);
   const [vitals, setVitals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createForm, setCreateForm] = useState(emptyCreateForm);
   const [editingSection, setEditingSection] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
-  const [creatingProfile, setCreatingProfile] = useState(false);
   const [showVitalsForm, setShowVitalsForm] = useState(false);
   const [savingVitals, setSavingVitals] = useState(false);
   const [vitalsForm, setVitalsForm] = useState({
@@ -174,11 +93,14 @@ const PatientProfile = () => {
   });
   const [tagInput, setTagInput] = useState({ allergies: '', chronicConditions: '' });
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/login');
-    }
-  }, [authLoading, isAuthenticated, navigate]);
+  // Settings State
+  const [settingsForm, setSettingsForm] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    mfaEnabled: false,
+    currentPassword: '',
+    newPassword: ''
+  });
 
   const loadProfile = async () => {
     try {
@@ -191,20 +113,29 @@ const PatientProfile = () => {
       if (profileResponse.status === 'fulfilled') {
         const data = profileResponse.value.data.data;
         setProfile(data);
-        setDraft(fromProfileToDraft(data));
-        setShowCreateForm(false);
-      } else {
-        setProfile(null);
-        setDraft(emptyDraft);
+        setDraft({
+          fullName: data?.fullName || '',
+          dateOfBirth: toInputDate(data?.dateOfBirth),
+          gender: data?.gender || '',
+          bloodGroup: data?.bloodGroup || '',
+          height: data?.height || '',
+          weight: data?.weight || '',
+          allergies: data?.allergies || [],
+          chronicConditions: data?.chronicConditions || [],
+          address: data?.address || '128 Clinical Parkway, New Delhi',
+          emergencyContact: {
+            name: data?.emergencyContact?.name || '',
+            phone: data?.emergencyContact?.phone || '',
+            relation: data?.emergencyContact?.relation || ''
+          }
+        });
       }
 
       if (vitalsResponse.status === 'fulfilled') {
         setVitals(vitalsResponse.value.data.data || []);
-      } else {
-        setVitals([]);
       }
     } catch (err) {
-      setMessage(err.response?.data?.msg || 'Failed to load profile');
+      setMessage('Failed to load profile parameters');
       setMessageType('error');
     } finally {
       setLoading(false);
@@ -212,60 +143,18 @@ const PatientProfile = () => {
   };
 
   useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  useEffect(() => {
     if (isAuthenticated) {
       loadProfile();
     }
   }, [isAuthenticated]);
 
-  const updateDraftField = (field, value) => {
-    setDraft((prev) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const updateEmergencyField = (field, value) => {
-    setDraft((prev) => ({
-      ...prev,
-      emergencyContact: {
-        ...prev.emergencyContact,
-        [field]: value
-      }
-    }));
-  };
-
-  const updateCreateField = (field, value) => {
-    setCreateForm((prev) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const updateCreateEmergencyField = (field, value) => {
-    setCreateForm((prev) => ({
-      ...prev,
-      emergencyContact: {
-        ...prev.emergencyContact,
-        [field]: value
-      }
-    }));
-  };
-
-  const startEdit = (section) => {
-    setMessage('');
-    setMessageType('success');
-    setEditingSection(section);
-  };
-
-  const cancelEdit = () => {
-    if (profile) {
-      setDraft(fromProfileToDraft(profile));
-    }
-    setTagInput({ allergies: '', chronicConditions: '' });
-    setEditingSection('');
-  };
-
-  const saveProfile = async () => {
+  const handleSaveProfile = async () => {
     try {
       setSavingProfile(true);
       const payload = {
@@ -275,81 +164,26 @@ const PatientProfile = () => {
         bloodGroup: draft.bloodGroup || undefined,
         height: draft.height === '' ? undefined : Number(draft.height),
         weight: draft.weight === '' ? undefined : Number(draft.weight),
-        allergies: normalizeArray(draft.allergies),
-        chronicConditions: normalizeArray(draft.chronicConditions),
-        emergencyContact: {
-          name: draft.emergencyContact.name,
-          phone: draft.emergencyContact.phone,
-          relation: draft.emergencyContact.relation
-        }
+        allergies: draft.allergies,
+        chronicConditions: draft.chronicConditions,
+        address: draft.address,
+        emergencyContact: draft.emergencyContact
       };
 
       const response = await patientAPI.updateProfile(payload);
-      const updatedProfile = response.data.data;
-      setProfile(updatedProfile);
-      setDraft(fromProfileToDraft(updatedProfile));
+      setProfile(response.data.data);
       setEditingSection('');
-      setMessage('Profile updated successfully');
+      setMessage('Health Profile updated successfully');
       setMessageType('success');
     } catch (err) {
-      setMessage(err.response?.data?.msg || 'Failed to update profile');
+      setMessage('Failed to update clinical profile');
       setMessageType('error');
     } finally {
       setSavingProfile(false);
     }
   };
 
-  const createProfile = async (e) => {
-    e.preventDefault();
-    try {
-      setCreatingProfile(true);
-      const payload = {
-        fullName: createForm.fullName,
-        dateOfBirth: createForm.dateOfBirth || undefined,
-        gender: createForm.gender || undefined,
-        bloodGroup: createForm.bloodGroup || undefined,
-        height: createForm.height === '' ? undefined : Number(createForm.height),
-        weight: createForm.weight === '' ? undefined : Number(createForm.weight),
-        allergies: parseCommaSeparated(createForm.allergiesText),
-        chronicConditions: parseCommaSeparated(createForm.chronicConditionsText),
-        emergencyContact: createForm.emergencyContact
-      };
-
-      const response = await patientAPI.createProfile(payload);
-      const createdProfile = response.data.data;
-      setProfile(createdProfile);
-      setDraft(fromProfileToDraft(createdProfile));
-      setShowCreateForm(false);
-      setEditingSection('');
-      setMessage('Profile created successfully');
-      setMessageType('success');
-      await loadProfile();
-    } catch (err) {
-      setMessage(err.response?.data?.msg || 'Failed to create profile');
-      setMessageType('error');
-    } finally {
-      setCreatingProfile(false);
-    }
-  };
-
-  const addTag = (field) => {
-    const value = tagInput[field].trim();
-    if (!value) return;
-    setDraft((prev) => ({
-      ...prev,
-      [field]: Array.from(new Set([...(prev[field] || []), value]))
-    }));
-    setTagInput((prev) => ({ ...prev, [field]: '' }));
-  };
-
-  const removeTag = (field, tag) => {
-    setDraft((prev) => ({
-      ...prev,
-      [field]: (prev[field] || []).filter((item) => item !== tag)
-    }));
-  };
-
-  const saveVitals = async (e) => {
+  const handleAddVitals = async (e) => {
     e.preventDefault();
     try {
       setSavingVitals(true);
@@ -360,394 +194,452 @@ const PatientProfile = () => {
         sugarLevel: vitalsForm.sugarLevel === '' ? undefined : Number(vitalsForm.sugarLevel),
         oxygenLevel: vitalsForm.oxygenLevel === '' ? undefined : Number(vitalsForm.oxygenLevel)
       });
-      setVitalsForm({
-        bloodPressure: '',
-        heartRate: '',
-        temperature: '',
-        sugarLevel: '',
-        oxygenLevel: ''
-      });
+      setVitalsForm({ bloodPressure: '', heartRate: '', temperature: '', sugarLevel: '', oxygenLevel: '' });
       setShowVitalsForm(false);
       await loadProfile();
-      setMessage('Vitals added successfully');
+      setMessage('Telemetry Vitals logged successfully');
       setMessageType('success');
     } catch (err) {
-      setMessage(err.response?.data?.msg || 'Failed to add vitals');
+      setMessage('Failed to record vitals log');
       setMessageType('error');
     } finally {
       setSavingVitals(false);
     }
   };
 
+  const handleExportData = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ profile, vitals }));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `healthease_clinical_backup.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    setMessage('Clinical backup generated and downloaded successfully.');
+    setMessageType('success');
+  };
+
   const age = useMemo(() => calculateAge(profile?.dateOfBirth), [profile]);
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-white">
-        <div className="h-12 w-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!profile && !showCreateForm) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="max-w-xl w-full bg-gray-800 border border-gray-700 rounded-3xl p-8 text-center shadow-2xl">
-          <div className="mx-auto w-20 h-20 rounded-full bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-3xl text-cyan-300 mb-5">
-            {user?.name?.charAt(0)?.toUpperCase() || 'H'}
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-3">Complete your health profile</h1>
-          <p className="text-gray-400 mb-6">
-            Add your personal details, emergency contact, and health history to unlock a more personalized experience.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setCreateForm((prev) => ({
-                ...prev,
-                fullName: user?.name || ''
-              }));
-              setShowCreateForm(true);
-            }}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-semibold transition-colors"
-          >
-            Get Started
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!profile && showCreateForm) {
-    return (
-      <div className="max-w-5xl mx-auto text-white">
-        <div className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold">My Health Profile</h1>
-          <p className="text-gray-400 mt-2">Create your patient profile to personalize care and interactions.</p>
-        </div>
-
-        <form onSubmit={createProfile} className="bg-gray-800 border border-gray-700 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
-          {message && (
-            <div className={`px-4 py-3 rounded-xl border ${messageType === 'error' ? 'bg-red-900/30 border-red-700 text-red-200' : 'bg-emerald-900/30 border-emerald-700 text-emerald-200'}`}>
-              {message}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Field label="Full Name" value={createForm.fullName} editing onChange={(value) => updateCreateField('fullName', value)} placeholder="Your full name" />
-            <Field label="Date of Birth" value={createForm.dateOfBirth} editing type="date" onChange={(value) => updateCreateField('dateOfBirth', value)} />
-            <Field label="Gender" value={createForm.gender} editing type="select" options={genders} onChange={(value) => updateCreateField('gender', value)} />
-            <Field label="Blood Group" value={createForm.bloodGroup} editing type="select" options={bloodGroups} onChange={(value) => updateCreateField('bloodGroup', value)} />
-            <Field label="Height (cm)" value={createForm.height} editing type="number" onChange={(value) => updateCreateField('height', value)} placeholder="170" />
-            <Field label="Weight (kg)" value={createForm.weight} editing type="number" onChange={(value) => updateCreateField('weight', value)} placeholder="65" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Allergies (comma separated)</label>
-              <input
-                type="text"
-                value={createForm.allergiesText}
-                onChange={(e) => updateCreateField('allergiesText', e.target.value)}
-                className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                placeholder="Penicillin, Peanuts"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Chronic Conditions (comma separated)</label>
-              <input
-                type="text"
-                value={createForm.chronicConditionsText}
-                onChange={(e) => updateCreateField('chronicConditionsText', e.target.value)}
-                className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                placeholder="Diabetes, Hypertension"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Field label="Emergency Contact Name" value={createForm.emergencyContact.name} editing onChange={(value) => updateCreateEmergencyField('name', value)} />
-            <Field label="Emergency Contact Phone" value={createForm.emergencyContact.phone} editing onChange={(value) => updateCreateEmergencyField('phone', value)} />
-            <Field label="Relation" value={createForm.emergencyContact.relation} editing onChange={(value) => updateCreateEmergencyField('relation', value)} />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-end">
-            <button
-              type="button"
-              onClick={() => setShowCreateForm(false)}
-              className="px-5 py-3 rounded-xl border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={creatingProfile}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-950 font-semibold transition-colors"
-            >
-              {creatingProfile ? 'Creating...' : 'Create Profile'}
-            </button>
-          </div>
-        </form>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto text-white space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl md:text-4xl font-bold">My Health Profile</h1>
-        <p className="text-gray-400">Manage your personal details, vitals, allergies, and emergency contact in one place.</p>
+    <div className="space-y-6 font-sans">
+      {/* Title block */}
+      <div>
+        <h2 className="text-xl font-black text-text-primary tracking-tight">Patient Console</h2>
+        <p className="text-xs text-text-secondary mt-1">Manage clinical metrics, emergency parameters, or settings.</p>
       </div>
 
       {message && (
-        <div className={`px-4 py-3 rounded-xl border ${messageType === 'error' ? 'bg-red-900/30 border-red-700 text-red-200' : 'bg-emerald-900/30 border-emerald-700 text-emerald-200'}`}>
-          {message}
+        <div className={`p-4 border rounded-custom text-xs flex items-center gap-2 animate-slideUp ${
+          messageType === 'error' 
+            ? 'bg-danger/10 border-danger/30 text-danger' 
+            : 'bg-success/10 border-success/30 text-success'
+        }`}>
+          <span>⚠️</span>
+          <span>{message}</span>
         </div>
       )}
 
-      <div className="bg-gray-800 border border-gray-700 rounded-3xl p-6 shadow-2xl">
-        <div className="flex flex-col md:flex-row md:items-center gap-5">
-          <div className="w-20 h-20 rounded-2xl bg-cyan-500 text-gray-950 font-bold text-3xl flex items-center justify-center">
-            {profile?.fullName?.charAt(0)?.toUpperCase() || 'H'}
+      {/* Tabs Header */}
+      <div className="flex border-b border-border gap-6">
+        <button
+          onClick={() => setActiveTab('profile')}
+          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all duration-150 ${
+            activeTab === 'profile' 
+              ? 'border-primary text-primary' 
+              : 'border-transparent text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <User size={16} /> Health Profile
+        </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all duration-150 ${
+            activeTab === 'settings' 
+              ? 'border-primary text-primary' 
+              : 'border-transparent text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <Settings size={16} /> Account Settings
+        </button>
+      </div>
+
+      {/* Profile Tab */}
+      {activeTab === 'profile' && (
+        <div className="space-y-6">
+          {/* Card: Hero Initials Header */}
+          <Card className="p-6 flex flex-col sm:flex-row items-center gap-5 border border-border">
+            <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 text-primary font-black text-3xl flex items-center justify-center">
+              {profile?.fullName?.charAt(0)?.toUpperCase() || 'P'}
+            </div>
+            <div className="space-y-1 text-center sm:text-left flex-1">
+              <h3 className="text-lg font-black text-text-primary">{profile?.fullName || 'Anonymous Patient'}</h3>
+              <p className="text-xs text-text-secondary">
+                Age: {age} • Blood Group: <span className="font-bold text-text-primary">{profile?.bloodGroup || 'N/A'}</span> • Gender: {profile?.gender || 'N/A'}
+              </p>
+              <p className="text-[10px] text-text-secondary font-mono">{draft.address}</p>
+            </div>
+            <Button
+              onClick={() => setEditingSection(editingSection === 'edit' ? '' : 'edit')}
+              className="flex items-center gap-1.5 font-bold rounded-custom text-xs"
+            >
+              <Edit3 size={14} /> {editingSection === 'edit' ? 'Close Editor' : 'Edit Profile'}
+            </Button>
+          </Card>
+
+          {/* Form Editor panel */}
+          {editingSection === 'edit' && (
+            <Card className="p-6 border border-primary/20 space-y-4 animate-slideUp">
+              <h4 className="font-bold text-xs text-text-primary">Clinical Metrics Editor</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <Input
+                  label="Full Name"
+                  value={draft.fullName}
+                  onChange={(e) => setDraft({ ...draft, fullName: e.target.value })}
+                />
+                <Input
+                  label="Date of Birth"
+                  type="date"
+                  value={draft.dateOfBirth}
+                  onChange={(e) => setDraft({ ...draft, dateOfBirth: e.target.value })}
+                />
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest">Gender</label>
+                  <select
+                    value={draft.gender}
+                    onChange={(e) => setDraft({ ...draft, gender: e.target.value })}
+                    className="w-full px-4 py-3 bg-white dark:bg-card border border-border rounded-custom text-sm focus:outline-none focus:border-primary text-text-primary"
+                  >
+                    <option value="">Select</option>
+                    {genders.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-text-secondary uppercase tracking-widest">Blood Group</label>
+                  <select
+                    value={draft.bloodGroup}
+                    onChange={(e) => setDraft({ ...draft, bloodGroup: e.target.value })}
+                    className="w-full px-4 py-3 bg-white dark:bg-card border border-border rounded-custom text-sm focus:outline-none focus:border-primary text-text-primary"
+                  >
+                    <option value="">Select</option>
+                    {bloodGroups.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                  </select>
+                </div>
+                <Input
+                  label="Height (cm)"
+                  type="number"
+                  value={draft.height}
+                  onChange={(e) => setDraft({ ...draft, height: e.target.value })}
+                />
+                <Input
+                  label="Weight (kg)"
+                  type="number"
+                  value={draft.weight}
+                  onChange={(e) => setDraft({ ...draft, weight: e.target.value })}
+                />
+                <div className="sm:col-span-2 md:col-span-3">
+                  <Input
+                    label="Residential Address"
+                    value={draft.address}
+                    onChange={(e) => setDraft({ ...draft, address: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Input
+                  label="Emergency Contact Name"
+                  value={draft.emergencyContact.name}
+                  onChange={(e) => setDraft({ ...draft, emergencyContact: { ...draft.emergencyContact, name: e.target.value } })}
+                />
+                <Input
+                  label="Emergency Contact Phone"
+                  value={draft.emergencyContact.phone}
+                  onChange={(e) => setDraft({ ...draft, emergencyContact: { ...draft.emergencyContact, phone: e.target.value } })}
+                />
+                <Input
+                  label="Relationship"
+                  value={draft.emergencyContact.relation}
+                  onChange={(e) => setDraft({ ...draft, emergencyContact: { ...draft.emergencyContact, relation: e.target.value } })}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="secondary" onClick={() => setEditingSection('')} className="rounded-custom text-xs">
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveProfile} disabled={savingProfile} className="rounded-custom text-xs">
+                  {savingProfile ? 'Saving...' : 'Save Profile Changes'}
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Cards Grid: Contact, Allergies */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-6 border border-border space-y-4">
+              <h4 className="font-extrabold text-xs text-text-primary flex items-center gap-1.5">
+                <Heart size={14} className="text-danger" /> Emergency Information
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-text-secondary block">Contact Name</span>
+                  <span className="font-bold text-text-primary block mt-0.5">{profile?.emergencyContact?.name || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-text-secondary block">Relation</span>
+                  <span className="font-bold text-text-primary block mt-0.5">{profile?.emergencyContact?.relation || 'N/A'}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-text-secondary block">Emergency Phone</span>
+                  <span className="font-bold text-text-primary block mt-0.5">{profile?.emergencyContact?.phone || 'N/A'}</span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border border-border space-y-4">
+              <h4 className="font-extrabold text-xs text-text-primary flex items-center gap-1.5">
+                <FileText size={14} className="text-primary" /> Allergies & Chronic Conditions
+              </h4>
+              <div className="space-y-3 text-xs">
+                <div>
+                  <span className="text-text-secondary block mb-1">Known Allergies</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile?.allergies?.length ? profile.allergies.map(a => <Badge key={a} variant="danger">{a}</Badge>) : <span className="text-text-secondary text-[10px]">No allergies recorded.</span>}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-text-secondary block mb-1">Chronic Medical Conditions</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile?.chronicConditions?.length ? profile.chronicConditions.map(c => <Badge key={c} variant="warning">{c}</Badge>) : <span className="text-text-secondary text-[10px]">No chronic conditions.</span>}
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
-          <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+
+          {/* Vitals logs table */}
+          <Card className="p-6 border border-border space-y-4">
+            <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold">{profile?.fullName || 'Not specified'}</h2>
-                <p className="text-gray-400 mt-1">Age {age} · {profile?.bloodGroup || 'Blood group not set'} · {profile?.gender || 'Gender not set'}</p>
+                <h4 className="font-extrabold text-xs text-text-primary flex items-center gap-1.5">
+                  <Activity size={14} className="text-secondary" /> Historical Vitals Telemetry
+                </h4>
+                <p className="text-[10px] text-text-secondary mt-0.5">Showing last recorded entries</p>
               </div>
-              <button
-                type="button"
-                onClick={() => startEdit('personal')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-600 text-gray-200 hover:bg-gray-700 transition-colors"
+              <Button
+                onClick={() => setShowVitalsForm(!showVitalsForm)}
+                className="font-bold rounded-custom text-[10px] py-1.5 px-3"
               >
-                <Edit3 size={16} />
-                Edit
-              </button>
+                {showVitalsForm ? 'Hide Form' : 'Log New Vitals'}
+              </Button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card
-          title="Personal Info"
-          action={editingSection === 'personal' ? null : (
-            <button type="button" onClick={() => startEdit('personal')} className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
-              <Edit3 size={16} /> Edit
-            </button>
-          )}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Full Name" value={draft.fullName} editing={editingSection === 'personal'} onChange={(value) => updateDraftField('fullName', value)} />
-            <Field label="Date of Birth" value={formatDate(draft.dateOfBirth)} editing={editingSection === 'personal'} type="date" onChange={(value) => updateDraftField('dateOfBirth', value)} />
-            <Field label="Gender" value={draft.gender} editing={editingSection === 'personal'} type="select" options={genders} onChange={(value) => updateDraftField('gender', value)} />
-            <Field label="Blood Group" value={draft.bloodGroup} editing={editingSection === 'personal'} type="select" options={bloodGroups} onChange={(value) => updateDraftField('bloodGroup', value)} />
-            <Field label="Height (cm)" value={draft.height} editing={editingSection === 'personal'} type="number" onChange={(value) => updateDraftField('height', value)} />
-            <Field label="Weight (kg)" value={draft.weight} editing={editingSection === 'personal'} type="number" onChange={(value) => updateDraftField('weight', value)} />
-          </div>
-          {editingSection === 'personal' && (
-            <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-end">
-              <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded-xl border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors">Cancel</button>
-              <button type="button" onClick={saveProfile} disabled={savingProfile} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-950 font-semibold transition-colors">
-                <Save size={16} /> {savingProfile ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          )}
-        </Card>
-
-        <Card
-          title="Emergency Contact"
-          action={editingSection === 'emergency' ? null : (
-            <button type="button" onClick={() => startEdit('emergency')} className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
-              <Edit3 size={16} /> Edit
-            </button>
-          )}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Name" value={draft.emergencyContact.name} editing={editingSection === 'emergency'} onChange={(value) => updateEmergencyField('name', value)} />
-            <Field label="Phone" value={draft.emergencyContact.phone} editing={editingSection === 'emergency'} onChange={(value) => updateEmergencyField('phone', value)} />
-            <Field label="Relation" value={draft.emergencyContact.relation} editing={editingSection === 'emergency'} onChange={(value) => updateEmergencyField('relation', value)} />
-          </div>
-          {editingSection === 'emergency' && (
-            <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-end">
-              <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded-xl border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors">Cancel</button>
-              <button type="button" onClick={saveProfile} disabled={savingProfile} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-950 font-semibold transition-colors">
-                <Save size={16} /> {savingProfile ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          )}
-        </Card>
-
-        <Card
-          title="Allergies"
-          action={editingSection === 'allergies' ? null : (
-            <button type="button" onClick={() => startEdit('allergies')} className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
-              <Edit3 size={16} /> Edit
-            </button>
-          )}
-        >
-          <div className="flex flex-wrap gap-2 mb-4 min-h-11">
-            {draft.allergies.length ? draft.allergies.map((item) => (
-              <Pill key={item} label={item} removable={editingSection === 'allergies'} onRemove={() => removeTag('allergies', item)} />
-            )) : <p className="text-gray-400">No allergies added yet.</p>}
-          </div>
-          {editingSection === 'allergies' && (
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tagInput.allergies}
-                  onChange={(e) => setTagInput((prev) => ({ ...prev, allergies: e.target.value }))}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addTag('allergies');
-                    }
-                  }}
-                  className="flex-1 rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  placeholder="Add allergy"
+            {showVitalsForm && (
+              <form onSubmit={handleAddVitals} className="p-4 border border-border rounded-custom bg-slate-50 dark:bg-slate-900/30 grid grid-cols-2 sm:grid-cols-5 gap-3 items-end animate-slideUp">
+                <Input
+                  label="BP (mmHg)"
+                  placeholder="120/80"
+                  value={vitalsForm.bloodPressure}
+                  onChange={(e) => setVitalsForm({ ...vitalsForm, bloodPressure: e.target.value })}
                 />
-                <button type="button" onClick={() => addTag('allergies')} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-semibold">
-                  <Plus size={16} /> Add
-                </button>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded-xl border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors">Cancel</button>
-                <button type="button" onClick={saveProfile} disabled={savingProfile} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-950 font-semibold transition-colors">
-                  <Save size={16} /> {savingProfile ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        <Card
-          title="Chronic Conditions"
-          action={editingSection === 'conditions' ? null : (
-            <button type="button" onClick={() => startEdit('conditions')} className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
-              <Edit3 size={16} /> Edit
-            </button>
-          )}
-        >
-          <div className="flex flex-wrap gap-2 mb-4 min-h-11">
-            {draft.chronicConditions.length ? draft.chronicConditions.map((item) => (
-              <Pill key={item} label={item} removable={editingSection === 'conditions'} onRemove={() => removeTag('chronicConditions', item)} />
-            )) : <p className="text-gray-400">No chronic conditions added yet.</p>}
-          </div>
-          {editingSection === 'conditions' && (
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tagInput.chronicConditions}
-                  onChange={(e) => setTagInput((prev) => ({ ...prev, chronicConditions: e.target.value }))}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addTag('chronicConditions');
-                    }
-                  }}
-                  className="flex-1 rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  placeholder="Add chronic condition"
+                <Input
+                  label="Heart Rate"
+                  placeholder="72"
+                  type="number"
+                  value={vitalsForm.heartRate}
+                  onChange={(e) => setVitalsForm({ ...vitalsForm, heartRate: e.target.value })}
                 />
-                <button type="button" onClick={() => addTag('chronicConditions')} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-semibold">
-                  <Plus size={16} /> Add
-                </button>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                <button type="button" onClick={cancelEdit} className="px-4 py-2 rounded-xl border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors">Cancel</button>
-                <button type="button" onClick={saveProfile} disabled={savingProfile} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-950 font-semibold transition-colors">
-                  <Save size={16} /> {savingProfile ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </div>
-          )}
-        </Card>
-      </div>
+                <Input
+                  label="Temp (°C)"
+                  placeholder="36.8"
+                  type="number"
+                  step="0.1"
+                  value={vitalsForm.temperature}
+                  onChange={(e) => setVitalsForm({ ...vitalsForm, temperature: e.target.value })}
+                />
+                <Input
+                  label="Sugar Level"
+                  placeholder="110"
+                  type="number"
+                  value={vitalsForm.sugarLevel}
+                  onChange={(e) => setVitalsForm({ ...vitalsForm, sugarLevel: e.target.value })}
+                />
+                <Input
+                  label="SpO2 (%)"
+                  placeholder="98"
+                  type="number"
+                  value={vitalsForm.oxygenLevel}
+                  onChange={(e) => setVitalsForm({ ...vitalsForm, oxygenLevel: e.target.value })}
+                />
+                <div className="col-span-2 sm:col-span-5 flex justify-end">
+                  <Button type="submit" disabled={savingVitals} className="rounded-custom text-xs">
+                    {savingVitals ? 'Logging...' : 'Save Vitals Entry'}
+                  </Button>
+                </div>
+              </form>
+            )}
 
-      <div className="bg-gray-800 border border-gray-700 rounded-3xl p-6 shadow-2xl">
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-xl font-semibold">Vitals</h3>
-            <p className="text-gray-400 text-sm mt-1">Last 10 recorded entries</p>
+            <div className="overflow-x-auto rounded-custom border border-border">
+              <table className="min-w-full text-xs text-left">
+                <thead className="bg-slate-50 dark:bg-slate-900 text-text-secondary font-bold">
+                  <tr className="border-b border-border">
+                    <th className="px-4 py-3">Recorded Time</th>
+                    <th className="px-4 py-3">Blood Pressure</th>
+                    <th className="px-4 py-3">Heart Rate</th>
+                    <th className="px-4 py-3">Temp (°C)</th>
+                    <th className="px-4 py-3">Sugar Level</th>
+                    <th className="px-4 py-3">Oxygen (SpO2)</th>
+                  </tr>
+                </thead>
+                <tbody className="text-text-secondary">
+                  {vitals.length ? vitals.map((v, i) => (
+                    <tr key={i} className="border-b border-border last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-4 py-2.5">{formatDateTime(v.recordedAt || v.createdAt)}</td>
+                      <td className="px-4 py-2.5 font-bold text-text-primary">{v.bloodPressure || 'N/A'}</td>
+                      <td className="px-4 py-2.5">{v.heartRate ? `${v.heartRate} bpm` : 'N/A'}</td>
+                      <td className="px-4 py-2.5">{v.temperature ? `${v.temperature} °C` : 'N/A'}</td>
+                      <td className="px-4 py-2.5">{v.sugarLevel ? `${v.sugarLevel} mg/dL` : 'N/A'}</td>
+                      <td className="px-4 py-2.5 font-semibold text-text-primary">{v.oxygenLevel ? `${v.oxygenLevel}%` : 'N/A'}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="6" className="px-4 py-8 text-center text-text-secondary">No telemetry logs found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Settings Tab */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left Col: Menu */}
+            <div className="md:col-span-2 space-y-6">
+              {/* Notification Toggles */}
+              <Card className="p-6 border border-border space-y-4">
+                <h4 className="font-extrabold text-xs text-text-primary flex items-center gap-1.5">
+                  <Bell size={14} className="text-primary" /> Notification Settings
+                </h4>
+                <div className="space-y-3 text-xs text-text-secondary">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.emailNotifications}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, emailNotifications: e.target.checked })}
+                      className="w-4 h-4 text-primary focus:ring-primary border-border rounded"
+                    />
+                    <div>
+                      <p className="font-bold text-text-primary">Email Notifications</p>
+                      <p className="text-[10px] text-text-secondary">Receive medicine reminders and doctor summaries in your inbox.</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.smsNotifications}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, smsNotifications: e.target.checked })}
+                      className="w-4 h-4 text-primary focus:ring-primary border-border rounded"
+                    />
+                    <div>
+                      <p className="font-bold text-text-primary">SMS Alerts</p>
+                      <p className="text-[10px] text-text-secondary">Receive urgent vitals alerts and verification notifications via SMS.</p>
+                    </div>
+                  </label>
+                </div>
+              </Card>
+
+              {/* Password Change Card */}
+              <Card className="p-6 border border-border space-y-4">
+                <h4 className="font-extrabold text-xs text-text-primary flex items-center gap-1.5">
+                  <Shield size={14} className="text-secondary" /> Change Password
+                </h4>
+                <form onSubmit={(e) => { e.preventDefault(); setMessage('Security configurations locked for demo purposes.'); setMessageType('success'); }} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Current Password"
+                      type="password"
+                      value={settingsForm.currentPassword}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, currentPassword: e.target.value })}
+                    />
+                    <Input
+                      label="New Password"
+                      type="password"
+                      value={settingsForm.newPassword}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, newPassword: e.target.value })}
+                    />
+                  </div>
+                  <Button type="submit" className="rounded-custom text-xs">
+                    Update Security Password
+                  </Button>
+                </form>
+              </Card>
+
+              {/* Data Exporter & Account removal */}
+              <Card className="p-6 border border-border space-y-4">
+                <h4 className="font-extrabold text-xs text-text-primary flex items-center gap-1.5">
+                  <Trash2 size={14} className="text-danger" /> Danger Zone
+                </h4>
+                <div className="space-y-3 text-xs">
+                  <p className="text-text-secondary">Export all diagnostics records, prescription lists, and vitals parameters as a JSON backup.</p>
+                  <Button variant="secondary" onClick={handleExportData} className="flex items-center gap-1.5 rounded-custom text-xs font-bold">
+                    <Download size={14} /> Export Backup JSON
+                  </Button>
+                  
+                  <div className="border-t border-border pt-4 space-y-2">
+                    <p className="text-danger font-bold">Delete Patient Account</p>
+                    <p className="text-text-secondary text-[10px]">Permanently discard account access. This is an irreversible operation.</p>
+                    <button
+                      onClick={() => {
+                        const conf = window.confirm("Are you sure you want to request account deletion? All records will be wiped.");
+                        if (conf) {
+                          setMessage('Wipe request sent. Accounts in demo state are protected.');
+                          setMessageType('error');
+                        }
+                      }}
+                      className="px-4 py-2 border border-danger/30 text-danger hover:bg-danger/5 rounded-custom text-xs font-bold transition-all"
+                    >
+                      Delete Account
+                    </button>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Right Col: Two Factor */}
+            <div className="md:col-span-1">
+              <Card className="p-6 border border-border space-y-4">
+                <h4 className="font-extrabold text-xs text-text-primary">Two-Factor Authentication</h4>
+                <p className="text-text-secondary text-[10px] leading-relaxed">Secure credentials using double verification checks. Highly recommended for clinical portals.</p>
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs font-bold text-text-primary">MFA Authentication</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.mfaEnabled}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, mfaEnabled: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:height-4 after:width-4 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </Card>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowVitalsForm((prev) => !prev)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-semibold transition-colors"
-          >
-            <Plus size={16} /> {showVitalsForm ? 'Hide Form' : 'Add Vitals'}
-          </button>
         </div>
-
-        <div className="overflow-x-auto rounded-2xl border border-gray-700">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-900 text-gray-300">
-              <tr>
-                <th className="text-left px-4 py-3">Date</th>
-                <th className="text-left px-4 py-3">BP</th>
-                <th className="text-left px-4 py-3">Heart Rate</th>
-                <th className="text-left px-4 py-3">Temperature</th>
-                <th className="text-left px-4 py-3">Sugar</th>
-                <th className="text-left px-4 py-3">O2</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vitals.length ? vitals.map((entry) => (
-                <tr key={`${entry.recordedAt}-${entry.bloodPressure}`} className="border-t border-gray-700">
-                  <td className="px-4 py-3 text-gray-200">{formatDateTime(entry.recordedAt)}</td>
-                  <td className="px-4 py-3 text-gray-200">{entry.bloodPressure || 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-200">{entry.heartRate ?? 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-200">{entry.temperature ?? 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-200">{entry.sugarLevel ?? 'N/A'}</td>
-                  <td className="px-4 py-3 text-gray-200">{entry.oxygenLevel ?? 'N/A'}</td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="6" className="px-4 py-10 text-center text-gray-400">No vitals recorded yet.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {showVitalsForm && (
-          <form onSubmit={saveVitals} className="mt-5 grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">BP</label>
-              <input value={vitalsForm.bloodPressure} onChange={(e) => setVitalsForm((prev) => ({ ...prev, bloodPressure: e.target.value }))} className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="120/80" />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Heart Rate</label>
-              <input type="number" value={vitalsForm.heartRate} onChange={(e) => setVitalsForm((prev) => ({ ...prev, heartRate: e.target.value }))} className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="72" />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Temp (°C)</label>
-              <input type="number" step="0.1" value={vitalsForm.temperature} onChange={(e) => setVitalsForm((prev) => ({ ...prev, temperature: e.target.value }))} className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="36.8" />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Sugar</label>
-              <input type="number" value={vitalsForm.sugarLevel} onChange={(e) => setVitalsForm((prev) => ({ ...prev, sugarLevel: e.target.value }))} className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="110" />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">O2</label>
-              <input type="number" value={vitalsForm.oxygenLevel} onChange={(e) => setVitalsForm((prev) => ({ ...prev, oxygenLevel: e.target.value }))} className="w-full rounded-xl bg-gray-900 border border-gray-700 text-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="98" />
-            </div>
-            <div className="md:col-span-5 flex justify-end">
-              <button
-                type="submit"
-                disabled={savingVitals}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-950 font-semibold transition-colors"
-              >
-                <Save size={16} /> {savingVitals ? 'Saving...' : 'Save Vitals'}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+      )}
     </div>
   );
-};
-
-export default PatientProfile;
+}

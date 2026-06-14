@@ -32,6 +32,13 @@ export default function SidebarLayout({ children }) {
   const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer open
   const [isCollapsed, setIsCollapsed] = useState(false); // Desktop/tablet collapsed status
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'Prescription OCR Extracted', message: 'Lisinopril 10mg dosage parsed successfully.', read: false, category: 'prescription', time: '10m ago' },
+    { id: 2, title: 'Doctor Credentials Approved', message: 'Dr. Sarah Jenkins has been certified for teleconsultations.', read: false, category: 'doctor', time: '2h ago' },
+    { id: 3, title: 'High Compliance Reached', message: 'Excellent progress! Adherence ratio reached 94% this week.', read: true, category: 'insight', time: '1d ago' },
+    { id: 4, title: 'Vitals Warning logged', message: 'Heart rate reading logged higher than baseline (98 bpm).', read: false, category: 'vitals', time: '2d ago' }
+  ]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -279,14 +286,58 @@ export default function SidebarLayout({ children }) {
               />
             </div>
 
-            {/* Notification Bell */}
-            <button
-              className="p-2.5 rounded-[14px] hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200 relative"
-              aria-label="View Notifications"
-            >
-              <Bell size={18} />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger ring-2 ring-white dark:ring-slate-900"></span>
-            </button>
+            {/* Notification Bell with Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2.5 rounded-[14px] hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200 relative"
+                aria-label="View Notifications"
+              >
+                <Bell size={18} />
+                {notifications.some(n => !n.read) && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-danger ring-2 ring-white dark:ring-slate-900"></span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-card border border-border shadow-lg rounded-custom z-50 p-4 space-y-3 animate-slideUp">
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <span className="font-extrabold text-xs text-text-primary">Notifications</span>
+                      <button
+                        onClick={() => {
+                          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                        }}
+                        className="text-[10px] font-bold text-primary hover:underline bg-transparent border-0"
+                      >
+                        Mark all as read
+                      </button>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1 divide-y divide-border/50">
+                      {notifications.map(n => (
+                        <div
+                          key={n.id}
+                          onClick={() => {
+                            setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item));
+                          }}
+                          className={`pt-2.5 first:pt-0 flex flex-col gap-0.5 cursor-pointer group ${n.read ? 'opacity-65' : ''}`}
+                        >
+                          <div className="flex justify-between items-start gap-1">
+                            <span className={`font-bold text-[11px] group-hover:text-primary transition-colors ${n.read ? 'text-text-secondary' : 'text-text-primary'}`}>
+                              {n.title}
+                            </span>
+                            <span className="text-[9px] text-text-secondary/70 whitespace-nowrap">{n.time}</span>
+                          </div>
+                          <p className="text-[10px] text-text-secondary leading-relaxed">{n.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Theme Toggle Button */}
             <button
