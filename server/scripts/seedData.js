@@ -1,794 +1,218 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const connectDB = require('../config/db');
 
-// Import models
-const Doctor = require('../models/Doctor');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
+const Patient = require('../models/Patient');
 const Prescription = require('../models/Prescription');
-const Consultation = require('../models/Consultation');
 const Medicine = require('../models/Medicine');
 const MedicineReminder = require('../models/MedicineReminder');
+const Consultation = require('../models/Consultation');
+const { HealthProfile } = require('../models/HealthProfile');
 
 const seedData = async () => {
   try {
-    // Connect to MongoDB
-    await connectDB();
+    const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/healthease';
+    console.log('Connecting to database:', mongoUri);
+    await mongoose.connect(mongoUri);
 
-    console.log('\n🌱 Starting HealthEase seed...\n');
-
-    // Clear existing data
-    console.log('🗑️  Clearing existing data...');
-    await Doctor.deleteMany({});
+    console.log('Clearing old collections...');
     await User.deleteMany({});
+    await Doctor.deleteMany({});
+    await Patient.deleteMany({});
     await Prescription.deleteMany({});
-    await Consultation.deleteMany({});
     await Medicine.deleteMany({});
     await MedicineReminder.deleteMany({});
-    console.log('✅ Data cleared\n');
+    await Consultation.deleteMany({});
+    await HealthProfile.deleteMany({});
 
-    // ========================
-    // CREATE DOCTORS (8)
-    // ========================
-    console.log('👨‍⚕️ Creating 8 doctors...');
+    console.log('Generating password hashes...');
+    const adminPasswordHash = bcrypt.hashSync('Admin@123', 10);
+    const userPasswordHash = bcrypt.hashSync('User@123', 10);
+    const doctorPasswordHash = bcrypt.hashSync('Doctor@123', 10);
 
-    const doctorPassHash = await bcrypt.hash('Doctor@123', 10);
-
-    const doctorsData = [
-      {
-        name: 'Dr. Aisha Sharma',
-        email: 'aisha.sharma@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'Cardiologist',
-        qualifications: ['MBBS - AIIMS Delhi', 'MD Cardiology - PGI Chandigarh'],
-        experience: 12,
-        languages: ['Hindi', 'English', 'Punjabi'],
-        consultationFee: 800,
-        consultationType: ['video', 'audio', 'chat'],
-        availability: {
-          isOnline: true,
-          workingHours: { start: '09:00', end: '18:00' },
-          daysAvailable: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-        },
-        rating: 4.8,
-        totalConsultations: 1240,
-        isVerified: true,
-        hospitalAffiliation: 'Apollo Hospital, Delhi',
-        bio: 'Specialist in interventional cardiology with 12 years experience treating complex cardiac conditions.'
-      },
-      {
-        name: 'Dr. Rajesh Kumar',
-        email: 'rajesh.kumar@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'General Physician',
-        qualifications: ['MBBS - KMC Manipal', 'DNB General Medicine'],
-        experience: 8,
-        languages: ['Hindi', 'English', 'Kannada'],
-        consultationFee: 400,
-        consultationType: ['video', 'chat'],
-        availability: {
-          isOnline: true,
-          workingHours: { start: '08:00', end: '20:00' },
-          daysAvailable: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        },
-        rating: 4.6,
-        totalConsultations: 3200,
-        isVerified: true,
-        hospitalAffiliation: 'Manipal Hospital, Bangalore',
-        bio: 'General physician experienced in managing chronic conditions, diabetes, and preventive healthcare.'
-      },
-      {
-        name: 'Dr. Priya Nair',
-        email: 'priya.nair@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'Dermatologist',
-        qualifications: ['MBBS - JIPMER Puducherry', 'MD Dermatology'],
-        experience: 6,
-        languages: ['English', 'Tamil', 'Malayalam'],
-        consultationFee: 600,
-        consultationType: ['video', 'chat'],
-        availability: {
-          isOnline: false,
-          workingHours: { start: '10:00', end: '17:00' },
-          daysAvailable: ['Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        },
-        rating: 4.7,
-        totalConsultations: 890,
-        isVerified: true,
-        hospitalAffiliation: 'JIPMER, Puducherry',
-        bio: 'Expert in medical and cosmetic dermatology, treating acne, eczema, psoriasis, and pigmentation disorders.'
-      },
-      {
-        name: 'Dr. Vikram Patel',
-        email: 'vikram.patel@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'Orthopedic Surgeon',
-        qualifications: ['MBBS - B.J. Medical College', 'MS Orthopaedics'],
-        experience: 15,
-        languages: ['Hindi', 'English', 'Gujarati'],
-        consultationFee: 1000,
-        consultationType: ['video', 'audio'],
-        availability: {
-          isOnline: true,
-          workingHours: { start: '09:00', end: '16:00' },
-          daysAvailable: ['Mon', 'Wed', 'Fri']
-        },
-        rating: 4.9,
-        totalConsultations: 2100,
-        isVerified: true,
-        hospitalAffiliation: 'Sterling Hospitals, Ahmedabad',
-        bio: 'Specialized in joint replacement surgeries, sports injuries, and spine disorders.'
-      },
-      {
-        name: 'Dr. Meena Krishnaswamy',
-        email: 'meena.k@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'Pediatrician',
-        qualifications: ['MBBS - Stanley Medical College', 'MD Pediatrics'],
-        experience: 10,
-        languages: ['Tamil', 'English', 'Telugu'],
-        consultationFee: 500,
-        consultationType: ['video', 'audio', 'chat'],
-        availability: {
-          isOnline: true,
-          workingHours: { start: '09:00', end: '19:00' },
-          daysAvailable: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        },
-        rating: 4.9,
-        totalConsultations: 4500,
-        isVerified: true,
-        hospitalAffiliation: 'Rainbow Children\'s Hospital, Chennai',
-        bio: 'Dedicated pediatrician with expertise in neonatal care, childhood vaccinations, and developmental disorders.'
-      },
-      {
-        name: 'Dr. Arjun Mehta',
-        email: 'arjun.mehta@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'Psychiatrist',
-        qualifications: ['MBBS - Grant Medical College', 'MD Psychiatry - NIMHANS'],
-        experience: 9,
-        languages: ['Hindi', 'English', 'Marathi'],
-        consultationFee: 900,
-        consultationType: ['video', 'chat'],
-        availability: {
-          isOnline: false,
-          workingHours: { start: '11:00', end: '18:00' },
-          daysAvailable: ['Mon', 'Tue', 'Thu', 'Fri']
-        },
-        rating: 4.7,
-        totalConsultations: 760,
-        isVerified: true,
-        hospitalAffiliation: 'Fortis Hospital, Mumbai',
-        bio: 'Specialist in anxiety, depression, OCD, and psychotherapy with a patient-first approach.'
-      },
-      {
-        name: 'Dr. Sunita Rao',
-        email: 'sunita.rao@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'Gynecologist',
-        qualifications: ['MBBS - Osmania Medical College', 'MS Obstetrics & Gynaecology'],
-        experience: 14,
-        languages: ['Telugu', 'Hindi', 'English'],
-        consultationFee: 700,
-        consultationType: ['video', 'audio'],
-        availability: {
-          isOnline: true,
-          workingHours: { start: '09:00', end: '17:00' },
-          daysAvailable: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-        },
-        rating: 4.8,
-        totalConsultations: 3100,
-        isVerified: true,
-        hospitalAffiliation: 'KIMS Hospital, Hyderabad',
-        bio: 'Experienced gynecologist specializing in high-risk pregnancies, PCOS, and minimally invasive surgeries.'
-      },
-      {
-        name: 'Dr. Farhan Qureshi',
-        email: 'farhan.q@healthease.com',
-        passwordHash: doctorPassHash,
-        specialization: 'Neurologist',
-        qualifications: ['MBBS - King George\'s Medical University', 'DM Neurology'],
-        experience: 11,
-        languages: ['Hindi', 'English', 'Urdu'],
-        consultationFee: 1200,
-        consultationType: ['video', 'audio'],
-        availability: {
-          isOnline: true,
-          workingHours: { start: '10:00', end: '17:00' },
-          daysAvailable: ['Tue', 'Wed', 'Thu', 'Fri']
-        },
-        rating: 4.6,
-        totalConsultations: 980,
-        isVerified: true,
-        hospitalAffiliation: 'SGPGI, Lucknow',
-        bio: 'Expert in epilepsy, stroke management, migraine, Parkinson\'s disease, and neurodegenerative disorders.'
+    console.log('Seeding Users...');
+    // Seed Admin Account
+    const adminUser = await User.create({
+      name: 'System Admin Owner',
+      email: 'admin@healthease.demo',
+      passwordHash: adminPasswordHash,
+      role: 'admin',
+      profile: {
+        age: 32,
+        bloodGroup: 'O+',
+        chronicConditions: [],
+        allergies: []
       }
-    ];
-
-    const createdDoctors = await Doctor.insertMany(doctorsData);
-    createdDoctors.forEach(doc => {
-      console.log(`✅ ${doc.name} created`);
     });
 
-    // ========================
-    // CREATE PATIENTS (4)
-    // ========================
-    console.log('\n👤 Creating 4 patients...');
-
-    const patientPassHash = await bcrypt.hash('Patient@123', 10);
-    const testUserPassHash = await bcrypt.hash('TestUser@123', 10);
-
-    const patientsData = [
-      {
-        name: 'Test User One',
-        email: 'testuser@healthease.com',
-        passwordHash: testUserPassHash,
-        role: 'patient',
-        profile: {
-          age: 30,
-          bloodGroup: 'O+',
-          chronicConditions: [],
-          allergies: []
-        }
-      },
-      {
-        name: 'Rahul Verma',
-        email: 'rahul.verma@gmail.com',
-        passwordHash: patientPassHash,
-        role: 'patient',
-        profile: {
-          age: 34,
-          bloodGroup: 'B+',
-          chronicConditions: ['Type 2 Diabetes', 'Hypertension'],
-          allergies: ['Penicillin', 'Sulfa drugs']
-        }
-      },
-      {
-        name: 'Sneha Iyer',
-        email: 'sneha.iyer@gmail.com',
-        passwordHash: patientPassHash,
-        role: 'patient',
-        profile: {
-          age: 28,
-          bloodGroup: 'O+',
-          chronicConditions: ['Asthma'],
-          allergies: ['Aspirin']
-        }
-      },
-      {
-        name: 'Amit Joshi',
-        email: 'amit.joshi@gmail.com',
-        passwordHash: patientPassHash,
-        role: 'patient',
-        profile: {
-          age: 45,
-          bloodGroup: 'A+',
-          chronicConditions: ['Hypothyroidism', 'High Cholesterol'],
-          allergies: []
-        }
+    // Seed Patient Account
+    const patientUser = await User.create({
+      name: 'Rohan Sharma',
+      email: 'user@healthease.demo',
+      passwordHash: userPasswordHash,
+      role: 'patient',
+      profile: {
+        age: 28,
+        bloodGroup: 'A+',
+        chronicConditions: ['Hypertension'],
+        allergies: ['Penicillin']
       }
-    ];
-
-    const createdPatients = await User.insertMany(patientsData);
-    createdPatients.forEach(patient => {
-      console.log(`✅ ${patient.name} created`);
     });
 
-    // ========================
-    // CREATE PRESCRIPTIONS (6)
-    // ========================
-    console.log('\n💊 Creating 6 prescriptions...');
-
-    const prescriptionsData = [
-      // Rahul Verma - Prescription 1
-      {
-        patientId: createdPatients[0]._id,
-        doctorName: 'Dr. Aisha Sharma',
-        source: 'doctor-issued',
-        imageUrl: 'https://via.placeholder.com/600x800?text=Prescription+1',
-        isVerified: true,
-        uploadDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-        medications: [
-          {
-            name: 'Metformin',
-            dosage: '500mg',
-            frequency: 'Twice daily',
-            duration: '90 days'
-          },
-          {
-            name: 'Amlodipine',
-            dosage: '5mg',
-            frequency: 'Once daily',
-            duration: '90 days'
-          },
-          {
-            name: 'Aspirin',
-            dosage: '75mg',
-            frequency: 'Once daily',
-            duration: '90 days'
-          }
-        ],
-        notes: 'Monitor blood sugar weekly. Avoid high-carb meals.'
-      },
-      // Rahul Verma - Prescription 2
-      {
-        patientId: createdPatients[0]._id,
-        doctorName: 'Dr. Rajesh Kumar',
-        source: 'patient-uploaded',
-        imageUrl: 'https://via.placeholder.com/600x800?text=Prescription+2',
-        isVerified: false,
-        uploadDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-        medications: [
-          {
-            name: 'Pantoprazole',
-            dosage: '40mg',
-            frequency: 'Once daily before meals',
-            duration: '14 days'
-          },
-          {
-            name: 'Ondansetron',
-            dosage: '4mg',
-            frequency: 'As needed',
-            duration: '5 days'
-          }
-        ],
-        notes: 'Uploaded from last clinic visit.'
-      },
-      // Sneha Iyer - Prescription 1
-      {
-        patientId: createdPatients[1]._id,
-        doctorName: 'Dr. Rajesh Kumar',
-        source: 'doctor-issued',
-        imageUrl: 'https://via.placeholder.com/600x800?text=Prescription+3',
-        isVerified: true,
-        uploadDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-        medications: [
-          {
-            name: 'Salbutamol Inhaler',
-            dosage: '100mcg',
-            frequency: 'As needed (2 puffs)',
-            duration: 'Ongoing'
-          },
-          {
-            name: 'Budesonide Inhaler',
-            dosage: '200mcg',
-            frequency: 'Twice daily',
-            duration: '30 days'
-          },
-          {
-            name: 'Montelukast',
-            dosage: '10mg',
-            frequency: 'Once daily at night',
-            duration: '30 days'
-          }
-        ],
-        notes: 'Avoid cold air and dust. Carry inhaler at all times.'
-      },
-      // Sneha Iyer - Prescription 2
-      {
-        patientId: createdPatients[1]._id,
-        doctorName: 'Dr. Priya Nair',
-        source: 'patient-uploaded',
-        imageUrl: 'https://via.placeholder.com/600x800?text=Prescription+4',
-        isVerified: true,
-        uploadDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-        medications: [
-          {
-            name: 'Clindamycin Gel',
-            dosage: '1%',
-            frequency: 'Apply twice daily',
-            duration: '60 days'
-          },
-          {
-            name: 'Doxycycline',
-            dosage: '100mg',
-            frequency: 'Once daily',
-            duration: '30 days'
-          }
-        ],
-        notes: 'For acne treatment. Use sunscreen daily.'
-      },
-      // Amit Joshi - Prescription 1
-      {
-        patientId: createdPatients[2]._id,
-        doctorName: 'Dr. Aisha Sharma',
-        source: 'doctor-issued',
-        imageUrl: 'https://via.placeholder.com/600x800?text=Prescription+5',
-        isVerified: true,
-        uploadDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        medications: [
-          {
-            name: 'Levothyroxine',
-            dosage: '50mcg',
-            frequency: 'Once daily empty stomach',
-            duration: 'Ongoing'
-          },
-          {
-            name: 'Atorvastatin',
-            dosage: '20mg',
-            frequency: 'Once daily at night',
-            duration: '90 days'
-          },
-          {
-            name: 'Omega-3 Fatty Acids',
-            dosage: '1000mg',
-            frequency: 'Twice daily with meals',
-            duration: '90 days'
-          }
-        ],
-        notes: 'Thyroid levels to be checked after 6 weeks.'
-      },
-      // Amit Joshi - Prescription 2
-      {
-        patientId: createdPatients[2]._id,
-        doctorName: 'Dr. Farhan Qureshi',
-        source: 'patient-uploaded',
-        imageUrl: 'https://via.placeholder.com/600x800?text=Prescription+6',
-        isVerified: false,
-        uploadDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        medications: [
-          {
-            name: 'Sumatriptan',
-            dosage: '50mg',
-            frequency: 'As needed for migraine',
-            duration: 'PRN'
-          },
-          {
-            name: 'Propranolol',
-            dosage: '40mg',
-            frequency: 'Twice daily',
-            duration: '30 days'
-          }
-        ],
-        notes: 'For migraine prevention. Avoid triggers.'
-      }
-    ];
-
-    await Prescription.insertMany(prescriptionsData);
-    console.log(`✅ 6 prescriptions created`);
-
-    // ========================
-    // CREATE CONSULTATIONS (4)
-    // ========================
-    console.log('\n🏥 Creating 4 consultations...');
-
-    const consultationsData = [
-      // Consultation 1 - Completed (Rahul + Dr. Aisha)
-      {
-        patientId: createdPatients[0]._id,
-        doctorId: createdDoctors[0]._id,
-        consultationType: 'video',
-        status: 'completed',
-        scheduledAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-        startedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
-        endedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
-        fee: 800,
-        paymentStatus: 'paid',
-        queuePosition: 1,
-        notes: {
-          chiefComplaint: 'Chest tightness and shortness of breath on exertion',
-          diagnosis: 'Stable Angina - controlled with medication',
-          testsOrdered: [
-            {
-              testName: 'ECG',
-              urgency: 'routine',
-              reason: 'Baseline cardiac assessment'
-            },
-            {
-              testName: 'Echocardiogram',
-              urgency: 'routine',
-              reason: 'Assess cardiac function'
-            },
-            {
-              testName: 'Lipid Profile',
-              urgency: 'routine',
-              reason: 'Monitor cholesterol levels'
-            }
-          ],
-          followUpDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-          improvementObserved: {
-            observed: true,
-            details: 'Patient reports reduced frequency of chest tightness episodes'
-          },
-          doctorPrivateNotes: 'Patient is compliant with medication. Good candidate for stress test.'
-        }
-      },
-      // Consultation 2 - Completed (Sneha + Dr. Rajesh)
-      {
-        patientId: createdPatients[1]._id,
-        doctorId: createdDoctors[1]._id,
-        consultationType: 'chat',
-        status: 'completed',
-        scheduledAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-        fee: 400,
-        paymentStatus: 'paid',
-        queuePosition: 1,
-        notes: {
-          chiefComplaint: 'Frequent wheezing episodes at night',
-          diagnosis: 'Moderate Persistent Asthma - step-up therapy required',
-          testsOrdered: [
-            {
-              testName: 'Spirometry',
-              urgency: 'routine',
-              reason: 'Assess lung function'
-            },
-            {
-              testName: 'Chest X-Ray',
-              urgency: 'routine',
-              reason: 'Rule out infection'
-            }
-          ],
-          followUpDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-          improvementObserved: {
-            observed: false,
-            details: 'Symptoms worsening despite current inhaler therapy'
-          }
-        }
-      },
-      // Consultation 3 - Completed (Amit + Dr. Farhan)
-      {
-        patientId: createdPatients[2]._id,
-        doctorId: createdDoctors[7]._id,
-        consultationType: 'video',
-        status: 'completed',
-        scheduledAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        fee: 1200,
-        paymentStatus: 'paid',
-        queuePosition: 1,
-        notes: {
-          chiefComplaint: 'Severe migraine attacks 3-4 times/week',
-          diagnosis: 'Chronic Migraine with medication overuse headache',
-          testsOrdered: [
-            {
-              testName: 'MRI Brain',
-              urgency: 'high',
-              reason: 'Rule out secondary causes'
-            },
-            {
-              testName: 'EEG',
-              urgency: 'routine',
-              reason: 'Rule out seizure disorder'
-            }
-          ],
-          followUpDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          improvementObserved: {
-            observed: false,
-            details: ''
-          },
-          doctorPrivateNotes: 'Consider preventive therapy. Patient needs lifestyle counseling.'
-        }
-      },
-      // Consultation 4 - Queued (for live testing)
-      {
-        patientId: createdPatients[0]._id,
-        doctorId: createdDoctors[1]._id,
-        consultationType: 'video',
-        status: 'queued',
-        scheduledAt: new Date(),
-        fee: 400,
-        paymentStatus: 'paid',
-        queuePosition: 1
-      }
-    ];
-
-    await Consultation.insertMany(consultationsData);
-    console.log(`✅ 4 consultations created`);
-
-    // ========================
-    // CREATE MEDICINES (6)
-    // ========================
-    console.log('\n💊 Creating 6 medicines...');
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const medicineSeedData = [
-      {
-        userId: createdPatients[0]._id,
-        name: 'Metformin',
-        dosage: '500mg',
-        frequency: 'twice daily',
-        duration: 90,
-        reminderTime: '08:00',
-        sideEffects: ['Nausea', 'Loose stools'],
-        instructions: 'Take after breakfast and dinner',
-        takeWithFood: true,
-        quantityRemaining: 20,
-        refillThreshold: 7,
-        status: 'active'
-      },
-      {
-        userId: createdPatients[0]._id,
-        name: 'Amlodipine',
-        dosage: '5mg',
-        frequency: 'once daily',
-        duration: 90,
-        reminderTime: '21:00',
-        sideEffects: ['Dizziness'],
-        instructions: 'Take at bedtime',
-        takeWithFood: false,
-        quantityRemaining: 14,
-        refillThreshold: 7,
-        status: 'active'
-      },
-      {
-        userId: createdPatients[0]._id,
-        name: 'Calcium + D3',
-        dosage: '1 tablet',
-        frequency: 'once daily',
-        duration: 30,
-        reminderTime: '13:00',
-        sideEffects: [],
-        instructions: 'Take after lunch',
-        takeWithFood: true,
-        quantityRemaining: 4,
-        refillThreshold: 7,
-        status: 'active'
-      },
-      {
-        userId: createdPatients[1]._id,
-        name: 'Salbutamol Inhaler',
-        dosage: '2 puffs',
-        frequency: 'as needed',
-        duration: 30,
-        reminderTime: '22:00',
-        sideEffects: ['Tremor', 'Palpitations'],
-        instructions: 'Use only when wheezing starts',
-        takeWithFood: false,
-        quantityRemaining: 8,
-        refillThreshold: 5,
-        status: 'active'
-      },
-      {
-        userId: createdPatients[2]._id,
-        name: 'Sertraline',
-        dosage: '25mg',
-        frequency: 'once daily',
-        duration: 60,
-        reminderTime: '22:30',
-        sideEffects: ['Sleepiness'],
-        instructions: 'Take after dinner',
-        takeWithFood: false,
-        quantityRemaining: 12,
-        refillThreshold: 7,
-        status: 'paused'
-      },
-      {
-        userId: createdPatients[2]._id,
-        name: 'Levothyroxine',
-        dosage: '50mcg',
-        frequency: 'once daily',
-        duration: 180,
-        reminderTime: '07:00',
-        sideEffects: ['Palpitations if overdosed'],
-        instructions: 'Take on empty stomach, 30 minutes before breakfast',
-        takeWithFood: false,
-        quantityRemaining: 25,
-        refillThreshold: 10,
-        status: 'active'
-      },
-      {
-        userId: createdPatients[3]._id,
-        name: 'Atorvastatin',
-        dosage: '20mg',
-        frequency: 'once daily',
-        duration: 90,
-        reminderTime: '20:30',
-        sideEffects: ['Muscle aches'],
-        instructions: 'Take in the evening',
-        takeWithFood: false,
-        quantityRemaining: 6,
-        refillThreshold: 7,
-        status: 'active'
-      },
-      {
-        userId: createdPatients[3]._id,
-        name: 'Vitamin D3',
-        dosage: '60,000 IU',
-        frequency: 'weekly',
-        duration: 8,
-        reminderTime: '09:00',
-        sideEffects: [],
-        instructions: 'Take after lunch on Sundays',
-        takeWithFood: true,
-        quantityRemaining: 2,
-        refillThreshold: 1,
-        status: 'active'
-      }
-    ];
-
-    const createdMedicines = await Medicine.insertMany(
-      medicineSeedData.map(medicine => ({
-        ...medicine,
-        startDate: today,
-        endDate: new Date(today.getTime() + medicine.duration * 24 * 60 * 60 * 1000)
-      }))
-    );
-
-    createdMedicines.forEach(medicine => {
-      console.log(`✅ ${medicine.name} created`);
+    console.log('Seeding Doctors...');
+    const doc1 = await Doctor.create({
+      name: 'Dr. Sarah Jenkins',
+      email: 'jenkins@healthease.demo',
+      passwordHash: doctorPasswordHash,
+      specialization: 'General Physician',
+      experience: 12,
+      languages: ['English', 'Hindi'],
+      consultationFee: 500,
+      consultationType: ['video', 'chat'],
+      isVerified: true,
+      bio: 'Expert general physician with over a decade of clinical care experience.',
+      availability: { isOnline: true }
     });
 
-    const remindersToInsert = [];
-    for (const medicine of createdMedicines) {
-      for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-        const reminderDate = new Date(today);
-        reminderDate.setDate(reminderDate.getDate() + dayOffset);
-        remindersToInsert.push({
-          medicineId: medicine._id,
-          userId: medicine.userId,
-          reminderDate,
-          reminderTime: medicine.reminderTime,
-          status: 'pending',
-          notificationSent: false,
-          emailSent: false,
-          smsSent: false,
-          notificationCount: 0
-        });
+    const doc2 = await Doctor.create({
+      name: 'Dr. Amit Patel',
+      email: 'patel@healthease.demo',
+      passwordHash: doctorPasswordHash,
+      specialization: 'Cardiologist',
+      experience: 15,
+      languages: ['English', 'Gujarati'],
+      consultationFee: 800,
+      consultationType: ['video', 'audio'],
+      isVerified: true,
+      bio: 'Interventional cardiologist specializing in cardiovascular diagnostics.',
+      availability: { isOnline: true }
+    });
+
+    console.log('Seeding Patient Profile & Vitals...');
+    const patient = await Patient.create({
+      userId: patientUser._id,
+      fullName: 'Rohan Sharma',
+      dateOfBirth: new Date('1998-05-14'),
+      gender: 'Male',
+      bloodGroup: 'A+',
+      height: 178,
+      weight: 72,
+      allergies: ['Penicillin'],
+      chronicConditions: ['Hypertension'],
+      emergencyContact: {
+        name: 'Anita Sharma',
+        phone: '+91 98765 43210',
+        relation: 'Mother'
+      },
+      vitals: [
+        { recordedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), bloodPressure: '128/84', heartRate: 78, temperature: 36.8, sugarLevel: 115, oxygenLevel: 97 },
+        { recordedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), bloodPressure: '124/82', heartRate: 74, temperature: 36.6, sugarLevel: 110, oxygenLevel: 98 },
+        { recordedAt: new Date(), bloodPressure: '120/80', heartRate: 72, temperature: 36.7, sugarLevel: 108, oxygenLevel: 99 }
+      ]
+    });
+
+    console.log('Seeding Prescriptions...');
+    const rx = await Prescription.create({
+      source: 'patient-uploaded',
+      patientId: patientUser._id,
+      imageUrl: 'https://healthease-demo-prescriptions.s3.amazonaws.com/rx_sample.jpg',
+      doctorName: 'Dr. Sarah Jenkins',
+      isVerified: true,
+      ocrRawText: 'Sarah Jenkins GP MCI-199203. Rx: Lisinopril 10mg daily morning. Metformin 500mg post lunch.',
+      medications: [
+        { name: 'Lisinopril 10mg', dosage: '1 Tablet', frequency: 'once daily', duration: '30 days', notes: 'Take in morning' },
+        { name: 'Metformin 500mg', dosage: '1 Tablet', frequency: 'twice daily', duration: '60 days', notes: 'Take after meals' }
+      ]
+    });
+
+    console.log('Seeding Medicines Schedule...');
+    const med1 = await Medicine.create({
+      userId: patientUser._id,
+      name: 'Lisinopril 10mg',
+      dosage: '1 Tablet',
+      frequency: 'once daily',
+      duration: 30,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      reminderTime: '08:00',
+      quantityRemaining: 8,
+      refillThreshold: 10,
+      status: 'active',
+      prescriptionId: rx._id
+    });
+
+    const med2 = await Medicine.create({
+      userId: patientUser._id,
+      name: 'Metformin HCl 500mg',
+      dosage: '1 Tablet',
+      frequency: 'twice daily',
+      duration: 60,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+      reminderTime: '14:00',
+      quantityRemaining: 45,
+      refillThreshold: 15,
+      status: 'active',
+      prescriptionId: rx._id
+    });
+
+    console.log('Seeding Medicine Reminder Records...');
+    await MedicineReminder.create({
+      medicineId: med1._id,
+      userId: patientUser._id,
+      reminderDate: new Date(),
+      reminderTime: '08:00',
+      status: 'taken',
+      takenAt: new Date()
+    });
+
+    await MedicineReminder.create({
+      medicineId: med2._id,
+      userId: patientUser._id,
+      reminderDate: new Date(),
+      reminderTime: '14:00',
+      status: 'skipped',
+      notes: 'Missed lunch post time'
+    });
+
+    console.log('Seeding Consultations...');
+    await Consultation.create({
+      patientId: patientUser._id,
+      doctorId: doc1._id,
+      status: 'completed',
+      consultationType: 'chat',
+      scheduledAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      startedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      endedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      fee: 500,
+      paymentStatus: 'paid',
+      notes: {
+        chiefComplaint: 'Mild fatigue and blood pressure logs check.',
+        diagnosis: 'Essential primary mild hypertension - stable.',
+        prescribedMedicines: [
+          { name: 'Lisinopril 10mg', dosage: '1 Tablet', frequency: 'Once daily', duration: '30 Days', notes: 'Maintain weekly vitals logs' }
+        ]
       }
-    }
+    });
 
-    await MedicineReminder.insertMany(remindersToInsert);
-    console.log(`✅ ${remindersToInsert.length} medicine reminders created`);
+    await Consultation.create({
+      patientId: patientUser._id,
+      doctorId: doc2._id,
+      status: 'queued',
+      consultationType: 'video',
+      scheduledAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      fee: 800,
+      paymentStatus: 'paid'
+    });
 
-    // ========================
-    // SUCCESS SUMMARY
-    // ========================
-    console.log('\n🎉 Seed complete! Summary:');
-    console.log('   - 8 Doctors');
-    console.log('   - 4 Patients');
-    console.log('   - 6 Prescriptions');
-    console.log('   - 4 Consultations');
-    console.log('   - 8 Medicines');
-    console.log('   - 56 Reminders');
-
-    console.log('\n📋 LOGIN CREDENTIALS:');
-    console.log('\nPATIENTS:');
-    console.log('   Email: testuser@healthease.com');
-    console.log('   Password: TestUser@123');
-    console.log('   ');
-    console.log('   Email: rahul.verma@gmail.com');
-    console.log('   Password: Patient@123');
-    console.log('   ');
-    console.log('   Email: sneha.iyer@gmail.com');
-    console.log('   Password: Patient@123');
-    console.log('   ');
-    console.log('   Email: amit.joshi@gmail.com');
-    console.log('   Password: Patient@123');
-
-    console.log('\nDOCTORS:');
-    console.log('   Email: aisha.sharma@healthease.com');
-    console.log('   Password: Doctor@123');
-    console.log('   ');
-    console.log('   Email: rajesh.kumar@healthease.com');
-    console.log('   Password: Doctor@123');
-    console.log('   ');
-    console.log('   Email: priya.nair@healthease.com');
-    console.log('   Password: Doctor@123');
-    console.log('   ');
-    console.log('   Email: vikram.patel@healthease.com');
-    console.log('   Password: Doctor@123');
-    console.log('   ');
-    console.log('   Email: meena.k@healthease.com');
-    console.log('   Password: Doctor@123');
-    console.log('   ');
-    console.log('   Email: arjun.mehta@healthease.com');
-    console.log('   Password: Doctor@123');
-    console.log('   ');
-    console.log('   Email: sunita.rao@healthease.com');
-    console.log('   Password: Doctor@123');
-    console.log('   ');
-    console.log('   Email: farhan.q@healthease.com');
-    console.log('   Password: Doctor@123');
-
-    console.log('\n✨ Database seeded successfully!\n');
-
-    process.exit(0);
+    console.log('Database seeded successfully!');
+    mongoose.disconnect();
   } catch (error) {
-    console.error('\n❌ Seed error:', error.message);
-    console.error(error);
+    console.error('Seeding process encountered error:', error);
     process.exit(1);
   }
 };
 
-// Run the seed
 seedData();

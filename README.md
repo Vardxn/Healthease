@@ -28,6 +28,18 @@ graph TD
 
 ---
 
+## 👥 Demo Credentials & Seed Data
+
+HEALTHEASE includes predefined seed data to let users and reviewers immediately explore the clinical features without manual signup.
+
+### 🔑 Test Accounts
+| Account Type | Email | Password | Allowed Access Modules |
+| :--- | :--- | :--- | :--- |
+| **System Admin** | `admin@healthease.demo` | `Admin@123` | KPI Analytics, Doctor Certification Verification, System Audit Logs |
+| **Active Patient** | `user@healthease.demo` | `User@123` | AI prescriptions digitizer scanner, Adherence trackers, Vitals logs, Consult bookings |
+
+---
+
 ## 🌟 Key Features
 
 1. **AI Prescription OCR Scanner**
@@ -73,26 +85,26 @@ healthease/
 
 ### Server (`/server/.env`)
 ```env
-PORT=5000
-MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/healthease
-JWT_SECRET=super_secret_jwt_sign_key
+PORT=5001
+MONGO_URI=mongodb://127.0.0.1:27017/healthease
+JWT_SECRET=healthease_secret_key
 PYTHON_SERVICE_URL=http://localhost:8000
 GMAIL_USER=smtp.reminders@gmail.com
 GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
-CLIENT_URL=http://localhost:5173
+CLIENT_URL=http://localhost:3000
 ```
 
 ### AI Python Service (`/python-service/.env`)
 ```env
 PORT=8000
-MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/healthease
+MONGO_URI=mongodb://127.0.0.1:27017/healthease
 GROQ_API_KEY=gsk_xxxxxxxxx
 ```
 
 ### Client (`/client/.env`)
 ```env
-VITE_API_URL=http://localhost:5000/api
-VITE_WS_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5001/api
+VITE_WS_URL=http://localhost:5001
 ```
 
 ---
@@ -113,23 +125,29 @@ VITE_WS_URL=http://localhost:5000
 3. **Configure Environment variables**
    - Create `.env` files in `client/`, `server/`, and `python-service/` matching the environment blueprints above.
 
-4. **Launch Application Workspace**
+4. **Seed Database Demo Data**
+   ```bash
+   npm run seed
+   ```
+   *Note: Automatically drops old tables and seeds fresh mock records.*
+
+5. **Launch Application Workspace**
    ```bash
    npm run dev
    ```
-   *Note: Runs frontend dev server at `http://localhost:5173` and Node API at `http://localhost:5000`.*
+   *Note: Runs frontend dev server at `http://localhost:3000` and Node API at `http://localhost:5001` concurrently.*
 
 ---
 
 ## 🌍 Production Deployment Guides
 
-### Frontend (Vercel)
+### Vercel Deployment (Frontend)
 1. Import the project on Vercel.
 2. Select the root folder or override build directory to `client`.
-3. Set environment variable: `VITE_API_URL` and `VITE_WS_URL`.
+3. Set environment variables: `VITE_API_URL` and `VITE_WS_URL`.
 4. Deploy.
 
-### Backend (Render)
+### Render Deployment (Backend API)
 1. Create a Web Service linked to the repository.
 2. Build command: `cd server && npm install`.
 3. Start command: `cd server && npm start`.
