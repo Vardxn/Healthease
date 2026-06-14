@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api';
+export const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = API_ORIGIN ? `${API_ORIGIN}/api` : '/api';
 
 // Create axios instance
 const api = axios.create({
@@ -210,7 +211,8 @@ export const doctorConsultationAPI = {
   getById: (id) => doctorApiInstance.get(`/consultations/${id}`),
   getQueue: (doctorId) => doctorApiInstance.get(`/consultations/queue/${doctorId}`),
   updateStatus: (id, status) => doctorApiInstance.patch(`/consultations/${id}/status`, { status }),
-  addNotes: (id, notes) => doctorApiInstance.patch(`/consultations/${id}/notes`, notes)
+  addNotes: (id, notes) => doctorApiInstance.patch(`/consultations/${id}/notes`, notes),
+  checkPrescriptionSafety: (patientId, newMedications) => doctorApiInstance.post('/prescriptions/check-safety', { patientId, newMedications })
 };
 
 export default api;

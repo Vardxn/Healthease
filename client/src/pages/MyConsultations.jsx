@@ -1,33 +1,73 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { consultationAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import {
+  Calendar,
+  Clock,
+  Video,
+  Phone,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  AlertCircle,
+  FileText,
+  Activity,
+  History,
+  Grid,
+  ListTodo
+} from 'lucide-react';
 
-const badgeClasses = {
-  queued: 'bg-amber-500/20 text-amber-200 border-amber-500/30',
-  active: 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30',
-  completed: 'bg-cyan-500/20 text-cyan-200 border-cyan-500/30',
-  cancelled: 'bg-rose-500/20 text-rose-200 border-rose-500/30'
+const consultationTypeConfig = {
+  video: { label: 'Video', Icon: Video },
+  audio: { label: 'Audio', Icon: Phone },
+  chat: { label: 'Chat', Icon: MessageSquare }
+};
+
+const badgeVariants = {
+  queued: 'warning',
+  active: 'success',
+  completed: 'secondary',
+  cancelled: 'danger'
 };
 
 const formatDate = (value) => {
   if (!value) return 'N/A';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'N/A';
-  return date.toLocaleString();
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
+
+const formatTime = (value) => {
+  if (!value) return 'N/A';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'N/A';
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 const MyConsultations = () => {
   const navigate = useNavigate();
-  const { socket } = useContext(AuthContext);
+  const { socket, isAuthenticated } = useContext(AuthContext);
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expanded, setExpanded] = useState({});
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'timeline'
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!isAuthenticated) {
       navigate('/login');
       return;
     }
@@ -36,10 +76,8 @@ const MyConsultations = () => {
       try {
         setLoading(true);
         setError('');
-
         const response = await consultationAPI.getMy();
         const payload = response?.data;
-
         const data = Array.isArray(payload?.data)
           ? payload.data
           : Array.isArray(payload?.consultations)
@@ -47,7 +85,6 @@ const MyConsultations = () => {
             : Array.isArray(payload)
               ? payload
               : [];
-
         setConsultations(data);
       } catch (err) {
         setError(err.response?.data?.msg || 'Unable to load consultations');
@@ -57,24 +94,22 @@ const MyConsultations = () => {
     };
 
     fetchConsultations();
-  }, [navigate]);
+  }, [navigate, isAuthenticated]);
 
   useEffect(() => {
     if (!socket) return undefined;
-
     const handleConsultationStart = ({ consultationId }) => {
       if (consultationId) {
         navigate(`/consultation/${consultationId}`);
       }
     };
-
     socket.on('consultation:start', handleConsultationStart);
-
     return () => {
       socket.off('consultation:start', handleConsultationStart);
     };
   }, [navigate, socket]);
 
+  // Sorting: most recent appointments first
   const sortedConsultations = useMemo(() => {
     return [...consultations].sort((a, b) => {
       const dateA = new Date(a.scheduledAt || a.createdAt || 0).getTime();
@@ -83,6 +118,31 @@ const MyConsultations = () => {
     });
   }, [consultations]);
 
+  // Statistics counters
+  const stats = useMemo(() => {
+    const counts = { upcoming: 0, completed: 0, cancelled: 0 };
+    consultations.forEach((c) => {
+      if (c.status === 'queued' || c.status === 'active') counts.upcoming++;
+      else if (c.status === 'completed') counts.completed++;
+      else if (c.status === 'cancelled') counts.cancelled++;
+    });
+    return counts;
+  }, [consultations]);
+
+  // Group by Month (for timeline view)
+  const groupedTimeline = useMemo(() => {
+    const groups = {};
+    sortedConsultations.forEach((item) => {
+      const dateObj = new Date(item.scheduledAt || item.createdAt || 0);
+      const monthYear = dateObj.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      if (!groups[monthYear]) {
+        groups[monthYear] = [];
+      }
+      groups[monthYear].push(item);
+    });
+    return groups;
+  }, [sortedConsultations]);
+
   const toggleExpand = (id) => {
     setExpanded((prev) => ({
       ...prev,
@@ -90,135 +150,249 @@ const MyConsultations = () => {
     }));
   };
 
-  return (
-    <div className="mx-auto max-w-6xl space-y-5 text-gray-100">
-      <header className="rounded-2xl border border-gray-800 bg-gray-900 p-5">
-        <h1 className="text-3xl font-bold">My Consultations</h1>
-        <p className="mt-1 text-sm text-gray-400">Track your consultation history, status, and doctor notes.</p>
-      </header>
+  const handleCancelAppointment = (id) => {
+    if (window.confirm('Are you sure you want to cancel this consultation?')) {
+      // API call to cancel status
+      consultationAPI.updateStatus(id, 'cancelled')
+        .then(() => {
+          setConsultations(prev => prev.map(c => c._id === id || c.id === id ? { ...c, status: 'cancelled' } : c));
+        })
+        .catch(() => alert('Failed to cancel appointment'));
+    }
+  };
 
-      {error ? (
-        <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+        <Loader2 className="animate-spin text-primary" size={36} />
+        <p className="text-text-secondary font-semibold text-sm">Loading appointments...</p>
+      </div>
+    );
+  }
+
+  const ConsultationCard = ({ item }) => {
+    const id = item._id || item.id;
+    const doctorName = item?.doctorId?.name || item?.doctorName || 'Doctor';
+    const specialization = item?.doctorId?.specialization || item?.specialization || 'General Medicine';
+    const status = item?.status || 'queued';
+    const canViewNotes = status === 'completed';
+    const isExpanded = !!expanded[id];
+    const notes = item?.notes || {};
+    const meds = Array.isArray(notes?.prescribedMedicines) ? notes.prescribedMedicines : [];
+    const tests = Array.isArray(notes?.testsOrdered) ? notes.testsOrdered : [];
+    const consultationType = item.consultationType || 'video';
+    const Config = consultationTypeConfig[consultationType] || consultationTypeConfig.video;
+    const TypeIcon = Config.Icon;
+
+    return (
+      <Card className="hover:translate-y-[-2px] transition-custom border border-border p-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-text-primary">Dr. {doctorName}</h3>
+              <Badge variant={badgeVariants[status] || 'secondary'}>{status}</Badge>
+            </div>
+            <p className="text-xs text-secondary font-bold uppercase tracking-wider">{specialization}</p>
+            
+            <div className="flex flex-wrap items-center gap-4 text-xs text-text-secondary mt-3">
+              <span className="flex items-center gap-1"><Calendar size={13} /> {formatDate(item.scheduledAt || item.createdAt)}</span>
+              <span className="flex items-center gap-1"><Clock size={13} /> {formatTime(item.scheduledAt || item.createdAt)}</span>
+              <span className="flex items-center gap-1.5 capitalize font-medium">
+                <TypeIcon size={13} />
+                {Config.label}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 md:self-center">
+            {status === 'active' && (
+              <Link to={`/consultation/${id}`}>
+                <Button className="px-4 py-2 text-xs font-bold rounded-custom">Join Call</Button>
+              </Link>
+            )}
+
+            {canViewNotes && (
+              <Button
+                variant="secondary"
+                onClick={() => toggleExpand(id)}
+                className="px-4 py-2 text-xs font-bold rounded-custom flex items-center gap-1 border-primary text-primary hover:bg-primary/5"
+              >
+                {isExpanded ? (
+                  <>Hide Notes <ChevronUp size={12} /></>
+                ) : (
+                  <>View Doctor Notes <ChevronDown size={12} /></>
+                )}
+              </Button>
+            )}
+
+            {(status === 'queued' || status === 'active') && (
+              <button
+                onClick={() => handleCancelAppointment(id)}
+                className="text-xs font-bold text-danger hover:bg-red-50 px-3 py-2 rounded-custom transition-colors border border-transparent hover:border-danger/20"
+              >
+                Cancel Call
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Notes Collapsible details drawer */}
+        {canViewNotes && isExpanded && (
+          <div className="mt-4 p-5 bg-slate-50 border border-border rounded-custom animate-slideUp space-y-4 text-xs text-text-secondary">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="font-bold text-text-primary mb-1 uppercase tracking-wider text-[10px]">Diagnosis</p>
+                <p className="text-sm text-text-primary bg-white border border-border p-3 rounded-[12px]">
+                  {notes?.diagnosis || 'No diagnosis logged.'}
+                </p>
+              </div>
+
+              <div>
+                <p className="font-bold text-text-primary mb-1 uppercase tracking-wider text-[10px]">Follow-up Date</p>
+                <p className="text-sm text-text-primary bg-white border border-border p-3 rounded-[12px] flex items-center gap-1.5">
+                  <Calendar size={14} className="text-primary" />
+                  {formatDate(notes?.followUpDate)}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div>
+                <p className="font-bold text-text-primary mb-1.5 uppercase tracking-wider text-[10px]">Prescribed Medications</p>
+                {meds.length === 0 ? (
+                  <p className="text-text-secondary italic">No medicines listed.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {meds.map((med, idx) => (
+                      <div key={idx} className="bg-white border border-border p-2.5 rounded-[12px] flex justify-between items-center">
+                        <span className="font-bold text-text-primary text-xs">{med.name}</span>
+                        <span className="text-[10px] bg-slate-100 text-text-secondary px-2 py-0.5 rounded-full">
+                          {med.dosage} • {med.frequency} • {med.duration}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <p className="font-bold text-text-primary mb-1.5 uppercase tracking-wider text-[10px]">Diagnostic Tests</p>
+                {tests.length === 0 ? (
+                  <p className="text-text-secondary italic">No medical tests ordered.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {tests.map((test, idx) => (
+                      <div key={idx} className="bg-white border border-border p-2.5 rounded-[12px] flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-text-primary text-xs">{test.testName}</p>
+                          <p className="text-[10px] text-text-secondary mt-0.5">{test.reason}</p>
+                        </div>
+                        <Badge variant={test.urgency === 'High' ? 'danger' : 'secondary'}>{test.urgency}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+    );
+  };
+
+  return (
+    <div className="w-full space-y-6 pb-10">
+      {/* SECTION 1: Hero Header & Stats */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <h2 className="text-3xl font-extrabold text-text-primary tracking-tight">My Consultations</h2>
+          <p className="text-text-secondary text-sm font-medium">Track your medical appointments, call records, and prescriptions.</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Mode Switcher */}
+          <div className="flex bg-slate-100 p-1 rounded-[14px] border border-border mr-2">
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-custom flex items-center gap-1.5 transition-all duration-200 ${
+                viewMode === 'cards' ? 'bg-white text-primary shadow-xs' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <Grid size={13} /> Grid
+            </button>
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-custom flex items-center gap-1.5 transition-all duration-200 ${
+                viewMode === 'timeline' ? 'bg-white text-primary shadow-xs' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <History size={13} /> Timeline
+            </button>
+          </div>
+
+          <div className="flex gap-3 text-xs font-bold text-text-secondary">
+            <div className="bg-slate-50 border border-border px-3.5 py-1.5 rounded-custom text-center">
+              <span className="text-text-primary text-sm font-black block">{stats.upcoming}</span>
+              Upcoming
+            </div>
+            <div className="bg-slate-50 border border-border px-3.5 py-1.5 rounded-custom text-center">
+              <span className="text-text-primary text-sm font-black block">{stats.completed}</span>
+              Completed
+            </div>
+            <div className="bg-slate-50 border border-border px-3.5 py-1.5 rounded-custom text-center">
+              <span className="text-text-primary text-sm font-black block">{stats.cancelled}</span>
+              Cancelled
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-danger/30 text-danger p-4 rounded-custom text-sm font-semibold">
           {error}
         </div>
-      ) : null}
+      )}
 
-      {loading ? (
-        <div className="rounded-2xl border border-gray-800 bg-gray-900 p-8 text-center text-gray-300">
-          Loading consultation history...
-        </div>
-      ) : null}
-
-      {!loading && !error && sortedConsultations.length === 0 ? (
-        <div className="rounded-2xl border border-gray-800 bg-gray-900 p-8 text-center text-gray-400">
-          No consultations found yet.
-        </div>
-      ) : null}
-
-      {!loading && !error && sortedConsultations.length > 0 ? (
-        <section className="space-y-4">
-          {sortedConsultations.map((item) => {
-            const id = item._id || item.id;
-            const doctorName = item?.doctorId?.name || item?.doctorName || 'Doctor';
-            const specialization = item?.doctorId?.specialization || item?.specialization || 'General Medicine';
-            const status = item?.status || 'queued';
-            const canViewNotes = status === 'completed';
-            const isExpanded = !!expanded[id];
-            const notes = item?.notes || {};
-            const meds = Array.isArray(notes?.prescribedMedicines) ? notes.prescribedMedicines : [];
-            const tests = Array.isArray(notes?.testsOrdered) ? notes.testsOrdered : [];
-
-            return (
-              <article key={id} className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-lg">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold">Dr. {doctorName}</h2>
-                    <p className="text-sm text-cyan-200">{specialization}</p>
-                    <p className="mt-2 text-sm text-gray-300">Date: {formatDate(item.scheduledAt || item.createdAt)}</p>
-                    <p className="text-sm text-gray-300 capitalize">Type: {item.consultationType || 'video'}</p>
-                    <p className="text-sm text-gray-300">Fee Paid: ₹{Number(item.fee || 0).toLocaleString('en-IN')}</p>
+      {/* SECTION 2 & 3: Consultations Render */}
+      {sortedConsultations.length === 0 ? (
+        <Card className="p-12 text-center max-w-md mx-auto space-y-4 border border-border">
+          <div className="text-4xl">📅</div>
+          <h4 className="font-bold text-text-primary">No Consultations Found</h4>
+          <p className="text-xs text-text-secondary">You haven't scheduled any telemedicine consultations yet.</p>
+          <Link to="/doctors">
+            <Button className="mx-auto rounded-custom">Find a Doctor</Button>
+          </Link>
+        </Card>
+      ) : (
+        <>
+          {viewMode === 'cards' ? (
+            <div className="space-y-4">
+              {sortedConsultations.map((item) => (
+                <ConsultationCard key={item._id || item.id} item={item} />
+              ))}
+            </div>
+          ) : (
+            // TIMELINE MODE (Grouped by month)
+            <div className="space-y-8 relative pl-6 border-l border-border ml-3">
+              {Object.keys(groupedTimeline).map((monthYear) => (
+                <div key={monthYear} className="space-y-4">
+                  {/* Month header node */}
+                  <div className="relative -left-[31px] flex items-center gap-2 mb-4 bg-white py-1">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary border-4 border-white ring-2 ring-primary flex-shrink-0" />
+                    <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">{monthYear}</span>
                   </div>
-
-                  <div className="flex flex-col items-start gap-2 md:items-end">
-                    <span className={`rounded-full border px-3 py-1 text-xs font-medium capitalize ${badgeClasses[status] || 'bg-gray-700 text-gray-200 border-gray-600'}`}>
-                      {status}
-                    </span>
-
-                    {status === 'active' ? (
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/consultation/${id}`)}
-                        className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-gray-950 hover:bg-emerald-400"
-                      >
-                        Rejoin
-                      </button>
-                    ) : null}
-
-                    {canViewNotes ? (
-                      <button
-                        type="button"
-                        onClick={() => toggleExpand(id)}
-                        className="rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200 hover:bg-cyan-500/20"
-                      >
-                        {isExpanded ? 'Hide Notes' : 'View Notes'}
-                      </button>
-                    ) : null}
+                  
+                  <div className="space-y-4">
+                    {groupedTimeline[monthYear].map((item) => (
+                      <ConsultationCard key={item._id || item.id} item={item} />
+                    ))}
                   </div>
                 </div>
-
-                {canViewNotes && isExpanded ? (
-                  <div className="mt-4 space-y-3 rounded-xl border border-gray-800 bg-gray-950/60 p-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Diagnosis</p>
-                      <p className="text-sm text-gray-200">{notes?.diagnosis || 'N/A'}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Medicines</p>
-                      {meds.length === 0 ? (
-                        <p className="text-sm text-gray-400">No medicines listed.</p>
-                      ) : (
-                        <ul className="list-inside list-disc space-y-1 text-sm text-gray-200">
-                          {meds.map((med, idx) => (
-                            <li key={`${id}-med-${idx}`}>
-                              {med?.name || 'Medicine'}
-                              {med?.dosage ? ` • ${med.dosage}` : ''}
-                              {med?.frequency ? ` • ${med.frequency}` : ''}
-                              {med?.duration ? ` • ${med.duration}` : ''}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Tests Ordered</p>
-                      {tests.length === 0 ? (
-                        <p className="text-sm text-gray-400">No tests ordered.</p>
-                      ) : (
-                        <ul className="list-inside list-disc space-y-1 text-sm text-gray-200">
-                          {tests.map((test, idx) => (
-                            <li key={`${id}-test-${idx}`}>
-                              {test?.testName || 'Test'}
-                              {test?.urgency ? ` • ${test.urgency}` : ''}
-                              {test?.reason ? ` • ${test.reason}` : ''}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Follow-up Date</p>
-                      <p className="text-sm text-gray-200">{formatDate(notes?.followUpDate)}</p>
-                    </div>
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
-        </section>
-      ) : null}
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

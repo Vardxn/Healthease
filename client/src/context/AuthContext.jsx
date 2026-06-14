@@ -1,6 +1,6 @@
 import { createContext, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { authAPI } from '../services/api';
+import { API_ORIGIN, authAPI } from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    const socketClient = io(window.location.origin, {
+    const socketClient = io(API_ORIGIN || window.location.origin, {
       withCredentials: true,
       transports: ['websocket']
     });

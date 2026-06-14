@@ -1,0 +1,83 @@
+🏥 HealthEase — Project Overview & Technology Summary
+
+=========================================
+1. CURRENTLY IMPLEMENTED FEATURES
+=========================================
+* User Authentication & Role Management:
+  - Secure JWT authentication with bcrypt password hashing.
+  - Role-based profiles: Patient, Doctor, and Admin.
+  
+* Smart OCR Prescription Pipeline:
+  - Image preprocessing using Sharp library (grayscale, normalize, sharpen).
+  - OCR text extraction (Google Cloud Vision API / Tesseract).
+  - OpenAI GPT-4o-mini structured JSON parsing of medications (dosage, frequency, duration) and doctor details.
+
+* AI-assisted E-Prescription Builder:
+  - Real-time prescription interaction checking against patient allergies and current medications during doctor note writing.
+  - Interactive alerts and warnings based on severity (High/Medium/Low).
+
+* AI Symptom Checker & Triage:
+  - Classifies patient symptoms into RED (Emergency), YELLOW (Medical Review), and GREEN (Self-care) urgency tiers.
+  - Recommends clinical specialties.
+
+* Vitals Dashboard:
+  - Trend visualization using Recharts for Blood Pressure (Systolic + Diastolic), Blood Sugar, SpO2, and Weight.
+
+* Family Health Management:
+  - Creation and management of dependent/family member profiles under a single parent account.
+
+* Patient Gamification:
+  - Streak tracking and milestone rewards (+50 points per day for vitals logging).
+  
+* Speech-to-Text (STT) Integration:
+  - Regional language support for voice-guided medical commands.
+
+=========================================
+2. TECHNOLOGY STACK USED
+=========================================
+* Frontend:
+  - React 18, Vite (Fast build tool)
+  - Tailwind CSS (Premium dashboard UI design)
+  - Recharts (Data visualization & vitals graphing)
+  - Axios (API Client)
+
+* Backend API:
+  - Node.js, Express.js
+  - MongoDB & Mongoose (NoSQL database and schema modeling)
+  - JWT (Token-based stateless authentication)
+  - Multer & Sharp (File uploads and image processing)
+  - Nodemailer (Gmail SMTP reminders)
+
+* Python Services:
+  - FastAPI (Fast Python microservice framework)
+  - OpenCV & Tesseract (Local OCR and image manipulation)
+  
+* AI & Third-Party APIs:
+  - OpenAI API (GPT-4o / GPT-4o-mini for structured analysis and chat)
+  - Google Cloud Vision API (Prescription OCR)
+  - Groq Vision AI API (Secondary OCR/Vision model)
+  - Sarvam/Bhashini (Indic Voice STT)
+
+=========================================
+3. ROADMAP: TO BE DONE IN THE NEAR FUTURE
+=========================================
+* Telemedicine & Video Consulting (High Priority):
+  - PeerJS / WebRTC video & audio consult sessions.
+  - Razorpay or Stripe payment gateway integration.
+  - Live doctor dashboards and consultation queues.
+
+* Smart Reminders & Alerts (High Priority):
+  - Twilio integration for SMS reminders.
+  - Missed dose notifications (Firebase Cloud Messaging).
+
+* Common Indian Diseases Guidance Module (High Priority):
+  - Symptom, diagnosis, next-step care, and follow-up paths for the top 30 common Indian diseases.
+
+* Lab Report Digitization (Medium Priority):
+  - Uploading lab results to parse blood levels and flag out-of-range values.
+
+* Emergency SOS & QR ID (Medium Priority):
+  - Offline Medical ID card with QR codes for paramedics.
+
+* Compliance & Hardening (Low Priority):
+  - Access audit logs for HIPAA/DPDP Act compliance.

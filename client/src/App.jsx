@@ -14,13 +14,12 @@ import ConsultationRoom from './pages/ConsultationRoom';
 import DoctorDirectory from './pages/DoctorDirectory';
 import DoctorLogin from './pages/DoctorLogin';
 import DoctorRegister from './pages/DoctorRegister';
-import DoctorDashboard from './pages/DoctorDashboard';
 import MyConsultations from './pages/MyConsultations';
+import DoctorDashboard from './pages/DoctorDashboard';
 import DoctorConsultationNotes from './pages/DoctorConsultationNotes';
 import CareTimeline from './pages/CareTimeline';
 import MedicineTracker from './pages/MedicineTracker';
 import ReminderHistory from './pages/ReminderHistory';
-import AIChatbot from './components/AIChatbot';
 import SymptomChecker from './pages/SymptomChecker';
 import VitalsDashboard from './pages/VitalsDashboard';
 
@@ -106,7 +105,6 @@ function AppContent() {
         />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-      <AIChatbot />
     </>
   );
 }

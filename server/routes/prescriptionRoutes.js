@@ -29,4 +29,9 @@ router.put('/:id', auth, prescriptionController.updatePrescription);
 // @access  Private
 router.delete('/:id', auth, prescriptionController.deletePrescription);
 
+// @route   POST /api/prescriptions/check-safety
+// @desc    Check prescription safety (interactions & allergies)
+// @access  Private
+router.post('/check-safety', auth, prescriptionController.checkPrescriptionSafety);
+
 module.exports = router;

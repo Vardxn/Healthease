@@ -1,5 +1,7 @@
 const Prescription = require('../models/Prescription');
 const ocrService = require('../services/ocrService');
+const { HealthProfile } = require('../models/HealthProfile');
+const aiService = require('../services/aiService');
 
 const GEMINI_STRUCTURED_PARSING_PROMPT_TEMPLATE = `Parse this structured prescription text into JSON.
 Input format is:
@@ -278,6 +280,57 @@ exports.deletePrescription = async (req, res) => {
         res.status(500).json({ 
             success: false,
             msg: 'Server Error' 
+        });
+    }
+};
+
+/**
+ * Check prescription safety (drug interactions and allergies)
+ * @route POST /api/prescriptions/check-safety
+ * @access Private
+ */
+exports.checkPrescriptionSafety = async (req, res) => {
+    try {
+        const { patientId, newMedications } = req.body;
+
+        if (!patientId) {
+            return res.status(400).json({
+                success: false,
+                msg: 'Patient ID is required'
+            });
+        }
+
+        if (!newMedications || !Array.isArray(newMedications)) {
+            return res.status(400).json({
+                success: false,
+                msg: 'newMedications array is required'
+            });
+        }
+
+        // Fetch HealthProfile of the patient
+        const healthProfile = await HealthProfile.findOne({ userId: patientId });
+
+        // Format profile data for checkDrugInteractions
+        const profile = {
+            knownAllergies: healthProfile ? healthProfile.knownAllergies : [],
+            currentMedications: healthProfile ? healthProfile.currentMedications : []
+        };
+
+        const result = await aiService.checkDrugInteractions({
+            profile,
+            newMedications
+        });
+
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (err) {
+        console.error('Check prescription safety error:', err);
+        res.status(500).json({
+            success: false,
+            msg: 'Server Error',
+            error: err.message
         });
     }
 };

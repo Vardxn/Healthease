@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import Peer from 'peerjs';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Mic, MicOff, PhoneOff, SendHorizontal, Video, VideoOff } from 'lucide-react';
-import api from '../services/api';
+import api, { API_ORIGIN } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 
 const formatDuration = (seconds) => {
@@ -47,7 +47,7 @@ const ConsultationRoom = () => {
 
   const socketBaseUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
-    return window.location.origin;
+    return API_ORIGIN || window.location.origin;
   }, []);
 
   useEffect(() => {

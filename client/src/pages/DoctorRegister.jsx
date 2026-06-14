@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 
 const DoctorRegister = () => {
   const navigate = useNavigate();
@@ -103,7 +103,7 @@ const DoctorRegister = () => {
         bio: formData.bio.trim() || ''
       };
 
-      const response = await axios.post('/api/doctors/register', payload);
+      const response = await api.post('/doctors/register', payload);
 
       if (response.data?.success) {
         setSuccess('Registration successful! Redirecting to login...');

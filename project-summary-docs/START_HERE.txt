@@ -1,0 +1,162 @@
+================================================================================
+                    HealthEase - Daily Startup Guide
+================================================================================
+
+QUICK START - Open 3 Terminal Windows
+
+================================================================================
+Terminal 1 - Python OCR Service (Port 8000)
+================================================================================
+
+cd python-service
+source venv/bin/activate
+python3 -m uvicorn main:app --reload --port 8000
+
+Expected Output: "Application startup complete. Uvicorn running on http://0.0.0.0:8000"
+
+Health Check:
+  curl http://localhost:8000/health
+  Expected: {"status":"ok","service":"python-tesseract-ocr"}
+
+================================================================================
+Terminal 2 - Node Backend (Port 5001)
+================================================================================
+
+cd server
+npm run dev
+
+Expected Output: "🚀 Server running on port 5001" & "✅ MongoDB Connected"
+
+Health Check:
+  curl http://localhost:5001/
+  Expected: Response from backend (may vary by endpoint)
+
+================================================================================
+Terminal 3 - React Frontend (Port 3000)
+================================================================================
+
+cd client
+npm run dev
+
+Expected Output: "VITE v6.x.x ready in XXX ms" & "➜ Local: http://localhost:3000/"
+
+Health Check:
+  Visit http://localhost:3000 in browser
+  Expected: HealthEase login page loads
+
+================================================================================
+SERVICE PORTS REFERENCE
+================================================================================
+
+Python OCR Service:     http://localhost:8000
+Node Backend API:       http://localhost:5001
+React Frontend:         http://localhost:3000
+
+================================================================================
+IMPORTANT - BEFORE FIRST START
+================================================================================
+
+1. Python Service Setup (One-time):
+   cd python-service
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   Tesseract: brew install tesseract
+
+2. Backend Setup (One-time):
+   cd server
+   npm install
+   
+3. Frontend Setup (One-time):
+   cd client
+   npm install
+
+================================================================================
+ENVIRONMENT FILES REQUIRED
+================================================================================
+
+✓ /server/.env
+  Required variables:
+    PORT=5001
+    MONGO_URI=mongodb://localhost:27017/healthease
+    JWT_SECRET=your_super_secret_jwt_key_change_this
+    OPENAI_API_KEY=sk-your-openai-api-key-here
+    PYTHON_OCR_URL=http://localhost:8000/ocr
+
+✓ /python-service/.env (optional, for future use)
+
+Ensure both .env files exist before starting services!
+
+================================================================================
+STARTUP ORDER IS CRITICAL
+================================================================================
+
+Always start in this order:
+  1. Python OCR Service (Port 8000) - FIRST
+  2. Node Backend (Port 5001) - SECOND
+  3. React Frontend (Port 3000) - THIRD
+
+This ensures the backend can connect to the OCR service before frontend
+tries to connect to the backend.
+
+================================================================================
+QUICK TROUBLESHOOTING
+================================================================================
+
+Python Service fails to start:
+  - Ensure Tesseract is installed: brew install tesseract
+  - Verify venv is activated: source venv/bin/activate
+  - Check Python 3.10+: python3 --version
+
+Backend connection errors:
+  - Confirm MongoDB is running: brew services list
+  - Check .env file exists and PORT=5001 is set
+  - Verify PYTHON_OCR_URL points to http://localhost:8000/ocr
+
+Frontend shows blank page:
+  - Clear browser cache: Ctrl+Shift+Delete (or Cmd+Shift+Delete on Mac)
+  - Check backend is running at http://localhost:5001
+  - Open browser console for error messages (F12)
+
+================================================================================
+MONGODB LOCAL SETUP (if not already running)
+================================================================================
+
+Start MongoDB:
+  brew services start mongodb-community
+
+Stop MongoDB:
+  brew services stop mongodb-community
+
+Check status:
+  brew services list
+
+Reset database (caution - deletes all data):
+  mongosh
+  > use healthease
+  > db.dropDatabase()
+
+================================================================================
+TESTING THE FULL STACK
+================================================================================
+
+1. Go to http://localhost:3000
+2. Register a new account
+3. Login with your credentials
+4. Upload a handwritten prescription image
+5. Wait for AI processing (OCR + parsing)
+6. View digitized prescription in list
+7. Chat with Dr. AI using the chatbot
+
+================================================================================
+DOCUMENTATION FILES
+================================================================================
+
+High-level overview:       STAKEHOLDER_OVERVIEW.md
+Technical architecture:    TECHNICAL_ARCHITECTURE.md
+API documentation:         API_DOCUMENTATION.md
+File structure guide:       FILE_STRUCTURE.md
+Development notes:          DEVELOPMENT_GUIDE.md
+Project summary:            PROJECT_SUMMARY.md
+
+================================================================================

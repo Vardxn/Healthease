@@ -1,7 +1,29 @@
-import { useState, useContext, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { prescriptionAPI } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
+import SectionHeading from '../components/ui/SectionHeading';
+import {
+  Upload,
+  Cpu,
+  Image as ImageIcon,
+  CheckCircle,
+  AlertTriangle,
+  Lightbulb,
+  FileCheck,
+  Search,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Loader2,
+  Trash2,
+  Plus,
+  RefreshCw
+} from 'lucide-react';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -20,6 +42,7 @@ const UploadPrescription = () => {
   const [reviewDraft, setReviewDraft] = useState(null);
   const [reviewSaving, setReviewSaving] = useState(false);
   const [reviewMessage, setReviewMessage] = useState('');
+  const [activeStep, setActiveStep] = useState(1); // For workflow indicator
 
   if (!isAuthenticated) {
     navigate('/login');
@@ -40,13 +63,13 @@ const UploadPrescription = () => {
       URL.revokeObjectURL(preview);
     }
     setPreview(null);
+    setActiveStep(1);
   };
 
   const sanitizeMedicationList = (medications = []) => {
     if (!Array.isArray(medications)) {
       return [];
     }
-
     return medications
       .map((med) => ({
         name: (med?.name || '').trim(),
@@ -75,9 +98,7 @@ const UploadPrescription = () => {
   };
 
   const validateAndSetFile = (selectedFile) => {
-    if (!selectedFile) {
-      return;
-    }
+    if (!selectedFile) return;
 
     if (!ALLOWED_FILE_TYPES.includes(selectedFile.type)) {
       setError('Please upload a valid image file (JPG, PNG, GIF, or WEBP).');
@@ -100,6 +121,7 @@ const UploadPrescription = () => {
     setReviewDraft(null);
     setReviewMessage('');
     setUploadProgress(0);
+    setActiveStep(2); // Preprocessing
   };
 
   const handleDraftFieldChange = (field, value) => {
@@ -116,7 +138,6 @@ const UploadPrescription = () => {
         ...nextMeds[index],
         [field]: value
       };
-
       return {
         ...prev,
         medications: nextMeds
@@ -126,6 +147,7 @@ const UploadPrescription = () => {
 
   const addMedicationRow = () => {
     setReviewDraft((prev) => ({
+      ...prev,
       ...prev,
       medications: [...prev.medications, { ...EMPTY_MEDICATION }]
     }));
@@ -163,7 +185,8 @@ const UploadPrescription = () => {
         data: response.data.data
       }));
       initializeReviewDraft(response.data.data);
-      setReviewMessage('Review saved successfully.');
+      setReviewMessage('Review changes saved successfully.');
+      setActiveStep(5); // Saved state
     } catch (err) {
       setReviewMessage(err.response?.data?.msg || 'Failed to save review changes.');
     } finally {
@@ -185,7 +208,6 @@ const UploadPrescription = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       validateAndSetFile(e.dataTransfer.files[0]);
     }
@@ -198,7 +220,6 @@ const UploadPrescription = () => {
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    
     if (!file) {
       setError('Please select a file');
       return;
@@ -207,6 +228,7 @@ const UploadPrescription = () => {
     setLoading(true);
     setError('');
     setUploadProgress(0);
+    setActiveStep(3); // OCR extraction
 
     const formData = new FormData();
     formData.append('prescription', file);
@@ -214,20 +236,21 @@ const UploadPrescription = () => {
     try {
       const response = await prescriptionAPI.upload(formData, {
         onUploadProgress: (progressEvent) => {
-          if (!progressEvent.total) {
-            return;
-          }
+          if (!progressEvent.total) return;
           const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(progress);
         }
       });
+      
       setResult(response.data);
       initializeReviewDraft(response.data.data);
       resetSelectedFile();
       setUploadProgress(100);
+      setActiveStep(4); // Review
     } catch (err) {
       setError(err.response?.data?.msg || 'Upload failed. Please try again.');
       setUploadProgress(0);
+      setActiveStep(1); // Reset step
     } finally {
       setLoading(false);
     }
@@ -242,6 +265,7 @@ const UploadPrescription = () => {
     : qualityLevel === 'low'
       ? 'bg-red-100 text-red-800 border-red-300'
       : 'bg-amber-100 text-amber-800 border-amber-300';
+      
   const interactionMedications = useMemo(() => {
     const meds = Array.isArray(reviewDraft?.medications) && reviewDraft.medications.length
       ? reviewDraft.medications
@@ -261,372 +285,379 @@ const UploadPrescription = () => {
     navigate('/interactions');
   };
 
+  const steps = [
+    { label: 'Upload', number: 1 },
+    { label: 'Preprocessing', number: 2 },
+    { label: 'OCR Extraction', number: 3 },
+    { label: 'Medicine Parsing', number: 4 },
+    { label: 'Review & Save', number: 5 }
+  ];
+
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent mb-3">
-          📤 Upload Prescription
-        </h1>
-        <p className="text-gray-600 text-lg">Digitize your prescription with AI in seconds</p>
+    <div className="space-y-8 pb-10">
+      {/* SECTION 1: Hero Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full text-xs font-bold text-primary mb-3">
+            <Sparkles size={12} className="animate-pulse" />
+            Powered by OCR + AI Extraction
+          </div>
+          <h2 className="text-3xl font-extrabold text-text-primary tracking-tight">AI Prescription Digitization</h2>
+          <p className="text-text-secondary text-base mt-1.5 max-w-xl leading-relaxed">
+            Upload a handwritten prescription image and instantly convert it into structured digital medical records in seconds.
+          </p>
+        </div>
       </div>
 
-      <div className="glass-effect rounded-2xl shadow-2xl p-10">
-        <form onSubmit={handleUpload}>
-          {/* File Upload Area */}
-          <div className="mb-8">
-            <label className="block text-gray-700 font-semibold mb-4 text-lg">
-              📸 Select Prescription Image
-            </label>
-            <div 
-              className={`border-3 border-dashed ${dragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-300'} rounded-2xl p-12 text-center hover:border-primary-400 hover:bg-primary-50 transition-all duration-300 ${file ? 'border-primary-500 bg-primary-50' : ''}`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <div className="bg-gradient-primary text-white w-24 h-24 mx-auto rounded-2xl flex items-center justify-center text-5xl mb-6 shadow-glow">
-                  📷
-                </div>
-                <p className="text-gray-700 mb-2 text-lg font-semibold">
-                  {file ? `Selected: ${file.name}` : 'Click to upload or drag and drop'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  PNG, JPG, GIF, WEBP up to 10MB
-                </p>
-              </label>
-            </div>
-          </div>
-
-          {/* Image Preview */}
-          {preview && (
-            <div className="mb-8 animate-slideUp">
-              <p className="text-gray-700 font-semibold mb-4 text-lg">✨ Preview:</p>
-              <div className="relative">
-                <img 
-                  src={preview} 
-                  alt="Preview" 
-                  className="max-w-2xl mx-auto rounded-2xl shadow-2xl border-4 border-white"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* LEFT COLUMN: Upload, preview, steps & results */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* SECTION 2: Upload Card */}
+          <Card className="p-8">
+            <form onSubmit={handleUpload} className="space-y-6">
+              <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                className={`relative border-2 border-dashed rounded-[20px] p-8 flex flex-col items-center justify-center min-h-[320px] text-center transition-all duration-300 cursor-pointer ${
+                  dragActive
+                    ? 'border-primary bg-primary/5 shadow-custom'
+                    : 'border-[#14B8A6] hover:border-primary/80 hover:bg-slate-50/50 hover:shadow-[0_8px_30px_rgba(20,184,166,0.06)]'
+                }`}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  id="file-upload"
                 />
-                <button
-                  type="button"
-                  onClick={resetSelectedFile}
-                  className="absolute top-4 right-4 bg-red-500 text-white w-10 h-10 rounded-full hover:bg-red-600 transition shadow-lg"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-xl mb-6 animate-slideUp">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">⚠️</span>
-                <span className="font-semibold">{error}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading || !file}
-            className="w-full gradient-primary text-white py-5 rounded-xl font-bold text-lg hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
-          >
-            {loading ? '🔍 Processing with AI...' : '🚀 Upload & Digitize Now'}
-          </button>
-
-          <p className="mt-3 text-sm text-gray-600 text-center">
-            For best results: place prescription flat, photograph from directly above in good lighting
-          </p>
-        </form>
-
-        {/* Processing Info */}
-        {loading && (
-          <div className="mt-8 gradient-accent text-white rounded-xl p-6 animate-slideUp">
-            <div className="flex items-center gap-4">
-              <div className="animate-spin text-4xl">⚙️</div>
-              <div>
-                <p className="font-bold text-lg mb-1">Processing your prescription...</p>
-                <p className="text-sm text-white/90">
-                  Uploading image and running OCR
+                
+                <div className="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mb-4">
+                  <Upload size={28} className="animate-bounce" />
+                </div>
+                
+                <h4 className="text-lg font-bold text-text-primary mb-1">
+                  {file ? `Selected: ${file.name}` : 'Drop your prescription here'}
+                </h4>
+                <p className="text-text-secondary text-sm mb-4">
+                  or <span className="text-primary font-bold hover:underline">browse local files</span>
+                </p>
+                <p className="text-xs text-text-secondary/70">
+                  Supported formats: PNG, JPG, JPEG, WEBP • Max: 10 MB
                 </p>
               </div>
-            </div>
-            <div className="mt-4">
-              <div className="flex justify-between text-xs text-white/90 mb-2">
-                <span>Upload progress</span>
-                <span>{uploadProgress}%</span>
-              </div>
-              <div className="w-full bg-white/30 rounded-full h-2">
-                <div
-                  className="bg-white h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Success Result */}
-        {result?.data && (
-          <div className="mt-8 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-8 animate-slideUp shadow-xl">
-            <h3 className="text-3xl font-bold text-green-800 mb-6 flex items-center gap-3">
-              <span className="text-4xl">✅</span>
-              Prescription Digitized Successfully!
-            </h3>
-
-            <div className="mb-6 bg-white rounded-xl p-4 shadow-md">
-              <p className="text-gray-600 font-medium text-sm mb-1">OCR Mode:</p>
-              <p className="text-gray-900 font-semibold">
-                {result.processingMode === 'demo-fallback' ? 'Demo fallback' : 'Real OCR'}
-              </p>
-            </div>
-
-            {ocrQuality && (
-              <div className="mb-6 bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                <p className="text-gray-700 font-bold mb-3 text-lg">🎯 OCR Confidence</p>
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <span className={`px-3 py-1 text-sm rounded-full border font-semibold uppercase tracking-wide ${qualityClassName}`}>
-                    {ocrQuality.confidenceLevel} confidence
-                  </span>
-                  <span className="text-sm text-gray-700 font-semibold">
-                    Score: {ocrQuality.confidenceScore}/100
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className={`h-2.5 rounded-full transition-all duration-500 ${qualityLevel === 'high' ? 'bg-green-500' : qualityLevel === 'low' ? 'bg-red-500' : 'bg-amber-500'}`}
-                    style={{ width: `${ocrQuality.confidenceScore}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {(ocrWarnings.length > 0 || ocrRecommendations.length > 0) && (
-              <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm">
-                <p className="text-amber-900 font-bold mb-2">⚠️ Quality Warnings</p>
-                {ocrWarnings.length > 0 && (
-                  <ul className="text-sm text-amber-900 list-disc ml-5 space-y-1 mb-3">
-                    {ocrWarnings.map((warning, idx) => (
-                      <li key={`warn-${idx}`}>{warning}</li>
-                    ))}
-                  </ul>
-                )}
-                {ocrRecommendations.length > 0 && (
-                  <div>
-                    <p className="text-sm font-semibold text-amber-900 mb-1">Recommended actions</p>
-                    <ul className="text-sm text-amber-900 list-disc ml-5 space-y-1">
-                      {ocrRecommendations.map((item, idx) => (
-                        <li key={`rec-${idx}`}>{item}</li>
-                      ))}
-                    </ul>
+              {/* Preview */}
+              {preview && (
+                <div className="relative mt-4 border border-border rounded-custom p-4 bg-slate-50 animate-slideUp">
+                  <p className="text-xs font-bold text-text-secondary uppercase mb-3 flex items-center gap-1.5">
+                    <ImageIcon size={14} /> Image Preview
+                  </p>
+                  <div className="relative max-w-lg mx-auto rounded-custom overflow-hidden border-2 border-white shadow-custom">
+                    <img src={preview} alt="Selected prescription preview" className="w-full h-auto object-contain max-h-80" />
+                    <button
+                      type="button"
+                      onClick={resetSelectedFile}
+                      className="absolute top-3 right-3 bg-danger text-white p-2 rounded-full hover:bg-danger-hover transition-colors shadow-md"
+                      aria-label="Remove image"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
-                )}
-              </div>
-            )}
-            
-            {reviewDraft && (
-              <div className="mb-6 bg-white rounded-xl p-5 shadow-md">
-                <p className="text-gray-700 font-bold mb-3 text-lg">🧾 Review Extracted Prescription</p>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Doctor Name</label>
-                  <input
-                    type="text"
-                    value={reviewDraft.doctorName}
-                    onChange={(e) => handleDraftFieldChange('doctorName', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    placeholder="Enter doctor name"
-                  />
                 </div>
+              )}
 
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Notes</label>
-                  <textarea
-                    value={reviewDraft.notes}
-                    onChange={(e) => handleDraftFieldChange('notes', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    rows={3}
-                    placeholder="Optional notes about this prescription"
-                  />
+              {/* Error State */}
+              {error && (
+                <div className="bg-red-50 border border-danger/30 text-danger text-sm font-semibold p-4 rounded-custom flex items-center gap-3 animate-slideUp">
+                  <AlertTriangle size={18} className="flex-shrink-0" />
+                  <span>{error}</span>
                 </div>
+              )}
 
-                <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 mb-4">
-                  <input
-                    type="checkbox"
-                    checked={reviewDraft.isVerified}
-                    onChange={(e) => handleDraftFieldChange('isVerified', e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  Mark as verified
-                </label>
+              {/* Actions */}
+              <div className="flex gap-4">
+                <Button
+                  type="submit"
+                  disabled={loading || !file}
+                  className="flex-1 py-4 font-bold text-base shadow-custom rounded-custom flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Analyzing with AI OCR...
+                    </>
+                  ) : (
+                    <>
+                      <Cpu size={20} />
+                      Upload & Extact Records
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            {/* Processing state indicator */}
+            {loading && (
+              <div className="mt-6 p-5 bg-primary/5 border border-primary/20 rounded-custom animate-slideUp space-y-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="animate-spin text-primary" size={24} />
+                  <div>
+                    <h5 className="font-bold text-text-primary text-sm">Processing Prescription Records...</h5>
+                    <p className="text-xs text-text-secondary">AI parsing is running on Google Cloud Vision & Gemini API</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs text-text-secondary font-bold">
+                    <span>Extracting Text</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             )}
+          </Card>
 
-            {result.data.ocrRawText && (
-              <div className="mb-6 bg-white rounded-xl p-4 shadow-md">
-                <details>
-                  <summary className="text-gray-700 font-bold text-lg cursor-pointer select-none">
-                    View Raw OCR Text
-                  </summary>
-                  <pre className="mt-3 whitespace-pre-wrap break-words text-sm text-gray-700 bg-gray-50 p-3 rounded-lg max-h-80 overflow-y-auto">
-                    {result.data.ocrRawText}
-                  </pre>
-                </details>
+          {/* Result Block */}
+          {result?.data && (
+            <Card className="p-8 border border-green-200 bg-green-50/20 shadow-custom space-y-6">
+              <div className="flex items-center justify-between border-b border-green-200/50 pb-4">
+                <h3 className="text-xl font-bold text-green-800 flex items-center gap-2">
+                  <CheckCircle size={22} className="text-green-600" />
+                  Digitization Complete!
+                </h3>
+                <Badge variant="success">OCR Done</Badge>
               </div>
-            )}
 
-            <div className="mb-6">
-              <p className="text-gray-700 font-bold mb-4 text-lg">💊 Medications:</p>
-              {reviewDraft?.medications?.length > 0 ? (
-                <div className="grid gap-4">
-                  {reviewDraft.medications.map((med, idx) => (
-                    <div key={idx} className="bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition border-l-4 border-primary-500">
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Medicine Name</label>
-                          <input
-                            type="text"
+              {ocrQuality && (
+                <div className="p-4 bg-white border border-slate-100 rounded-custom shadow-xs space-y-3">
+                  <p className="text-xs font-bold text-text-secondary uppercase">Confidence Report</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-1 text-xs rounded-full border font-bold uppercase tracking-wider ${qualityClassName}`}>
+                        {ocrQuality.confidenceLevel}
+                      </span>
+                      <span className="text-sm text-text-primary font-bold">Score: {ocrQuality.confidenceScore}/100</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        qualityLevel === 'high' ? 'bg-success' : qualityLevel === 'low' ? 'bg-danger' : 'bg-warning'
+                      }`}
+                      style={{ width: `${ocrQuality.confidenceScore}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {reviewDraft && (
+                <div className="space-y-4 bg-white border border-slate-100 rounded-custom p-6 shadow-xs">
+                  <p className="text-xs font-bold text-text-secondary uppercase border-b border-border pb-2 mb-4">
+                    Review Extracted Metadata
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Doctor Name"
+                      value={reviewDraft.doctorName}
+                      onChange={(e) => handleDraftFieldChange('doctorName', e.target.value)}
+                      placeholder="Doctor Name"
+                    />
+                    <Input
+                      label="Diagnosis & Notes"
+                      value={reviewDraft.notes}
+                      onChange={(e) => handleDraftFieldChange('notes', e.target.value)}
+                      placeholder="e.g. Hypertension, regular follow-up"
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs font-bold text-text-primary cursor-pointer select-none mt-2">
+                    <input
+                      type="checkbox"
+                      checked={reviewDraft.isVerified}
+                      onChange={(e) => handleDraftFieldChange('isVerified', e.target.checked)}
+                      className="w-4 h-4 text-primary focus:ring-primary border-border rounded-custom"
+                    />
+                    Mark prescription as verified by doctor/pharmacy
+                  </label>
+                </div>
+              )}
+
+              {/* Medications list */}
+              <div className="space-y-4">
+                <p className="text-xs font-bold text-text-secondary uppercase">Extracted Medications</p>
+                {reviewDraft?.medications?.length > 0 ? (
+                  <div className="space-y-3">
+                    {reviewDraft.medications.map((med, idx) => (
+                      <div key={idx} className="bg-white p-4 border border-slate-100 rounded-custom shadow-xs relative flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 flex-1">
+                          <Input
+                            label="Medicine Name"
                             value={med.name}
                             onChange={(e) => handleMedicationChange(idx, 'name', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="e.g. Amoxicillin"
+                            placeholder="Amoxicillin"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Dosage</label>
-                          <input
-                            type="text"
+                          <Input
+                            label="Dosage"
                             value={med.dosage}
                             onChange={(e) => handleMedicationChange(idx, 'dosage', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="e.g. 500mg"
+                            placeholder="500 mg"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Frequency</label>
-                          <input
-                            type="text"
+                          <Input
+                            label="Frequency"
                             value={med.frequency}
                             onChange={(e) => handleMedicationChange(idx, 'frequency', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="e.g. Twice daily"
+                            placeholder="Twice daily"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Duration</label>
-                          <input
-                            type="text"
+                          <Input
+                            label="Duration"
                             value={med.duration}
                             onChange={(e) => handleMedicationChange(idx, 'duration', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="e.g. 7 days"
+                            placeholder="7 Days"
                           />
                         </div>
-                      </div>
-                      <div className="mt-3 flex justify-end">
                         <button
                           type="button"
                           onClick={() => removeMedicationRow(idx)}
-                          className="text-sm text-red-600 hover:text-red-800 font-semibold"
+                          className="text-danger hover:text-red-700 p-2 hover:bg-red-50 rounded-custom self-end flex items-center gap-1 text-xs font-bold transition-colors"
                         >
-                          Remove
+                          <Trash2 size={14} /> Remove
                         </button>
                       </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addMedicationRow}
-                    className="bg-white border-2 border-dashed border-primary-300 text-primary-700 rounded-xl p-4 font-semibold hover:bg-primary-50"
-                  >
-                    + Add Medication
-                  </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addMedicationRow}
+                      className="w-full bg-white border-2 border-dashed border-primary/30 hover:border-primary/60 text-primary rounded-custom p-3 text-sm font-bold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Plus size={16} /> Add Medication Row
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-text-secondary bg-white p-4 rounded-custom">No medications parsed.</p>
+                )}
+              </div>
+
+              {reviewMessage && (
+                <div className="bg-primary/5 border border-primary/20 text-primary text-xs font-bold p-3 rounded-custom animate-slideUp">
+                  {reviewMessage}
                 </div>
-              ) : (
-                <p className="text-gray-600 bg-white p-4 rounded-xl">No medications found</p>
               )}
-            </div>
 
-            {reviewMessage && (
-              <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-blue-800 text-sm font-medium">
-                {reviewMessage}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                {reviewDraft && (
+                  <Button
+                    onClick={handleReviewSave}
+                    disabled={reviewSaving}
+                    className="flex-1 bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700 text-white font-bold rounded-custom"
+                  >
+                    {reviewSaving ? 'Saving Changes...' : 'Save & Confirm Records'}
+                  </Button>
+                )}
+                
+                {interactionMedications.length >= 2 && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleCheckInteractions}
+                    className="border-accent text-accent hover:bg-accent/5 font-bold rounded-custom"
+                  >
+                    Check Drug Interactions
+                  </Button>
+                )}
               </div>
-            )}
 
-            {reviewDraft && (
-              <button
-                type="button"
-                onClick={handleReviewSave}
-                disabled={reviewSaving}
-                className="w-full mb-4 bg-green-600 text-white py-4 rounded-xl hover:bg-green-700 transition-all font-bold text-lg disabled:opacity-60"
-              >
-                {reviewSaving ? 'Saving Changes...' : 'Save Reviewed Prescription'}
-              </button>
-            )}
-
-            {interactionMedications.length >= 2 && (
-              <div className="mb-6 bg-cyan-50 border border-cyan-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-cyan-900">Check these medications for interactions →</p>
-                  <p className="text-sm text-cyan-800 mt-1">Use the checker to review this prescription against potential drug combinations.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCheckInteractions}
-                  className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-semibold transition-colors"
-                >
-                  Check Now
-                </button>
-              </div>
-            )}
-
-            <button
-              onClick={() => navigate('/prescriptions')}
-              className="w-full gradient-primary text-white py-4 rounded-xl hover:shadow-glow transition-all font-bold text-lg transform hover:scale-[1.02]"
-            >
-              📋 View All Prescriptions
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Info Section */}
-      <div className="mt-8 glass-effect rounded-2xl p-8 shadow-lg">
-        <h3 className="font-bold text-primary-800 mb-4 text-xl flex items-center gap-3">
-          <span className="text-3xl">📋</span>
-          How it works:
-        </h3>
-        <div className="space-y-3">
-          {[
-            'Upload a clear image of your handwritten prescription',
-            'Our OCR engine preprocesses the image for better clarity',
-            'Text is extracted and organized into readable sections',
-            'Medicine details are parsed into dosage and schedule fields',
-            'Review and verify the digitized prescription'
-          ].map((step, idx) => (
-            <div key={idx} className="flex items-center gap-3 bg-white/50 p-3 rounded-xl">
-              <div className="bg-primary-100 text-primary-700 w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                {idx + 1}
-              </div>
-              <p className="text-gray-700">{step}</p>
-            </div>
-          ))}
+              <Link to="/prescriptions" className="block">
+                <Button variant="secondary" className="w-full font-bold rounded-custom">
+                  📋 View My Prescriptions Database
+                </Button>
+              </Link>
+            </Card>
+          )}
         </div>
-        <div className="mt-6 bg-accent-50 border-2 border-accent-200 rounded-xl p-4">
-          <p className="text-sm text-accent-800">
-            <strong>Note:</strong> If live OCR is unavailable, the app automatically falls back to demo OCR output.
-          </p>
+
+        {/* RIGHT COLUMN: Steps indicator, AI benefits & tips */}
+        <div className="space-y-6">
+          {/* SECTION 3: OCR Workflow Visualization */}
+          <Card className="p-6">
+            <h3 className="font-bold text-text-primary text-sm uppercase tracking-wider mb-5">OCR Process Stages</h3>
+            <div className="relative pl-6 space-y-6">
+              <div className="absolute left-[11px] top-1.5 bottom-1.5 w-0.5 bg-slate-100" />
+              {steps.map((step) => {
+                const isCurrent = step.number === activeStep;
+                const isPassed = step.number < activeStep;
+                return (
+                  <div key={step.number} className="relative flex items-start gap-4">
+                    <div
+                      className={`absolute -left-[24px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border transition-colors ${
+                        isCurrent
+                          ? 'bg-primary border-primary text-white scale-110 shadow-md shadow-primary/20'
+                          : isPassed
+                            ? 'bg-secondary border-secondary text-white'
+                            : 'bg-white border-slate-200 text-text-secondary'
+                      }`}
+                    >
+                      {step.number}
+                    </div>
+                    <div>
+                      <p className={`text-xs font-bold leading-none ${isCurrent ? 'text-primary' : isPassed ? 'text-secondary' : 'text-text-secondary'}`}>
+                        {step.label}
+                      </p>
+                      {isCurrent && <span className="text-[10px] text-text-secondary">AI processing this step...</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* SECTION 4: AI Benefits Card */}
+          <Card className="p-6 bg-slate-50/50">
+            <h3 className="font-bold text-text-primary text-sm uppercase tracking-wider mb-4">AI Extraction Features</h3>
+            <ul className="space-y-3">
+              {[
+                { title: 'Accurate Medicine Extraction', desc: 'Preprocesses handwritten text with vision enhancement.' },
+                { title: 'Dosage Detection', desc: 'Detects mg, ml, pills, tablets and times.' },
+                { title: 'Schedule Parsing', desc: 'Extracts intake times (morning, night, foods).' },
+                { title: 'Digital Record Creation', desc: 'Outputs structured, editable arrays for reminders.' }
+              ].map((benefit, idx) => (
+                <li key={idx} className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#14B8A6] flex-shrink-0 mt-1.5" />
+                  <div>
+                    <h5 className="text-xs font-bold text-text-primary">{benefit.title}</h5>
+                    <p className="text-[11px] text-text-secondary leading-tight mt-0.5">{benefit.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+
+          {/* SECTION 5: Helpful Tips */}
+          <Card className="p-6">
+            <h3 className="font-bold text-text-primary text-sm uppercase tracking-wider mb-4 flex items-center gap-1.5">
+              <Lightbulb size={16} className="text-warning" /> Helpful Tips
+            </h3>
+            <ul className="space-y-3 text-xs text-text-secondary">
+              {[
+                'Good Lighting: Click photos in a brightly lit environment.',
+                'Flat Image: Make sure the prescription sheet is flat on a desk.',
+                'Entire Prescription: Keep all edges and corners visible.',
+                'No Blur: Avoid shaking the camera while clicking the snap.'
+              ].map((tip, idx) => (
+                <li key={idx} className="flex gap-2">
+                  <span className="font-bold text-primary">{idx + 1}.</span>
+                  <span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
         </div>
       </div>
     </div>

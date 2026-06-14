@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 
 const DoctorLogin = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const DoctorLogin = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/doctors/login', {
+      const response = await api.post('/doctors/login', {
         email: formData.email,
         password: formData.password
       });

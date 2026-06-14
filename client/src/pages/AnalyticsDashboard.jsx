@@ -18,48 +18,51 @@ import {
 } from 'recharts';
 import { analyticsAPI } from '../services/api';
 import { exportAnalyticsPDF } from '../utils/pdfExport';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import SectionHeading from '../components/ui/SectionHeading';
 
-const CHART_COLORS = ['#06b6d4', '#6366f1', '#10b981', '#f59e0b', '#ef4444'];
+const CHART_COLORS = ['#0F766E', '#14B8A6', '#06B6D4', '#F59E0B', '#EF4444'];
 
-const SummaryCard = ({ title, value, subtitle, accent = 'text-white' }) => (
-  <div className="bg-[#1e293b] border border-slate-700 rounded-xl p-5 shadow-lg">
-    <p className="text-slate-400 text-sm font-medium">{title}</p>
-    <p className={`text-2xl font-bold mt-2 ${accent}`}>{value ?? '-'}</p>
-    {subtitle ? <p className="text-xs text-slate-400 mt-2">{subtitle}</p> : null}
-  </div>
+const SummaryCard = ({ title, value, subtitle, accent = 'text-text-primary' }) => (
+  <Card>
+    <p className="text-text-secondary text-sm font-semibold uppercase tracking-wider">{title}</p>
+    <p className={`text-3xl font-extrabold mt-2 ${accent}`}>{value ?? '-'}</p>
+    {subtitle ? <p className="text-xs text-text-secondary mt-2">{subtitle}</p> : null}
+  </Card>
 );
 
 const SkeletonCard = () => (
-  <div className="bg-[#1e293b] border border-slate-700 rounded-xl p-5 animate-pulse">
-    <div className="h-4 w-32 bg-slate-700 rounded" />
-    <div className="h-8 w-20 bg-slate-700 rounded mt-3" />
-  </div>
+  <Card className="animate-pulse">
+    <div className="h-4 w-32 bg-slate-200 rounded" />
+    <div className="h-8 w-20 bg-slate-200 rounded mt-3" />
+  </Card>
 );
 
 const SkeletonPanel = ({ titleWidth = 'w-40', height = 'h-72' }) => (
-  <div className="bg-[#1e293b] border border-slate-700 rounded-xl p-5 animate-pulse">
-    <div className={`h-5 ${titleWidth} bg-slate-700 rounded mb-4`} />
-    <div className={`${height} bg-slate-700 rounded`} />
-  </div>
+  <Card className="animate-pulse">
+    <div className={`h-5 ${titleWidth} bg-slate-200 rounded mb-4`} />
+    <div className={`${height} bg-slate-200 rounded`} />
+  </Card>
 );
 
 const ChartCard = ({ title, children }) => (
-  <div className="bg-[#1e293b] border border-slate-700 rounded-xl p-5 shadow-lg">
-    <h3 className="text-lg font-semibold mb-4">{title}</h3>
+  <Card>
+    <h3 className="text-lg font-bold text-text-primary mb-6">{title}</h3>
     {children}
-  </div>
+  </Card>
 );
 
 const EmptyChartState = ({ onUpload }) => (
-  <div className="h-full flex flex-col items-center justify-center text-center px-6">
-    <p className="text-slate-300">No data yet — upload your first prescription to see insights</p>
-    <button
-      type="button"
+  <div className="h-full flex flex-col items-center justify-center text-center px-6 py-8">
+    <p className="text-text-secondary">No data yet — upload your first prescription to see insights</p>
+    <Button
       onClick={onUpload}
-      className="mt-4 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold transition-colors"
+      className="mt-4"
     >
       Upload Now
-    </button>
+    </Button>
   </div>
 );
 
@@ -81,7 +84,7 @@ const piePercentLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   return (
-    <text x={x} y={y} fill="#e2e8f0" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={600}>
+    <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={700}>
       {`${Math.round(percent * 100)}%`}
     </text>
   );
@@ -130,19 +133,19 @@ const AnalyticsDashboard = () => {
 
   const adherenceTone = useMemo(() => {
     if (adherenceRate >= 70) {
-      return 'text-emerald-400';
+      return 'text-success';
     }
     if (adherenceRate >= 40) {
-      return 'text-amber-400';
+      return 'text-warning';
     }
-    return 'text-red-400';
+    return 'text-danger';
   }, [adherenceRate]);
 
   const hasNoData = totalPrescriptions === 0;
 
   const commonTooltip = {
-    contentStyle: { backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 8 },
-    labelStyle: { color: '#e2e8f0' }
+    contentStyle: { backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 8px 24px rgba(15,23,42,0.08)' },
+    labelStyle: { color: '#0f172a', fontWeight: 'bold' }
   };
 
   const handleExportReport = () => {
@@ -166,25 +169,24 @@ const AnalyticsDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white rounded-2xl p-6 md:p-8">
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Health Analytics</h1>
-          <p className="text-slate-400 mt-2">Your medication and prescription insights, powered by Python analytics.</p>
-        </div>
-        <button
-          type="button"
-          onClick={handleExportReport}
-          disabled={isLoading || !data?.summary}
-          className="inline-flex items-center gap-2 self-start px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-600 disabled:text-slate-300 disabled:cursor-not-allowed text-white font-semibold transition-colors"
-        >
-          <FileDown size={16} />
-          Export Report
-        </button>
-      </div>
+    <div className="w-full">
+      <SectionHeading
+        title="Health Analytics"
+        subtitle="Your medication and prescription insights, powered by Python analytics."
+        action={
+          <Button
+            onClick={handleExportReport}
+            disabled={isLoading || !data?.summary}
+            className="flex items-center gap-2"
+          >
+            <FileDown size={16} />
+            Export Report
+          </Button>
+        }
+      />
 
       {error && (
-        <div className="mb-6 bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
+        <div className="mb-6 bg-red-50 border border-danger/30 text-danger px-4 py-3 rounded-custom text-sm font-semibold">
           {error}
         </div>
       )}
@@ -235,12 +237,12 @@ const AnalyticsDashboard = () => {
                     <EmptyChartState onUpload={() => navigate('/upload')} />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.timeline} margin={{ top: 12, right: 16, left: 0, bottom: 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="month" stroke="#94a3b8" />
-                        <YAxis stroke="#94a3b8" allowDecimals={false} />
+                      <LineChart data={data.timeline} margin={{ top: 12, right: 16, left: -20, bottom: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="month" stroke="#64748b" />
+                        <YAxis stroke="#64748b" allowDecimals={false} />
                         <Tooltip {...commonTooltip} />
-                        <Line type="monotone" dataKey="count" name="Uploads" stroke="#06b6d4" strokeWidth={3} />
+                        <Line type="monotone" dataKey="count" name="Uploads" stroke="#0F766E" strokeWidth={3} activeDot={{ r: 8 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   )}
@@ -265,16 +267,16 @@ const AnalyticsDashboard = () => {
                   <EmptyChartState onUpload={() => navigate('/upload')} />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.top_medications} margin={{ top: 10, right: 12, left: 0, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis dataKey="name" stroke="#94a3b8" interval={0} angle={-35} textAnchor="end" height={70} />
-                      <YAxis stroke="#94a3b8" allowDecimals={false} />
+                    <BarChart data={data.top_medications} margin={{ top: 10, right: 12, left: -20, bottom: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="name" stroke="#64748b" interval={0} angle={-35} textAnchor="end" height={70} />
+                      <YAxis stroke="#64748b" allowDecimals={false} />
                       <Tooltip
                         {...commonTooltip}
                         formatter={(value) => [`${value}`, 'Count']}
                         labelFormatter={(label) => `Medication: ${label}`}
                       />
-                      <Bar dataKey="count" name="Prescribed Count" fill="#06b6d4" radius={[4, 4, 0, 0]} barSize={34} />
+                      <Bar dataKey="count" name="Prescribed Count" fill="#0F766E" radius={[6, 6, 0, 0]} barSize={34} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -290,17 +292,17 @@ const AnalyticsDashboard = () => {
                     <BarChart
                       layout="vertical"
                       data={data.top_diagnoses}
-                      margin={{ top: 10, right: 16, left: 8, bottom: 10 }}
+                      margin={{ top: 10, right: 16, left: 20, bottom: 10 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis type="number" stroke="#94a3b8" allowDecimals={false} />
-                      <YAxis dataKey="diagnosis" type="category" stroke="#94a3b8" width={130} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis type="number" stroke="#64748b" allowDecimals={false} />
+                      <YAxis dataKey="diagnosis" type="category" stroke="#64748b" width={100} />
                       <Tooltip
                         {...commonTooltip}
                         formatter={(value) => [`${value}`, 'Count']}
                         labelFormatter={(label) => `Diagnosis: ${label}`}
                       />
-                      <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={18} />
+                      <Bar dataKey="count" fill="#14B8A6" radius={[0, 6, 6, 0]} barSize={18} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -340,7 +342,7 @@ const AnalyticsDashboard = () => {
                           verticalAlign="bottom"
                           align="center"
                           wrapperStyle={{ paddingTop: 16 }}
-                          formatter={(value) => <span style={{ color: '#cbd5e1' }}>{value}</span>}
+                          formatter={(value) => <span className="text-text-secondary text-sm">{value}</span>}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -356,22 +358,22 @@ const AnalyticsDashboard = () => {
                     <EmptyChartState onUpload={() => navigate('/upload')} />
                   ) : (
                     <div className="relative pl-6">
-                      <div className="absolute left-[11px] top-1 bottom-1 w-px bg-slate-600" />
+                      <div className="absolute left-[11px] top-1 bottom-1 w-px bg-border" />
                       {(data.recent_prescriptions || []).map((item) => (
                         <div key={item.id} className="relative mb-6 last:mb-0">
-                          <div className="absolute -left-[14px] top-1.5 w-3 h-3 rounded-full bg-cyan-500 border border-cyan-300" />
-                          <div className="bg-slate-800/70 border border-slate-700 rounded-lg p-3">
+                          <div className="absolute -left-[14px] top-2 w-3 h-3 rounded-full bg-secondary border border-white" />
+                          <Card className="p-4 bg-background border border-border">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-sm text-slate-200 font-medium">{formatDate(item.date)}</p>
+                              <p className="text-sm text-text-primary font-bold">{formatDate(item.date)}</p>
                               {item.is_verified ? (
-                                <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-700">
-                                  Verified
-                                </span>
-                              ) : null}
+                                <Badge variant="success">Verified</Badge>
+                              ) : (
+                                <Badge variant="warning">Pending Verification</Badge>
+                              )}
                             </div>
-                            <p className="text-slate-300 mt-1">Doctor: {item.doctor_name || 'UNCLEAR'}</p>
-                            <p className="text-slate-400 text-sm mt-1">Medications: {item.medication_count || 0}</p>
-                          </div>
+                            <p className="text-text-secondary text-sm mt-1">Doctor: {item.doctor_name || 'UNCLEAR'}</p>
+                            <p className="text-text-secondary text-sm">Medications: {item.medication_count || 0}</p>
+                          </Card>
                         </div>
                       ))}
                     </div>
@@ -382,16 +384,15 @@ const AnalyticsDashboard = () => {
           </div>
 
           {hasNoData ? (
-            <div className="mt-6 bg-[#1e293b] border border-slate-700 rounded-xl p-6 text-center">
-              <p className="text-slate-300">No data yet — upload your first prescription to see insights</p>
-              <button
-                type="button"
+            <Card className="mt-6 p-6 text-center">
+              <p className="text-text-secondary">No data yet — upload your first prescription to see insights</p>
+              <Button
                 onClick={() => navigate('/upload')}
-                className="mt-4 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold transition-colors"
+                className="mt-4"
               >
                 Upload Now
-              </button>
-            </div>
+              </Button>
+            </Card>
           ) : null}
         </>
       )}

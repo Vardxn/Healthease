@@ -40,6 +40,8 @@ const DoctorConsultationNotes = () => {
   const [privateNotes, setPrivateNotes] = useState('');
   const [improvementObserved, setImprovementObserved] = useState(false);
   const [improvementDetails, setImprovementDetails] = useState('');
+  const [safetyReport, setSafetyReport] = useState(null);
+  const [checkingSafety, setCheckingSafety] = useState(false);
 
   useEffect(() => {
     const doctorToken = localStorage.getItem('doctorToken');
@@ -85,6 +87,41 @@ const DoctorConsultationNotes = () => {
 
     loadConsultation();
   }, [doctorToken, id, navigate]);
+
+  useEffect(() => {
+    const patientId = consultation?.patientId?._id;
+    if (!patientId) return;
+
+    const activeMedicines = medicines
+      .map((m) => ({
+        name: String(m.name || '').trim(),
+        dosage: String(m.dosage || '').trim(),
+        frequency: String(m.frequency || '').trim(),
+        duration: String(m.duration || '').trim()
+      }))
+      .filter((m) => m.name);
+
+    if (activeMedicines.length === 0) {
+      setSafetyReport(null);
+      return;
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      setCheckingSafety(true);
+      try {
+        const response = await doctorConsultationAPI.checkPrescriptionSafety(patientId, activeMedicines);
+        if (response?.data?.success) {
+          setSafetyReport(response.data.data);
+        }
+      } catch (err) {
+        console.error('Safety check failed:', err);
+      } finally {
+        setCheckingSafety(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(delayDebounce);
+  }, [medicines, consultation?.patientId?._id]);
 
   const patientName = consultation?.patientId?.name || 'Unknown';
   const patientAge = consultation?.patientId?.profile?.age ?? 'N/A';
@@ -227,6 +264,53 @@ const DoctorConsultationNotes = () => {
             <h3 className="text-lg font-semibold">Prescribed Medicines</h3>
             <button type="button" onClick={addMedicine} className="rounded-lg bg-cyan-500 px-3 py-1.5 text-sm font-semibold text-gray-950 hover:bg-cyan-400">Add Medicine</button>
           </div>
+
+          {/* AI Safety Screening Dashboard */}
+          {checkingSafety && (
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-cyan-800 bg-cyan-950/20 p-4 text-sm text-cyan-300">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent"></div>
+              Checking prescription safety with AI...
+            </div>
+          )}
+
+          {!checkingSafety && safetyReport && safetyReport.conflictsFound && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-5 space-y-3">
+              <div className="flex items-center gap-2 text-rose-400 font-bold">
+                ⚠️ AI Safety Warning: Conflicts Found
+              </div>
+              <p className="text-xs text-gray-400">{safetyReport.summary}</p>
+              <div className="space-y-2">
+                {safetyReport.warnings.map((w, idx) => {
+                  const isHigh = w.severity?.toLowerCase() === 'high';
+                  const isMedium = w.severity?.toLowerCase() === 'medium';
+                  const badgeColor = isHigh 
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                    : isMedium 
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+                      : 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+                  
+                  return (
+                    <div key={`warning-${idx}`} className={`flex flex-col gap-1 rounded-lg border p-3 bg-gray-950/50 ${isHigh ? 'border-rose-500/20' : 'border-gray-800'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`rounded px-1.5 py-0.5 text-xs font-semibold border ${badgeColor}`}>
+                          {w.type?.toUpperCase()} - {w.severity?.toUpperCase()}
+                        </span>
+                        <span className="font-semibold text-gray-200">{w.subject}</span>
+                      </div>
+                      <p className="text-sm text-gray-300 font-light">{w.detail}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 italic mt-2">{safetyReport.disclaimer}</p>
+            </div>
+          )}
+
+          {!checkingSafety && safetyReport && !safetyReport.conflictsFound && (
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/10 p-4 text-sm text-emerald-300 flex items-center gap-2">
+              ✅ No interaction conflicts or patient allergy issues detected.
+            </div>
+          )}
 
           {medicines.map((med, index) => (
             <div key={`medicine-${index}`} className="grid grid-cols-1 gap-2 rounded-xl border border-gray-700 bg-gray-950/70 p-3 md:grid-cols-5">
