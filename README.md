@@ -13,18 +13,10 @@ HEALTHEASE is a modern clinical SaaS workspace and patient compliance hub. It en
 
 ---
 
-## 🏗️ Technical Architecture Diagram
+## 🚀 Live Hosting URLs
 
-```mermaid
-graph TD
-    User([Patient/Doctor Client]) --> |HTTP/WS| FE[React Vite Client]
-    FE --> |JSON API| BE[Node.js Express Server]
-    FE --> |Real-time Sync| WS[Socket.io Hub]
-    BE --> |Data Storage| DB[(MongoDB Atlas)]
-    BE --> |Extract OCR Requests| PY[FastAPI AI OCR Service]
-    PY --> |OCR Extraction| Groq[Groq LLM/Llama Vision API]
-    BE --> |Medicine Reminders| SMTP[Gmail SMTP Server]
-```
+- **Live Frontend Application**: [https://healthease-saas.vercel.app](https://healthease-saas.vercel.app)
+- **Live Backend API**: [https://healthease-api.onrender.com](https://healthease-api.onrender.com)
 
 ---
 
@@ -37,6 +29,21 @@ HEALTHEASE includes predefined seed data to let users and reviewers immediately 
 | :--- | :--- | :--- | :--- |
 | **System Admin** | `admin@healthease.demo` | `Admin@123` | KPI Analytics, Doctor Certification Verification, System Audit Logs |
 | **Active Patient** | `user@healthease.demo` | `User@123` | AI prescriptions digitizer scanner, Adherence trackers, Vitals logs, Consult bookings |
+
+---
+
+## 🏗️ Technical Architecture Diagram
+
+```mermaid
+graph TD
+    User([Patient/Doctor Client]) --> |HTTP/WS| FE[React Vite Client]
+    FE --> |JSON API| BE[Node.js Express Server]
+    FE --> |Real-time Sync| WS[Socket.io Hub]
+    BE --> |Data Storage| DB[(MongoDB Atlas)]
+    BE --> |Extract OCR Requests| PY[FastAPI AI OCR Service]
+    PY --> |OCR Extraction| Groq[Groq LLM/Llama Vision API]
+    BE --> |Medicine Reminders| SMTP[Gmail SMTP Server]
+```
 
 ---
 
