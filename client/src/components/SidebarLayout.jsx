@@ -20,7 +20,10 @@ import {
   Moon,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Printer,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function SidebarLayout({ children }) {
@@ -55,10 +58,13 @@ export default function SidebarLayout({ children }) {
       { name: 'Medicines', path: '/medicine-tracker', icon: Pill },
       { name: 'Vitals', path: '/vitals', icon: Activity },
       { name: 'Timeline', path: '/timeline', icon: Calendar },
+      { name: 'AI Assistant', path: '/assistant', icon: Sparkles },
+      { name: 'PDF Reports', path: '/exports', icon: Printer },
     ],
     account: [
       { name: 'Profile', path: '/profile', icon: User },
       { name: 'Settings', path: '/profile#settings', icon: Settings }, // redirect to profile with hash/tab
+      { name: 'Admin Panel', path: '/admin/dashboard', icon: ShieldCheck },
     ]
   };
 
@@ -79,6 +85,9 @@ export default function SidebarLayout({ children }) {
     if (path.startsWith('/symptom-checker')) return 'Symptom Checker';
     if (path.startsWith('/doctor/dashboard')) return 'Doctor Dashboard';
     if (path.startsWith('/consultation')) return 'Consultation Room';
+    if (path.startsWith('/assistant')) return 'AI Health Assistant';
+    if (path.startsWith('/exports')) return 'PDF Report Center';
+    if (path.startsWith('/admin/dashboard')) return 'Admin Control Center';
     return 'HealthEase';
   };
 

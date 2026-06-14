@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { useContext } from 'react';
 import SidebarLayout from './components/SidebarLayout';
+import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -25,89 +26,107 @@ import ReminderHistory from './pages/ReminderHistory';
 import SymptomChecker from './pages/SymptomChecker';
 import VitalsDashboard from './pages/VitalsDashboard';
 
+// Premium SaaS Features
+import HealthAssistant from './pages/HealthAssistant';
+import ExportEngine from './pages/ExportEngine';
+import AdminDashboard from './pages/AdminDashboard';
+
 function AppContent() {
   const { user } = useContext(AuthContext);
 
   return (
-    <>
-      <Routes>
-        {/* Auth Pages - No Sidebar */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/doctor/login" element={<DoctorLogin />} />
-        <Route path="/doctor/register" element={<DoctorRegister />} />
+    <Routes>
+      {/* Auth Pages - No Sidebar */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/doctor/login" element={<DoctorLogin />} />
+      <Route path="/doctor/register" element={<DoctorRegister />} />
 
-        {/* Dashboard redirect */}
-        <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+      {/* Landing Page */}
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
 
-        {/* Protected Routes - With Sidebar */}
-        <Route
-          path="/dashboard"
-          element={user ? <SidebarLayout><Dashboard /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/upload"
-          element={user ? <SidebarLayout><UploadPrescription /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/prescriptions"
-          element={user ? <SidebarLayout><PrescriptionList /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/profile"
-          element={user ? <SidebarLayout><PatientProfile /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/dashboard/analytics"
-          element={user ? <SidebarLayout><AnalyticsDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/interactions"
-          element={user ? <SidebarLayout><DrugInteractions /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/doctors"
-          element={user ? <SidebarLayout><DoctorDirectory /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/consultations/my"
-          element={user ? <SidebarLayout><MyConsultations /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/timeline"
-          element={user ? <SidebarLayout><CareTimeline /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/medicine-tracker"
-          element={user ? <SidebarLayout><MedicineTracker /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/medicine-history"
-          element={user ? <SidebarLayout><ReminderHistory /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/vitals"
-          element={user ? <SidebarLayout><VitalsDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/symptom-checker"
-          element={user ? <SidebarLayout><SymptomChecker /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/doctor/dashboard"
-          element={user ? <SidebarLayout><DoctorDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/consultation/:id"
-          element={user ? <SidebarLayout><ConsultationRoom /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/consultation/:id/notes"
-          element={user ? <SidebarLayout><DoctorConsultationNotes /></SidebarLayout> : <Navigate to="/login" replace />}
-        />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </>
+      {/* Protected Routes - With Sidebar */}
+      <Route
+        path="/dashboard"
+        element={user ? <SidebarLayout><Dashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/upload"
+        element={user ? <SidebarLayout><UploadPrescription /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/prescriptions"
+        element={user ? <SidebarLayout><PrescriptionList /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/profile"
+        element={user ? <SidebarLayout><PatientProfile /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/dashboard/analytics"
+        element={user ? <SidebarLayout><AnalyticsDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/interactions"
+        element={user ? <SidebarLayout><DrugInteractions /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/doctors"
+        element={user ? <SidebarLayout><DoctorDirectory /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/consultations/my"
+        element={user ? <SidebarLayout><MyConsultations /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/timeline"
+        element={user ? <SidebarLayout><CareTimeline /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/medicine-tracker"
+        element={user ? <SidebarLayout><MedicineTracker /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/medicine-history"
+        element={user ? <SidebarLayout><ReminderHistory /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/vitals"
+        element={user ? <SidebarLayout><VitalsDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/symptom-checker"
+        element={user ? <SidebarLayout><SymptomChecker /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/doctor/dashboard"
+        element={user ? <SidebarLayout><DoctorDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/consultation/:id"
+        element={user ? <SidebarLayout><ConsultationRoom /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/consultation/:id/notes"
+        element={user ? <SidebarLayout><DoctorConsultationNotes /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+
+      {/* New SaaS Portfolio Routes */}
+      <Route
+        path="/assistant"
+        element={user ? <SidebarLayout><HealthAssistant /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/exports"
+        element={user ? <SidebarLayout><ExportEngine /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/admin/dashboard"
+        element={user ? <SidebarLayout><AdminDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
+      />
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 
