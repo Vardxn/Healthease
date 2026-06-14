@@ -1,8 +1,24 @@
-import { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Stethoscope, Beaker, TrendingUp, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import {
+  Calendar,
+  Stethoscope,
+  Beaker,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  FileText,
+  Bookmark,
+  Sparkles,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { patientAPI } from '../services/api';
+import Card from '../components/ui/Card';
+import Badge from '../components/ui/Badge';
+import SectionHeading from '../components/ui/SectionHeading';
 
 const CareTimeline = () => {
   const { isAuthenticated, user, loading: authLoading } = useContext(AuthContext);
@@ -28,7 +44,6 @@ const CareTimeline = () => {
     try {
       setLoading(true);
       setError('');
-      // Endpoint: GET /api/patients/:patientId/care-timeline
       const response = await patientAPI.getCareTimeline(user._id);
       if (response.data?.success) {
         const groupedTimeline = Array.isArray(response.data?.data?.groupedTimeline)
@@ -49,17 +64,17 @@ const CareTimeline = () => {
   const getTypeIcon = (type) => {
     switch (type) {
       case 'consultation':
-        return <Stethoscope size={20} className="text-blue-400" />;
+        return <Stethoscope size={18} className="text-primary" />;
       case 'test':
-        return <Beaker size={20} className="text-purple-400" />;
+        return <Beaker size={18} className="text-purple-600" />;
       case 'vitals':
-        return <TrendingUp size={20} className="text-emerald-400" />;
+        return <TrendingUp size={18} className="text-[#14B8A6]" />;
       case 'alert':
-        return <AlertCircle size={20} className="text-red-400" />;
+        return <AlertCircle size={18} className="text-danger" />;
       case 'prescription':
-        return <AlertCircle size={20} className="text-amber-400" />;
+        return <FileText size={18} className="text-accent" />;
       default:
-        return <Calendar size={20} className="text-cyan-400" />;
+        return <Calendar size={18} className="text-text-secondary" />;
     }
   };
 
@@ -67,24 +82,29 @@ const CareTimeline = () => {
     const labels = {
       consultation: 'Consultation',
       test: 'Lab Test',
-      vitals: 'Vitals',
+      vitals: 'Vitals Logged',
       alert: 'Vitals Alert',
-      prescription: 'Prescription',
+      prescription: 'Prescription Uploaded',
       milestone: 'Milestone'
     };
     return labels[type] || type;
   };
 
-  const getTypeColor = (type) => {
-    const colors = {
-      consultation: 'bg-blue-900/30 border-blue-700 text-blue-200',
-      test: 'bg-purple-900/30 border-purple-700 text-purple-200',
-      vitals: 'bg-emerald-900/30 border-emerald-700 text-emerald-200',
-      alert: 'bg-red-900/30 border-red-700 text-red-200',
-      prescription: 'bg-amber-900/30 border-amber-700 text-amber-200',
-      milestone: 'bg-cyan-900/30 border-cyan-700 text-cyan-200'
-    };
-    return colors[type] || 'bg-slate-900/30 border-slate-700 text-slate-200';
+  const getTypeColorClasses = (type) => {
+    switch (type) {
+      case 'consultation':
+        return { bg: 'bg-primary/10', text: 'text-primary' };
+      case 'test':
+        return { bg: 'bg-purple-100', text: 'text-purple-700' };
+      case 'vitals':
+        return { bg: 'bg-teal-50', text: 'text-teal-700' };
+      case 'alert':
+        return { bg: 'bg-red-50', text: 'text-red-700' };
+      case 'prescription':
+        return { bg: 'bg-cyan-50', text: 'text-cyan-700' };
+      default:
+        return { bg: 'bg-slate-100', text: 'text-slate-700' };
+    }
   };
 
   const formatDate = (dateString) => {
@@ -116,35 +136,33 @@ const CareTimeline = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 size={40} className="text-cyan-500 animate-spin mx-auto mb-3" />
-          <p className="text-slate-300">Loading your care timeline...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+        <Loader2 size={36} className="text-primary animate-spin" />
+        <p className="text-text-secondary font-semibold text-sm">Loading your care timeline...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto text-white">
+    <div className="w-full space-y-6 pb-10">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">📅 Care Timeline</h1>
-        <p className="text-slate-400">
-          View your complete healthcare journey — consultations, tests, vitals, and milestones
+      <div className="border-b border-border pb-4">
+        <h2 className="text-3xl font-extrabold text-text-primary tracking-tight">Health Journey</h2>
+        <p className="text-text-secondary text-sm">
+          Track prescriptions, consultations, medicines, and vitals logged over time.
         </p>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div className="flex flex-wrap gap-2">
         {['all', 'consultation', 'test', 'vitals', 'prescription'].map(type => (
           <button
             key={type}
             onClick={() => setFilterType(type)}
-            className={`px-4 py-2 rounded-xl font-medium transition-all ${
+            className={`px-4 py-2 rounded-full font-bold text-xs transition-all border ${
               filterType === type
-                ? 'bg-cyan-500 text-slate-900 shadow-glow-cyan'
-                : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                ? 'bg-primary border-primary text-white shadow-custom'
+                : 'bg-white border-border hover:border-text-secondary text-text-secondary'
             }`}
           >
             {type === 'all' ? 'All Events' : getTypeLabel(type)}
@@ -154,186 +172,202 @@ const CareTimeline = () => {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 mb-6 text-red-200 flex items-start gap-3">
-          <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+        <div className="bg-red-50 border border-danger/20 text-danger p-4 rounded-custom text-sm font-semibold flex items-center gap-3">
+          <AlertCircle size={18} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
       )}
 
       {/* Empty State */}
       {filteredEventsCount === 0 ? (
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-12 text-center">
-          <Calendar size={48} className="mx-auto text-slate-500 mb-4" />
-          <h3 className="text-xl font-bold text-slate-300 mb-2">No timeline events</h3>
-          <p className="text-slate-400">
+        <Card className="p-12 text-center max-w-md mx-auto space-y-4">
+          <Calendar size={48} className="mx-auto text-text-secondary/50" />
+          <h3 className="text-xl font-bold text-text-primary">No Journey Logs</h3>
+          <p className="text-xs text-text-secondary">
             {filterType === 'all'
-              ? 'Your healthcare timeline will appear here once you have consultations, tests, or vitals recorded.'
+              ? 'Your healthcare timeline will appear here once you schedule appointments, log vitals, or digitize records.'
               : `No ${getTypeLabel(filterType)} records found.`}
           </p>
-        </div>
+        </Card>
       ) : (
-        <div className="space-y-8">
+        // Vertical timeline connector
+        <div className="space-y-8 relative pl-6 border-l-2 border-slate-100 ml-3.5">
           {filteredGroups.map((group) => (
-            <div key={group.key || group.month}>
-              {/* Date Header */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="h-px flex-1 bg-slate-700"></div>
-                <span className="text-sm font-semibold text-cyan-400 bg-slate-900 px-4 py-1 rounded-full">
-                  {group.month || 'Unknown'}
+            <div key={group.key || group.month} className="space-y-4">
+              {/* Month grouping header */}
+              <div className="relative -left-[35px] flex items-center gap-2 bg-white py-1">
+                <div className="w-3.5 h-3.5 rounded-full bg-primary border-4 border-white ring-2 ring-primary flex-shrink-0" />
+                <span className="text-xs font-bold text-text-secondary uppercase tracking-widest bg-white px-2">
+                  {group.month || 'Journey Record'}
                 </span>
-                <div className="h-px flex-1 bg-slate-700"></div>
               </div>
 
-              {/* Events for this date */}
-              <div className="space-y-4 ml-4">
-                {group.entries.map((event) => (
-                  <div key={event.id}>
-                    {/* Timeline Connector */}
-                    <div className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className="bg-slate-700 p-3 rounded-full mb-2">
-                          {getTypeIcon(event.type)}
-                        </div>
-                        <div className="w-1 h-12 bg-slate-700"></div>
+              {/* Entries for this month */}
+              <div className="space-y-5">
+                {group.entries.map((event) => {
+                  const colorClasses = getTypeColorClasses(event.type);
+                  const isExpanded = expandedEvent === event.id;
+                  
+                  return (
+                    <div key={event.id} className="relative group">
+                      {/* Event node badge */}
+                      <div className={`absolute -left-[37px] top-4 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white ring-2 ring-slate-100 shadow-sm flex-shrink-0 ${colorClasses.bg}`}>
+                        {getTypeIcon(event.type)}
                       </div>
 
-                      {/* Event Card */}
-                      <div
-                        className={`flex-1 rounded-xl border p-4 cursor-pointer transition-all hover:shadow-lg ${getTypeColor(event.type)}`}
-                        onClick={() => setExpandedEvent(expandedEvent === event.id ? null : event.id)}
+                      <Card
+                        className="hover:translate-y-[-2px] transition-custom border border-border p-5 cursor-pointer ml-3"
+                        onClick={() => setExpandedEvent(isExpanded ? null : event.id)}
                       >
-                        {/* Event Title */}
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div>
-                            <p className="font-bold text-lg">{getTypeLabel(event.type)}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-text-primary text-base">
+                                {getTypeLabel(event.type)}
+                              </h4>
+                              {event.status && (
+                                <Badge variant={
+                                  event.status === 'completed' ? 'secondary' :
+                                  event.status === 'active' ? 'success' :
+                                  event.status === 'cancelled' ? 'danger' : 'secondary'
+                                }>
+                                  {event.status}
+                                </Badge>
+                              )}
+                            </div>
+                            
                             {event.doctorName && (
-                              <p className="text-sm opacity-80">
+                              <p className="text-xs font-semibold text-text-secondary mt-1">
                                 with Dr. {event.doctorName}
                                 {event.specialization && ` (${event.specialization})`}
                               </p>
                             )}
                           </div>
-                          {event.status && (
-                            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                              event.status === 'completed' ? 'bg-emerald-900/50 text-emerald-200' :
-                              event.status === 'active' ? 'bg-blue-900/50 text-blue-200' :
-                              event.status === 'cancelled' ? 'bg-red-900/50 text-red-200' :
-                              'bg-slate-900/50 text-slate-200'
-                            }`}>
-                              {event.status}
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-text-secondary font-bold bg-slate-50 border border-border px-2.5 py-1 rounded-full">
+                              {formatDate(event.createdAt || event.date)}
                             </span>
-                          )}
+                            {isExpanded ? <ChevronUp size={16} className="text-text-secondary" /> : <ChevronDown size={16} className="text-text-secondary" />}
+                          </div>
                         </div>
 
-                        {/* Event Summary */}
+                        {/* Summary description */}
                         {event.summary && (
-                          <p className="text-sm mb-2">{event.summary}</p>
+                          <p className="text-xs text-text-secondary mt-3 leading-relaxed bg-slate-50 border border-border/60 p-3 rounded-[12px]">{event.summary}</p>
                         )}
 
-                        {/* Quick Details */}
-                        <div className="text-xs space-y-1 opacity-80">
+                        {/* Quick metadata fields */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-3 border-t border-border/50 text-[11px] text-text-secondary font-semibold">
                           {event.consultationType && (
-                            <p>📞 Type: {event.consultationType}</p>
+                            <div>
+                              <span>Mode:</span>
+                              <p className="text-text-primary font-bold capitalize mt-0.5">{event.consultationType}</p>
+                            </div>
                           )}
                           {event.testName && (
-                            <p>🧪 Test: {event.testName}</p>
+                            <div>
+                              <span>Test Ordered:</span>
+                              <p className="text-text-primary font-bold mt-0.5">{event.testName}</p>
+                            </div>
                           )}
                           {event.urgency && (
-                            <p>⚡ Urgency: {event.urgency}</p>
-                          )}
-                          {event.reason && (
-                            <p>📝 Reason: {event.reason}</p>
+                            <div>
+                              <span>Urgency:</span>
+                              <p className="text-text-primary font-bold mt-0.5">{event.urgency}</p>
+                            </div>
                           )}
                           {event.followUpDate && (
-                            <p>📅 Follow-up: {formatDate(event.followUpDate)}</p>
+                            <div>
+                              <span>Follow-up Scheduled:</span>
+                              <p className="text-text-primary font-bold mt-0.5">{formatDate(event.followUpDate)}</p>
+                            </div>
                           )}
                         </div>
 
-                        {/* Abnormal Flag */}
+                        {/* Vitals indicators */}
                         {(event.abnormal || event.isAbnormal) && (
-                          <div className="mt-3 px-3 py-2 bg-red-900/30 border border-red-700 rounded-lg flex items-center gap-2 text-sm text-red-200">
-                            <AlertCircle size={16} />
-                            <span>Abnormal reading - consult doctor</span>
+                          <div className="mt-4 px-3 py-2.5 bg-red-50 border border-danger/20 rounded-custom flex items-center gap-2 text-xs text-danger font-semibold">
+                            <AlertCircle size={15} />
+                            <span>Warning: Abnormal readings logged. Consult with Doctor immediately.</span>
                           </div>
                         )}
 
-                        {/* Improvement Indicator */}
                         {event.improvementObserved && (
-                          <div className="mt-3 px-3 py-2 bg-emerald-900/30 border border-emerald-700 rounded-lg flex items-center gap-2 text-sm text-emerald-200">
-                            <CheckCircle2 size={16} />
-                            <span>Improvement observed</span>
+                          <div className="mt-4 px-3 py-2.5 bg-green-50 border border-success/20 rounded-custom flex items-center gap-2 text-xs text-green-700 font-semibold">
+                            <CheckCircle2 size={15} />
+                            <span>Adherence Status: Progress and improvements observed.</span>
                           </div>
                         )}
-                      </div>
+                      </Card>
+
+                      {/* Expanding medical charts notes */}
+                      {isExpanded && (
+                        <div className="mt-2 ml-3 pl-5 border-l-2 border-slate-100 animate-slideUp">
+                          <Card className="p-5 bg-slate-50 border border-border/80 rounded-custom space-y-4 text-xs text-text-secondary">
+                            {event.fullNotes?.chiefComplaint && (
+                              <div>
+                                <p className="font-bold text-text-primary uppercase tracking-wider text-[10px] mb-1">Chief Complaint</p>
+                                <p className="text-text-primary bg-white p-3 border border-border rounded-[12px]">{event.fullNotes.chiefComplaint}</p>
+                              </div>
+                            )}
+
+                            {event.fullNotes?.diagnosis && (
+                              <div>
+                                <p className="font-bold text-text-primary uppercase tracking-wider text-[10px] mb-1">Diagnosis</p>
+                                <p className="text-text-primary bg-white p-3 border border-border rounded-[12px]">{event.fullNotes.diagnosis}</p>
+                              </div>
+                            )}
+
+                            {Array.isArray(event.fullNotes?.prescribedMedicines) && event.fullNotes.prescribedMedicines.length > 0 && (
+                              <div>
+                                <p className="font-bold text-text-primary uppercase tracking-wider text-[10px] mb-2">Prescribed Medicines</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {event.fullNotes.prescribedMedicines.map((med, idx) => (
+                                    <div key={idx} className="bg-white border border-border rounded-[12px] p-3">
+                                      <p className="font-bold text-text-primary text-xs">{med.name}</p>
+                                      <p className="text-[10px] text-text-secondary mt-0.5">
+                                        {med.dosage} • {med.frequency} • {med.duration}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {Array.isArray(event.fullNotes?.testsOrdered) && event.fullNotes.testsOrdered.length > 0 && (
+                              <div>
+                                <p className="font-bold text-text-primary uppercase tracking-wider text-[10px] mb-2">Diagnostic Labs</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {event.fullNotes.testsOrdered.map((test, idx) => (
+                                    <div key={idx} className="bg-white border border-border rounded-[12px] p-3">
+                                      <p className="font-bold text-text-primary text-xs">{test.testName}</p>
+                                      <p className="text-[10px] text-text-secondary mt-0.5">{test.urgency || 'Normal'} • {test.reason}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {event.fullNotes?.doctorPrivateNotes && (
+                              <div>
+                                <p className="font-bold text-text-primary uppercase tracking-wider text-[10px] mb-1">Private Doctor Notes</p>
+                                <p className="text-text-primary bg-white p-3 border border-border rounded-[12px]">{event.fullNotes.doctorPrivateNotes}</p>
+                              </div>
+                            )}
+
+                            {event.improvementDetails && (
+                              <div>
+                                <p className="font-bold text-text-primary uppercase tracking-wider text-[10px] mb-1">Improvement Logs</p>
+                                <p className="text-text-primary bg-white p-3 border border-border rounded-[12px]">{event.improvementDetails}</p>
+                              </div>
+                            )}
+                          </Card>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Expanded Details */}
-                    {expandedEvent === event.id && (
-                      <div className="mt-4 ml-16 bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-4">
-                        {event.fullNotes?.chiefComplaint && (
-                          <div>
-                            <p className="text-sm font-semibold text-cyan-400 mb-1">Chief Complaint</p>
-                            <p className="text-slate-300 text-sm">{event.fullNotes.chiefComplaint}</p>
-                          </div>
-                        )}
-
-                        {event.fullNotes?.diagnosis && (
-                          <div>
-                            <p className="text-sm font-semibold text-cyan-400 mb-1">Diagnosis</p>
-                            <p className="text-slate-300 text-sm">{event.fullNotes.diagnosis}</p>
-                          </div>
-                        )}
-
-                        {Array.isArray(event.fullNotes?.prescribedMedicines) && event.fullNotes.prescribedMedicines.length > 0 && (
-                          <div>
-                            <p className="text-sm font-semibold text-cyan-400 mb-2">Prescribed Medicines</p>
-                            <div className="space-y-2">
-                              {event.fullNotes.prescribedMedicines.map((med, idx) => (
-                                <div key={idx} className="bg-slate-700/50 rounded p-3 text-sm">
-                                  <p className="font-medium text-white">{med.name}</p>
-                                  <p className="text-slate-300">
-                                    {med.dosage} • {med.frequency} • {med.duration}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {Array.isArray(event.fullNotes?.testsOrdered) && event.fullNotes.testsOrdered.length > 0 && (
-                          <div>
-                            <p className="text-sm font-semibold text-cyan-400 mb-2">Tests Ordered</p>
-                            <div className="space-y-2">
-                              {event.fullNotes.testsOrdered.map((test, idx) => (
-                                <div key={idx} className="bg-slate-700/50 rounded p-3 text-sm">
-                                  <p className="font-medium text-white">{test.testName}</p>
-                                  <p className="text-slate-300">
-                                    {test.urgency && `${test.urgency} • `}
-                                    {test.reason || 'No reason specified'}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {event.fullNotes?.doctorPrivateNotes && (
-                          <div>
-                            <p className="text-sm font-semibold text-cyan-400 mb-1">Doctor Notes</p>
-                            <p className="text-slate-300 text-sm">{event.fullNotes.doctorPrivateNotes}</p>
-                          </div>
-                        )}
-
-                        {event.improvementDetails && (
-                          <div>
-                            <p className="text-sm font-semibold text-emerald-400 mb-1">Improvement Details</p>
-                            <p className="text-slate-300 text-sm">{event.improvementDetails}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}

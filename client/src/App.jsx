@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 import { useContext } from 'react';
 import SidebarLayout from './components/SidebarLayout';
 import Dashboard from './pages/Dashboard';
@@ -111,11 +113,15 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router basename={import.meta.env.BASE_URL}>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Router basename={import.meta.env.BASE_URL}>
+            <AppContent />
+          </Router>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 

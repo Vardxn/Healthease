@@ -38,6 +38,23 @@
   --transition-custom: all 200ms ease;
 }
 
+.dark {
+  --primary: #14B8A6;
+  --primary-hover: #0D9488;
+  --secondary: #0D9488;
+  --accent: #06B6D4;
+  --background: #0F172A;
+  --card: #1E293B;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --border: #334155;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --shadow-custom: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.35);
+}
+
 @layer base {
   body {
     margin: 0;

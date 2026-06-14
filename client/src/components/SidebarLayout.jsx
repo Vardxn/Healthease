@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import {
   LayoutDashboard,
   FileText,
@@ -16,6 +17,7 @@ import {
   Bell,
   Search,
   Sun,
+  Moon,
   X,
   ChevronLeft,
   ChevronRight
@@ -24,6 +26,7 @@ import {
 export default function SidebarLayout({ children }) {
   const location = useLocation();
   const { logout, user } = useContext(AuthContext);
+  const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer open
   const [isCollapsed, setIsCollapsed] = useState(false); // Desktop/tablet collapsed status
 
@@ -80,7 +83,7 @@ export default function SidebarLayout({ children }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white dark:bg-card">
       {/* Brand Header */}
       <div className={`h-[72px] px-6 border-b border-border flex items-center justify-between`}>
         <div className="flex items-center gap-3 overflow-hidden">
@@ -97,7 +100,7 @@ export default function SidebarLayout({ children }) {
         {/* Toggle Collapse Button for Large Screens */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-100 text-text-secondary hover:text-text-primary transition-colors"
+          className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary transition-colors"
         >
           {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
@@ -123,8 +126,8 @@ export default function SidebarLayout({ children }) {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 rounded-[14px] transition-all duration-200 border-l-4 ${
                       active
-                        ? 'bg-[#E6FFFA] text-primary border-primary font-semibold'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-slate-50 border-transparent'
+                        ? 'bg-[#E6FFFA] dark:bg-primary/15 text-primary border-primary font-semibold'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-slate-50 dark:hover:bg-slate-800 border-transparent'
                     }`}
                   >
                     <Icon size={20} className="flex-shrink-0" />
@@ -161,8 +164,8 @@ export default function SidebarLayout({ children }) {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 rounded-[14px] transition-all duration-200 border-l-4 ${
                       active
-                        ? 'bg-[#E6FFFA] text-primary border-primary font-semibold'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-slate-50 border-transparent'
+                        ? 'bg-[#E6FFFA] dark:bg-primary/15 text-primary border-primary font-semibold'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-slate-50 dark:hover:bg-slate-800 border-transparent'
                     }`}
                   >
                     <Icon size={20} className="flex-shrink-0" />
@@ -183,7 +186,7 @@ export default function SidebarLayout({ children }) {
       </div>
 
       {/* Logout Footer */}
-      <div className="p-4 border-t border-border bg-slate-50/50">
+      <div className="p-4 border-t border-border bg-slate-50/50 dark:bg-slate-900/30">
         <div className="relative group">
           <button
             onClick={logout}
@@ -208,7 +211,7 @@ export default function SidebarLayout({ children }) {
     <div className="flex h-screen bg-background font-sans overflow-hidden">
       {/* 1. Desktop Sidebar */}
       <aside
-        className={`hidden md:block bg-white border-r border-border h-full flex-shrink-0 transition-all duration-300 ${
+        className={`hidden md:block bg-white dark:bg-card border-r border-border h-full flex-shrink-0 transition-all duration-300 ${
           isCollapsed ? 'w-20' : 'w-[280px]'
         }`}
       >
@@ -225,7 +228,7 @@ export default function SidebarLayout({ children }) {
           />
           
           {/* Drawer body */}
-          <div className="relative w-[280px] h-full bg-white shadow-xl animate-slideUp flex flex-col">
+          <div className="relative w-[280px] h-full bg-white dark:bg-card shadow-xl animate-slideUp flex flex-col">
             <button
               onClick={() => setSidebarOpen(false)}
               className="absolute top-5 right-5 p-2 rounded-lg bg-slate-50 border border-border text-text-secondary hover:text-text-primary transition-colors"
@@ -240,12 +243,12 @@ export default function SidebarLayout({ children }) {
       {/* 3. Main View Area (Wrapper) */}
       <div className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Sticky Top Navigation Bar */}
-        <header className="h-[72px] sticky top-0 bg-white border-b border-border px-6 flex items-center justify-between z-30 flex-shrink-0">
+        <header className="h-[72px] sticky top-0 bg-white dark:bg-card border-b border-border px-6 flex items-center justify-between z-30 flex-shrink-0">
           <div className="flex items-center gap-4">
             {/* Hamburger Trigger for Mobile */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-xl hover:bg-slate-50 border border-border text-text-secondary hover:text-text-primary transition-colors md:hidden"
+              className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 border border-border text-text-secondary hover:text-text-primary transition-colors md:hidden"
             >
               <Menu size={18} />
             </button>
@@ -263,25 +266,26 @@ export default function SidebarLayout({ children }) {
               <input
                 type="text"
                 placeholder="Search anything..."
-                className="w-full bg-slate-50 border border-border rounded-[14px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all duration-200"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-border rounded-[14px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all duration-200 text-text-primary"
               />
             </div>
 
             {/* Notification Bell */}
             <button
-              className="p-2.5 rounded-[14px] hover:bg-slate-50 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200 relative"
+              className="p-2.5 rounded-[14px] hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200 relative"
               aria-label="View Notifications"
             >
               <Bell size={18} />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger ring-2 ring-white"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger ring-2 ring-white dark:ring-slate-900"></span>
             </button>
 
-            {/* Theme Toggle Placeholder */}
+            {/* Theme Toggle Button */}
             <button
-              className="p-2.5 rounded-[14px] hover:bg-slate-50 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200"
+              onClick={toggleTheme}
+              className="p-2.5 rounded-[14px] hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200"
               aria-label="Toggle Theme"
             >
-              <Sun size={18} />
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
             {/* User Avatar */}
