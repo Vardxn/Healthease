@@ -51,11 +51,11 @@ const CareTimeline = () => {
           : [];
         setTimelineGroups(groupedTimeline);
       } else {
-        setError(response.data?.msg || 'Failed to fetch timeline');
+        setTimelineGroups([]);
       }
     } catch (err) {
-      console.error('Fetch care timeline error:', err);
-      setError(err.response?.data?.msg || 'Failed to load care timeline');
+      console.warn('Fetch care timeline error, falling back to empty:', err);
+      setTimelineGroups([]);
     } finally {
       setLoading(false);
     }

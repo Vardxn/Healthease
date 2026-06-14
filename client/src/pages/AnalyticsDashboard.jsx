@@ -236,7 +236,7 @@ const AnalyticsDashboard = () => {
                   {hasNoData ? (
                     <EmptyChartState onUpload={() => navigate('/upload')} />
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={320}>
                       <LineChart data={data.timeline} margin={{ top: 12, right: 16, left: -20, bottom: 10 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                         <XAxis dataKey="month" stroke="#64748b" />
@@ -266,7 +266,7 @@ const AnalyticsDashboard = () => {
                 {hasNoData ? (
                   <EmptyChartState onUpload={() => navigate('/upload')} />
                 ) : (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={data.top_medications} margin={{ top: 10, right: 12, left: -20, bottom: 60 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="name" stroke="#64748b" interval={0} angle={-35} textAnchor="end" height={70} />
@@ -288,7 +288,7 @@ const AnalyticsDashboard = () => {
                 {hasNoData ? (
                   <EmptyChartState onUpload={() => navigate('/upload')} />
                 ) : (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={320}>
                     <BarChart
                       layout="vertical"
                       data={data.top_diagnoses}
@@ -317,7 +317,7 @@ const AnalyticsDashboard = () => {
                   {hasNoData ? (
                     <EmptyChartState onUpload={() => navigate('/upload')} />
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={320}>
                       <PieChart>
                         <Pie
                           data={data.medication_frequency}

@@ -282,7 +282,7 @@ function VitalsDashboard({ userId: userIdProp }) {
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           {chartCard('Blood Pressure', 'Systolic and diastolic trend over the last 30 days', (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
@@ -296,7 +296,7 @@ function VitalsDashboard({ userId: userIdProp }) {
           ))}
 
           {chartCard('Blood Sugar', 'Glucose readings in mg/dL', (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
@@ -308,7 +308,7 @@ function VitalsDashboard({ userId: userIdProp }) {
           ))}
 
           {chartCard('SpO2', 'Oxygen saturation percentages', (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
@@ -320,7 +320,7 @@ function VitalsDashboard({ userId: userIdProp }) {
           ))}
 
           {chartCard('Body Weight', 'Weight trend in kilograms', (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
@@ -350,7 +350,7 @@ function VitalsDashboard({ userId: userIdProp }) {
                 </div>
               </div>
               <div className="flex-1 h-[180px] min-h-[140px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={healthTrendsData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#94a3b8" />
