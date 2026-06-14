@@ -54,9 +54,9 @@ const seedData = async () => {
       passwordHash: userPasswordHash,
       role: 'patient',
       profile: {
-        age: 28,
-        bloodGroup: 'A+',
-        chronicConditions: ['Hypertension'],
+        age: 29,
+        bloodGroup: 'B+',
+        chronicConditions: ['Mild Hypertension', 'Prediabetes'],
         allergies: ['Penicillin']
       }
     });
@@ -94,22 +94,27 @@ const seedData = async () => {
     const patient = await Patient.create({
       userId: patientUser._id,
       fullName: 'Rohan Sharma',
-      dateOfBirth: new Date('1998-05-14'),
+      dateOfBirth: new Date('1997-06-15'),
       gender: 'Male',
-      bloodGroup: 'A+',
-      height: 178,
-      weight: 72,
+      bloodGroup: 'B+',
+      height: 174,
+      weight: 76,
       allergies: ['Penicillin'],
-      chronicConditions: ['Hypertension'],
+      chronicConditions: ['Mild Hypertension', 'Prediabetes'],
       emergencyContact: {
         name: 'Anita Sharma',
         phone: '+91 98765 43210',
         relation: 'Mother'
       },
       vitals: [
-        { recordedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), bloodPressure: '128/84', heartRate: 78, temperature: 36.8, sugarLevel: 115, oxygenLevel: 97 },
-        { recordedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), bloodPressure: '124/82', heartRate: 74, temperature: 36.6, sugarLevel: 110, oxygenLevel: 98 },
-        { recordedAt: new Date(), bloodPressure: '120/80', heartRate: 72, temperature: 36.7, sugarLevel: 108, oxygenLevel: 99 }
+        { recordedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), bloodPressure: '132/86', heartRate: 80, temperature: 98.6, sugarLevel: 118, oxygenLevel: 98, weight: 76.5, source: 'Manual' },
+        { recordedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), bloodPressure: '130/84', heartRate: 78, temperature: 98.4, sugarLevel: 116, oxygenLevel: 97, weight: 76.4, source: 'Wearable' },
+        { recordedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), bloodPressure: '128/83', heartRate: 76, temperature: 98.6, sugarLevel: 114, oxygenLevel: 99, weight: 76.3, source: 'Wearable' },
+        { recordedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), bloodPressure: '126/82', heartRate: 82, temperature: 98.9, sugarLevel: 113, oxygenLevel: 96, weight: 76.2, source: 'Manual' },
+        { recordedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), bloodPressure: '125/81', heartRate: 75, temperature: 98.5, sugarLevel: 111, oxygenLevel: 98, weight: 76.1, source: 'Wearable' },
+        { recordedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), bloodPressure: '124/80', heartRate: 74, temperature: 98.2, sugarLevel: 109, oxygenLevel: 98, weight: 76.0, source: 'Wearable' },
+        { recordedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), bloodPressure: '122/79', heartRate: 71, temperature: 98.4, sugarLevel: 108, oxygenLevel: 99, weight: 75.9, source: 'Wearable' },
+        { recordedAt: new Date(), bloodPressure: '120/78', heartRate: 72, temperature: 98.6, sugarLevel: 106, oxygenLevel: 99, weight: 75.8, source: 'Manual' }
       ]
     });
 
@@ -120,10 +125,10 @@ const seedData = async () => {
       imageUrl: 'https://healthease-demo-prescriptions.s3.amazonaws.com/rx_sample.jpg',
       doctorName: 'Dr. Sarah Jenkins',
       isVerified: true,
-      ocrRawText: 'Sarah Jenkins GP MCI-199203. Rx: Lisinopril 10mg daily morning. Metformin 500mg post lunch.',
+      ocrRawText: 'Sarah Jenkins GP Rx: Lisinopril 10mg daily morning. Metformin HCl 500mg twice daily after meals.',
       medications: [
         { name: 'Lisinopril 10mg', dosage: '1 Tablet', frequency: 'once daily', duration: '30 days', notes: 'Take in morning' },
-        { name: 'Metformin 500mg', dosage: '1 Tablet', frequency: 'twice daily', duration: '60 days', notes: 'Take after meals' }
+        { name: 'Metformin HCl 500mg', dosage: '1 Tablet', frequency: 'twice daily', duration: '60 days', notes: 'Take after meals' }
       ]
     });
 
@@ -134,11 +139,11 @@ const seedData = async () => {
       dosage: '1 Tablet',
       frequency: 'once daily',
       duration: 30,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
       reminderTime: '08:00',
-      quantityRemaining: 8,
-      refillThreshold: 10,
+      quantityRemaining: 20,
+      refillThreshold: 7,
       status: 'active',
       prescriptionId: rx._id
     });
@@ -149,33 +154,42 @@ const seedData = async () => {
       dosage: '1 Tablet',
       frequency: 'twice daily',
       duration: 60,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+      startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 50 * 24 * 60 * 60 * 1000),
       reminderTime: '14:00',
-      quantityRemaining: 45,
-      refillThreshold: 15,
+      quantityRemaining: 50,
+      refillThreshold: 10,
       status: 'active',
       prescriptionId: rx._id
     });
 
     console.log('Seeding Medicine Reminder Records...');
-    await MedicineReminder.create({
-      medicineId: med1._id,
-      userId: patientUser._id,
-      reminderDate: new Date(),
-      reminderTime: '08:00',
-      status: 'taken',
-      takenAt: new Date()
-    });
+    // Seed exactly: 17 Taken, 2 Missed, 1 Pending
+    // We will distribute this over 10 days
+    // Day 0 to 9 -> 10 reminders for Lisinopril, 10 reminders for Metformin. Total 20.
+    for (let i = 9; i >= 0; i--) {
+      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      
+      // Lisinopril: 9 Taken, 1 Missed (on day 3)
+      await MedicineReminder.create({
+        medicineId: med1._id,
+        userId: patientUser._id,
+        reminderDate: date,
+        reminderTime: '08:00',
+        status: i === 3 ? 'missed' : 'taken',
+        takenAt: i === 3 ? null : new Date(date.setHours(8, 5))
+      });
 
-    await MedicineReminder.create({
-      medicineId: med2._id,
-      userId: patientUser._id,
-      reminderDate: new Date(),
-      reminderTime: '14:00',
-      status: 'skipped',
-      notes: 'Missed lunch post time'
-    });
+      // Metformin: 8 Taken, 1 Missed (on day 5), 1 Pending (on day 0 / today)
+      await MedicineReminder.create({
+        medicineId: med2._id,
+        userId: patientUser._id,
+        reminderDate: date,
+        reminderTime: '14:00',
+        status: i === 0 ? 'pending' : (i === 5 ? 'missed' : 'taken'),
+        takenAt: (i === 0 || i === 5) ? null : new Date(date.setHours(14, 15))
+      });
+    }
 
     console.log('Seeding Consultations...');
     await Consultation.create({
@@ -183,17 +197,19 @@ const seedData = async () => {
       doctorId: doc1._id,
       status: 'completed',
       consultationType: 'chat',
-      scheduledAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      startedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      endedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      scheduledAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      startedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      endedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
       fee: 500,
       paymentStatus: 'paid',
       notes: {
-        chiefComplaint: 'Mild fatigue and blood pressure logs check.',
-        diagnosis: 'Essential primary mild hypertension - stable.',
+        chiefComplaint: 'Patient reporting mild headaches and fatigue in the late afternoon.',
+        diagnosis: 'Mild Hypertension and Prediabetes detected.',
         prescribedMedicines: [
-          { name: 'Lisinopril 10mg', dosage: '1 Tablet', frequency: 'Once daily', duration: '30 Days', notes: 'Maintain weekly vitals logs' }
-        ]
+          { name: 'Lisinopril 10mg', dosage: '1 Tablet', frequency: 'Once daily', duration: '30 Days', notes: 'Maintain vitals log' },
+          { name: 'Metformin HCl 500mg', dosage: '1 Tablet', frequency: 'Twice daily', duration: '60 Days', notes: 'Take after meals' }
+        ],
+        advice: 'Reduce sodium intake. Walk 30 minutes daily. Monitor BP weekly.'
       }
     });
 
@@ -202,12 +218,12 @@ const seedData = async () => {
       doctorId: doc2._id,
       status: 'queued',
       consultationType: 'video',
-      scheduledAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      scheduledAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       fee: 800,
       paymentStatus: 'paid'
     });
 
-    console.log('Database seeded successfully!');
+    console.log('Database seeded successfully with human-friendly logs!');
     mongoose.disconnect();
   } catch (error) {
     console.error('Seeding process encountered error:', error);
