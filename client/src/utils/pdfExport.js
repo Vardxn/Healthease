@@ -101,13 +101,6 @@ const addFooter = (doc) => {
   }
 };
 
-const normalizeConfidence = (value) => {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 'N/A';
-  const score = numeric <= 1 ? numeric * 100 : numeric;
-  return `${Math.max(0, Math.min(100, Math.round(score)))}%`;
-};
-
 const extractReminderTimes = (reminder) => {
   const times = Array.isArray(reminder?.times) ? reminder.times : [];
   if (!times.length) return 'No times set';
@@ -180,16 +173,11 @@ export const exportPrescriptionPDF = (prescription) => {
   y += SECTION_SPACING;
   y = drawSectionTitle(doc, 'OCR Details', y);
 
-  const confidence = normalizeConfidence(
-    prescription?.ocrConfidence ?? prescription?.ocr_confidence ?? prescription?.confidenceScore ?? prescription?.extractionConfidence
-  );
   const ocrModeRaw = prescription?.ocrMode || prescription?.ocr_mode;
   const mode = ocrModeRaw || (prescription?.isManual ? 'Manual' : 'Real OCR');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
-  doc.text(`Confidence Score: ${confidence}`, PAGE_MARGIN, y);
-  y += 6;
   doc.text(`Mode: ${safeString(mode, 'Real OCR')}`, PAGE_MARGIN, y);
   y += 6;
   doc.text(`Verified: ${prescription?.isVerified ? 'Yes' : 'No'}`, PAGE_MARGIN, y);

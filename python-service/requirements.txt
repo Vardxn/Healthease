@@ -11,3 +11,5 @@ python-multipart
 opencv-python
 numpy
 requests
+scikit-learn==1.9.0
+joblib

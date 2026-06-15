@@ -5,6 +5,7 @@ import io
 from contextlib import asynccontextmanager
 from typing import Optional
 
+import joblib
 import PIL.Image
 from PIL.Image import Resampling
 import groq
@@ -30,6 +31,22 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 groq_client: Optional[groq.Groq] = groq.Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
+
+# ---- Medicine-Indication Classifier (trained ML model in ../ml) ----
+ML_MODEL_PATH = os.getenv(
+    "ML_MODEL_PATH",
+    os.path.join(os.path.dirname(__file__), "..", "ml", "models",
+                 "medicine_classifier.joblib"),
+)
+medicine_classifier = None
+class_to_indication: dict = {}
+try:
+    _bundle = joblib.load(ML_MODEL_PATH)
+    medicine_classifier = _bundle["pipeline"]
+    class_to_indication = _bundle["class_to_indication"]
+    print(f"Medicine-indication classifier loaded ({len(class_to_indication)} classes) ✅")
+except Exception as exc:  # pragma: no cover - model is optional at runtime
+    print(f"⚠️  Medicine classifier not loaded: {exc}")
 
 OCR_PROMPT = """
 You are a medical OCR expert. Extract ALL text from this prescription image carefully.
@@ -177,6 +194,10 @@ class InteractionCheckRequest(BaseModel):
     medications: list[str]
 
 
+class ClassifyRequest(BaseModel):
+    medicines: list[str]
+
+
 # ============ Reminder Endpoints ============
 @app.post("/reminders/set")
 async def set_reminder(request: SetReminderRequest):
@@ -260,6 +281,42 @@ async def set_reminder(request: SetReminderRequest):
             status_code=500,
             detail=f"Error setting reminder: {str(e)}"
         )
+
+
+@app.post("/classify-medicines")
+async def classify_medicines(request: ClassifyRequest):
+    """
+    Predict the therapeutic class and indication (the disease it treats) for each
+    medicine name, using the trained Medicine-Indication Classifier (see /ml).
+    """
+    names = [m.strip() for m in request.medicines if isinstance(m, str) and m.strip()]
+    if not names:
+        return {"results": []}
+
+    if medicine_classifier is None:
+        return {"results": [], "error": "Classifier model not loaded on the server"}
+
+    try:
+        clf = medicine_classifier.named_steps["clf"]
+        classes = list(clf.classes_)
+        preds = medicine_classifier.predict(names)
+        probs = (medicine_classifier.predict_proba(names)
+                 if hasattr(clf, "predict_proba") else None)
+
+        results = []
+        for i, (name, cls) in enumerate(zip(names, preds)):
+            confidence = None
+            if probs is not None:
+                confidence = round(float(probs[i][classes.index(cls)]), 4)
+            results.append({
+                "medicine": name,
+                "therapeutic_class": cls,
+                "indication": class_to_indication.get(cls, "Unknown"),
+                "confidence": confidence,
+            })
+        return {"results": results}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Classification failed: {str(exc)}") from exc
 
 
 @app.get("/analytics/dashboard")

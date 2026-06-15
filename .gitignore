@@ -11,6 +11,7 @@ server/node_modules/
 
 # Python
 python-service/venv/
+ml/venv/
 python-service/__pycache__/
 **/__pycache__/
 **/*.pyc

@@ -1,0 +1,18 @@
+{
+  "dataset": {
+    "n_medicines": 321,
+    "n_classes": 27,
+    "train_size": 240,
+    "test_size": 81
+  },
+  "test_accuracy": 0.7654,
+  "macro_f1": 0.7844,
+  "cross_val_accuracy_mean": 0.8537,
+  "cross_val_accuracy_std": 0.0361,
+  "model_comparison_cv": {
+    "Logistic Regression": 0.8292,
+    "Linear SVM": 0.8167,
+    "Complement NB": 0.7792
+  },
+  "final_model": "TF-IDF(char 2-5) + Logistic Regression"
+}

@@ -1,6 +1,9 @@
 #!/bin/bash
-cd /Users/vardxn/Developer/personal/health-ease/python-service
-export PYTHONPATH=/Users/vardxn/Developer/personal/health-ease/python-service:$PYTHONPATH
+# Resolve to this script's own directory so it works regardless of where the
+# project lives or where it is invoked from.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 
 if [ ! -x "venv/bin/python" ]; then
 	echo "Python virtual environment not found at python-service/venv"

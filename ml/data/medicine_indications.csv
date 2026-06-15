@@ -1,0 +1,322 @@
+medicine_name,therapeutic_class,indication
+Benazepril,ACE Inhibitor,Hypertension / Heart Failure
+Captopril,ACE Inhibitor,Hypertension / Heart Failure
+Cilazapril,ACE Inhibitor,Hypertension / Heart Failure
+Enalapril,ACE Inhibitor,Hypertension / Heart Failure
+Fosinopril,ACE Inhibitor,Hypertension / Heart Failure
+Imidapril,ACE Inhibitor,Hypertension / Heart Failure
+Lisinopril,ACE Inhibitor,Hypertension / Heart Failure
+Moexipril,ACE Inhibitor,Hypertension / Heart Failure
+Perindopril,ACE Inhibitor,Hypertension / Heart Failure
+Quinapril,ACE Inhibitor,Hypertension / Heart Failure
+Ramipril,ACE Inhibitor,Hypertension / Heart Failure
+Spirapril,ACE Inhibitor,Hypertension / Heart Failure
+Trandolapril,ACE Inhibitor,Hypertension / Heart Failure
+Zofenopril,ACE Inhibitor,Hypertension / Heart Failure
+Azilsartan,ARB,Hypertension
+Candesartan,ARB,Hypertension
+Eprosartan,ARB,Hypertension
+Fimasartan,ARB,Hypertension
+Irbesartan,ARB,Hypertension
+Losartan,ARB,Hypertension
+Olmesartan,ARB,Hypertension
+Telmisartan,ARB,Hypertension
+Valsartan,ARB,Hypertension
+Amikacin,Aminoglycoside Antibiotic,Bacterial Infection
+Gentamicin,Aminoglycoside Antibiotic,Bacterial Infection
+Kanamycin,Aminoglycoside Antibiotic,Bacterial Infection
+Neomycin,Aminoglycoside Antibiotic,Bacterial Infection
+Netilmicin,Aminoglycoside Antibiotic,Bacterial Infection
+Paromomycin,Aminoglycoside Antibiotic,Bacterial Infection
+Streptomycin,Aminoglycoside Antibiotic,Bacterial Infection
+Tobramycin,Aminoglycoside Antibiotic,Bacterial Infection
+Acenocoumarol,Anticoagulant,Blood Clot Prevention
+Apixaban,Anticoagulant,Blood Clot Prevention
+Argatroban,Anticoagulant,Blood Clot Prevention
+Bivalirudin,Anticoagulant,Blood Clot Prevention
+Dabigatran,Anticoagulant,Blood Clot Prevention
+Dalteparin,Anticoagulant,Blood Clot Prevention
+Edoxaban,Anticoagulant,Blood Clot Prevention
+Enoxaparin,Anticoagulant,Blood Clot Prevention
+Fondaparinux,Anticoagulant,Blood Clot Prevention
+Heparin,Anticoagulant,Blood Clot Prevention
+Rivaroxaban,Anticoagulant,Blood Clot Prevention
+Tinzaparin,Anticoagulant,Blood Clot Prevention
+Warfarin,Anticoagulant,Blood Clot Prevention
+Acarbose,Antidiabetic,Diabetes Mellitus
+Canagliflozin,Antidiabetic,Diabetes Mellitus
+Dapagliflozin,Antidiabetic,Diabetes Mellitus
+Empagliflozin,Antidiabetic,Diabetes Mellitus
+Glibenclamide,Antidiabetic,Diabetes Mellitus
+Gliclazide,Antidiabetic,Diabetes Mellitus
+Glimepiride,Antidiabetic,Diabetes Mellitus
+Glipizide,Antidiabetic,Diabetes Mellitus
+Linagliptin,Antidiabetic,Diabetes Mellitus
+Metformin,Antidiabetic,Diabetes Mellitus
+Nateglinide,Antidiabetic,Diabetes Mellitus
+Pioglitazone,Antidiabetic,Diabetes Mellitus
+Repaglinide,Antidiabetic,Diabetes Mellitus
+Saxagliptin,Antidiabetic,Diabetes Mellitus
+Sitagliptin,Antidiabetic,Diabetes Mellitus
+Teneligliptin,Antidiabetic,Diabetes Mellitus
+Vildagliptin,Antidiabetic,Diabetes Mellitus
+Aprepitant,Antiemetic,Nausea / Vomiting
+Dolasetron,Antiemetic,Nausea / Vomiting
+Domperidone,Antiemetic,Nausea / Vomiting
+Granisetron,Antiemetic,Nausea / Vomiting
+Metoclopramide,Antiemetic,Nausea / Vomiting
+Ondansetron,Antiemetic,Nausea / Vomiting
+Palonosetron,Antiemetic,Nausea / Vomiting
+Prochlorperazine,Antiemetic,Nausea / Vomiting
+Ramosetron,Antiemetic,Nausea / Vomiting
+Carbamazepine,Antiepileptic,Epilepsy
+Ethosuximide,Antiepileptic,Epilepsy
+Gabapentin,Antiepileptic,Epilepsy
+Lacosamide,Antiepileptic,Epilepsy
+Lamotrigine,Antiepileptic,Epilepsy
+Levetiracetam,Antiepileptic,Epilepsy
+Oxcarbazepine,Antiepileptic,Epilepsy
+Perampanel,Antiepileptic,Epilepsy
+Phenobarbital,Antiepileptic,Epilepsy
+Phenytoin,Antiepileptic,Epilepsy
+Pregabalin,Antiepileptic,Epilepsy
+Topiramate,Antiepileptic,Epilepsy
+Valproate,Antiepileptic,Epilepsy
+Vigabatrin,Antiepileptic,Epilepsy
+Zonisamide,Antiepileptic,Epilepsy
+Butenafine,Antifungal,Fungal Infection
+Caspofungin,Antifungal,Fungal Infection
+Clotrimazole,Antifungal,Fungal Infection
+Fluconazole,Antifungal,Fungal Infection
+Griseofulvin,Antifungal,Fungal Infection
+Itraconazole,Antifungal,Fungal Infection
+Ketoconazole,Antifungal,Fungal Infection
+Luliconazole,Antifungal,Fungal Infection
+Miconazole,Antifungal,Fungal Infection
+Nystatin,Antifungal,Fungal Infection
+Posaconazole,Antifungal,Fungal Infection
+Sertaconazole,Antifungal,Fungal Infection
+Terbinafine,Antifungal,Fungal Infection
+Voriconazole,Antifungal,Fungal Infection
+Bilastine,Antihistamine,Allergy
+Cetirizine,Antihistamine,Allergy
+Chlorpheniramine,Antihistamine,Allergy
+Cyproheptadine,Antihistamine,Allergy
+Desloratadine,Antihistamine,Allergy
+Diphenhydramine,Antihistamine,Allergy
+Ebastine,Antihistamine,Allergy
+Fexofenadine,Antihistamine,Allergy
+Hydroxyzine,Antihistamine,Allergy
+Ketotifen,Antihistamine,Allergy
+Levocetirizine,Antihistamine,Allergy
+Loratadine,Antihistamine,Allergy
+Promethazine,Antihistamine,Allergy
+Rupatadine,Antihistamine,Allergy
+Amisulpride,Antipsychotic,Schizophrenia / Psychosis
+Aripiprazole,Antipsychotic,Schizophrenia / Psychosis
+Asenapine,Antipsychotic,Schizophrenia / Psychosis
+Brexpiprazole,Antipsychotic,Schizophrenia / Psychosis
+Cariprazine,Antipsychotic,Schizophrenia / Psychosis
+Chlorpromazine,Antipsychotic,Schizophrenia / Psychosis
+Clozapine,Antipsychotic,Schizophrenia / Psychosis
+Haloperidol,Antipsychotic,Schizophrenia / Psychosis
+Lurasidone,Antipsychotic,Schizophrenia / Psychosis
+Olanzapine,Antipsychotic,Schizophrenia / Psychosis
+Paliperidone,Antipsychotic,Schizophrenia / Psychosis
+Quetiapine,Antipsychotic,Schizophrenia / Psychosis
+Risperidone,Antipsychotic,Schizophrenia / Psychosis
+Trifluoperazine,Antipsychotic,Schizophrenia / Psychosis
+Ziprasidone,Antipsychotic,Schizophrenia / Psychosis
+Abacavir,Antiviral,Viral Infection
+Acyclovir,Antiviral,Viral Infection
+Entecavir,Antiviral,Viral Infection
+Famciclovir,Antiviral,Viral Infection
+Favipiravir,Antiviral,Viral Infection
+Ganciclovir,Antiviral,Viral Infection
+Lamivudine,Antiviral,Viral Infection
+Oseltamivir,Antiviral,Viral Infection
+Remdesivir,Antiviral,Viral Infection
+Ritonavir,Antiviral,Viral Infection
+Tenofovir,Antiviral,Viral Infection
+Valacyclovir,Antiviral,Viral Infection
+Valganciclovir,Antiviral,Viral Infection
+Zanamivir,Antiviral,Viral Infection
+Alprazolam,Benzodiazepine,Anxiety / Seizures
+Bromazepam,Benzodiazepine,Anxiety / Seizures
+Clobazam,Benzodiazepine,Anxiety / Seizures
+Clonazepam,Benzodiazepine,Anxiety / Seizures
+Diazepam,Benzodiazepine,Anxiety / Seizures
+Estazolam,Benzodiazepine,Anxiety / Seizures
+Flurazepam,Benzodiazepine,Anxiety / Seizures
+Lorazepam,Benzodiazepine,Anxiety / Seizures
+Midazolam,Benzodiazepine,Anxiety / Seizures
+Nitrazepam,Benzodiazepine,Anxiety / Seizures
+Oxazepam,Benzodiazepine,Anxiety / Seizures
+Temazepam,Benzodiazepine,Anxiety / Seizures
+Triazolam,Benzodiazepine,Anxiety / Seizures
+Acebutolol,Beta Blocker,Hypertension / Cardiac Conditions
+Atenolol,Beta Blocker,Hypertension / Cardiac Conditions
+Betaxolol,Beta Blocker,Hypertension / Cardiac Conditions
+Bisoprolol,Beta Blocker,Hypertension / Cardiac Conditions
+Carvedilol,Beta Blocker,Hypertension / Cardiac Conditions
+Celiprolol,Beta Blocker,Hypertension / Cardiac Conditions
+Esmolol,Beta Blocker,Hypertension / Cardiac Conditions
+Labetalol,Beta Blocker,Hypertension / Cardiac Conditions
+Metoprolol,Beta Blocker,Hypertension / Cardiac Conditions
+Nadolol,Beta Blocker,Hypertension / Cardiac Conditions
+Nebivolol,Beta Blocker,Hypertension / Cardiac Conditions
+Pindolol,Beta Blocker,Hypertension / Cardiac Conditions
+Propranolol,Beta Blocker,Hypertension / Cardiac Conditions
+Sotalol,Beta Blocker,Hypertension / Cardiac Conditions
+Timolol,Beta Blocker,Hypertension / Cardiac Conditions
+Bambuterol,Bronchodilator,Asthma / COPD
+Doxofylline,Bronchodilator,Asthma / COPD
+Formoterol,Bronchodilator,Asthma / COPD
+Indacaterol,Bronchodilator,Asthma / COPD
+Ipratropium,Bronchodilator,Asthma / COPD
+Levosalbutamol,Bronchodilator,Asthma / COPD
+Salbutamol,Bronchodilator,Asthma / COPD
+Salmeterol,Bronchodilator,Asthma / COPD
+Terbutaline,Bronchodilator,Asthma / COPD
+Theophylline,Bronchodilator,Asthma / COPD
+Tiotropium,Bronchodilator,Asthma / COPD
+Vilanterol,Bronchodilator,Asthma / COPD
+Amlodipine,Calcium Channel Blocker,Hypertension
+Benidipine,Calcium Channel Blocker,Hypertension
+Cilnidipine,Calcium Channel Blocker,Hypertension
+Diltiazem,Calcium Channel Blocker,Hypertension
+Felodipine,Calcium Channel Blocker,Hypertension
+Isradipine,Calcium Channel Blocker,Hypertension
+Lacidipine,Calcium Channel Blocker,Hypertension
+Lercanidipine,Calcium Channel Blocker,Hypertension
+Nicardipine,Calcium Channel Blocker,Hypertension
+Nifedipine,Calcium Channel Blocker,Hypertension
+Nimodipine,Calcium Channel Blocker,Hypertension
+Nitrendipine,Calcium Channel Blocker,Hypertension
+Verapamil,Calcium Channel Blocker,Hypertension
+Cefaclor,Cephalosporin Antibiotic,Bacterial Infection
+Cefadroxil,Cephalosporin Antibiotic,Bacterial Infection
+Cefazolin,Cephalosporin Antibiotic,Bacterial Infection
+Cefdinir,Cephalosporin Antibiotic,Bacterial Infection
+Cefepime,Cephalosporin Antibiotic,Bacterial Infection
+Cefixime,Cephalosporin Antibiotic,Bacterial Infection
+Cefotaxime,Cephalosporin Antibiotic,Bacterial Infection
+Cefpodoxime,Cephalosporin Antibiotic,Bacterial Infection
+Cefprozil,Cephalosporin Antibiotic,Bacterial Infection
+Ceftaroline,Cephalosporin Antibiotic,Bacterial Infection
+Ceftazidime,Cephalosporin Antibiotic,Bacterial Infection
+Ceftriaxone,Cephalosporin Antibiotic,Bacterial Infection
+Cefuroxime,Cephalosporin Antibiotic,Bacterial Infection
+Cephalexin,Cephalosporin Antibiotic,Bacterial Infection
+Beclomethasone,Corticosteroid,Inflammation / Autoimmune
+Betamethasone,Corticosteroid,Inflammation / Autoimmune
+Budesonide,Corticosteroid,Inflammation / Autoimmune
+Deflazacort,Corticosteroid,Inflammation / Autoimmune
+Dexamethasone,Corticosteroid,Inflammation / Autoimmune
+Fluticasone,Corticosteroid,Inflammation / Autoimmune
+Hydrocortisone,Corticosteroid,Inflammation / Autoimmune
+Methylprednisolone,Corticosteroid,Inflammation / Autoimmune
+Mometasone,Corticosteroid,Inflammation / Autoimmune
+Prednisolone,Corticosteroid,Inflammation / Autoimmune
+Prednisone,Corticosteroid,Inflammation / Autoimmune
+Triamcinolone,Corticosteroid,Inflammation / Autoimmune
+Acetazolamide,Diuretic,Edema / Fluid Retention
+Amiloride,Diuretic,Edema / Fluid Retention
+Bumetanide,Diuretic,Edema / Fluid Retention
+Chlorthalidone,Diuretic,Edema / Fluid Retention
+Eplerenone,Diuretic,Edema / Fluid Retention
+Furosemide,Diuretic,Edema / Fluid Retention
+Hydrochlorothiazide,Diuretic,Edema / Fluid Retention
+Indapamide,Diuretic,Edema / Fluid Retention
+Metolazone,Diuretic,Edema / Fluid Retention
+Spironolactone,Diuretic,Edema / Fluid Retention
+Torsemide,Diuretic,Edema / Fluid Retention
+Triamterene,Diuretic,Edema / Fluid Retention
+Xipamide,Diuretic,Edema / Fluid Retention
+Ciprofloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Gatifloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Gemifloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Levofloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Lomefloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Moxifloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Norfloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Ofloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Prulifloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Sparfloxacin,Fluoroquinolone Antibiotic,Bacterial Infection
+Azithromycin,Macrolide Antibiotic,Bacterial Infection
+Clarithromycin,Macrolide Antibiotic,Bacterial Infection
+Erythromycin,Macrolide Antibiotic,Bacterial Infection
+Roxithromycin,Macrolide Antibiotic,Bacterial Infection
+Spiramycin,Macrolide Antibiotic,Bacterial Infection
+Telithromycin,Macrolide Antibiotic,Bacterial Infection
+Aceclofenac,NSAID,Pain / Inflammation
+Celecoxib,NSAID,Pain / Inflammation
+Diclofenac,NSAID,Pain / Inflammation
+Etoricoxib,NSAID,Pain / Inflammation
+Flurbiprofen,NSAID,Pain / Inflammation
+Ibuprofen,NSAID,Pain / Inflammation
+Indomethacin,NSAID,Pain / Inflammation
+Ketoprofen,NSAID,Pain / Inflammation
+Ketorolac,NSAID,Pain / Inflammation
+Lornoxicam,NSAID,Pain / Inflammation
+Mefenamic acid,NSAID,Pain / Inflammation
+Meloxicam,NSAID,Pain / Inflammation
+Naproxen,NSAID,Pain / Inflammation
+Nimesulide,NSAID,Pain / Inflammation
+Piroxicam,NSAID,Pain / Inflammation
+Buprenorphine,Opioid Analgesic,Severe Pain
+Codeine,Opioid Analgesic,Severe Pain
+Dihydrocodeine,Opioid Analgesic,Severe Pain
+Fentanyl,Opioid Analgesic,Severe Pain
+Hydrocodone,Opioid Analgesic,Severe Pain
+Hydromorphone,Opioid Analgesic,Severe Pain
+Methadone,Opioid Analgesic,Severe Pain
+Morphine,Opioid Analgesic,Severe Pain
+Nalbuphine,Opioid Analgesic,Severe Pain
+Oxycodone,Opioid Analgesic,Severe Pain
+Oxymorphone,Opioid Analgesic,Severe Pain
+Pethidine,Opioid Analgesic,Severe Pain
+Tapentadol,Opioid Analgesic,Severe Pain
+Tramadol,Opioid Analgesic,Severe Pain
+Amoxicillin,Penicillin Antibiotic,Bacterial Infection
+Ampicillin,Penicillin Antibiotic,Bacterial Infection
+Bacampicillin,Penicillin Antibiotic,Bacterial Infection
+Carbenicillin,Penicillin Antibiotic,Bacterial Infection
+Cloxacillin,Penicillin Antibiotic,Bacterial Infection
+Dicloxacillin,Penicillin Antibiotic,Bacterial Infection
+Flucloxacillin,Penicillin Antibiotic,Bacterial Infection
+Nafcillin,Penicillin Antibiotic,Bacterial Infection
+Oxacillin,Penicillin Antibiotic,Bacterial Infection
+Penicillin,Penicillin Antibiotic,Bacterial Infection
+Piperacillin,Penicillin Antibiotic,Bacterial Infection
+Ticarcillin,Penicillin Antibiotic,Bacterial Infection
+Dexlansoprazole,Proton Pump Inhibitor,Acid Reflux / GERD
+Esomeprazole,Proton Pump Inhibitor,Acid Reflux / GERD
+Ilaprazole,Proton Pump Inhibitor,Acid Reflux / GERD
+Lansoprazole,Proton Pump Inhibitor,Acid Reflux / GERD
+Omeprazole,Proton Pump Inhibitor,Acid Reflux / GERD
+Pantoprazole,Proton Pump Inhibitor,Acid Reflux / GERD
+Rabeprazole,Proton Pump Inhibitor,Acid Reflux / GERD
+Citalopram,SSRI Antidepressant,Depression / Anxiety
+Dapoxetine,SSRI Antidepressant,Depression / Anxiety
+Escitalopram,SSRI Antidepressant,Depression / Anxiety
+Fluoxetine,SSRI Antidepressant,Depression / Anxiety
+Fluvoxamine,SSRI Antidepressant,Depression / Anxiety
+Paroxetine,SSRI Antidepressant,Depression / Anxiety
+Sertraline,SSRI Antidepressant,Depression / Anxiety
+Vortioxetine,SSRI Antidepressant,Depression / Anxiety
+Atorvastatin,Statin,High Cholesterol
+Fluvastatin,Statin,High Cholesterol
+Lovastatin,Statin,High Cholesterol
+Pitavastatin,Statin,High Cholesterol
+Pravastatin,Statin,High Cholesterol
+Rosuvastatin,Statin,High Cholesterol
+Simvastatin,Statin,High Cholesterol
+Demeclocycline,Tetracycline Antibiotic,Bacterial Infection
+Doxycycline,Tetracycline Antibiotic,Bacterial Infection
+Eravacycline,Tetracycline Antibiotic,Bacterial Infection
+Lymecycline,Tetracycline Antibiotic,Bacterial Infection
+Minocycline,Tetracycline Antibiotic,Bacterial Infection
+Oxytetracycline,Tetracycline Antibiotic,Bacterial Infection
+Tetracycline,Tetracycline Antibiotic,Bacterial Infection
+Tigecycline,Tetracycline Antibiotic,Bacterial Infection

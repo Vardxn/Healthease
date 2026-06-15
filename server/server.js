@@ -66,6 +66,7 @@ app.use('/api/medicines', require('./routes/medicineRoutes'));
 app.use('/api/patient', require('./routes/patientRoutes'));
 app.use('/api/patients', require('./routes/careTimelineRoutes'));
 app.use('/api/interactions', require('./routes/interactionsRoutes'));
+app.use('/api/classify', require('./routes/classifyRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/voice-chat', require('./routes/voiceChatRoutes'));

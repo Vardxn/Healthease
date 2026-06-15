@@ -1,0 +1,33 @@
+                            precision    recall  f1-score   support
+
+             ACE Inhibitor       1.00      1.00      1.00         4
+                       ARB       1.00      1.00      1.00         2
+ Aminoglycoside Antibiotic       1.00      0.50      0.67         2
+             Anticoagulant       1.00      1.00      1.00         3
+              Antidiabetic       0.75      0.75      0.75         4
+                Antiemetic       1.00      0.50      0.67         2
+             Antiepileptic       0.33      0.25      0.29         4
+                Antifungal       1.00      0.50      0.67         4
+             Antihistamine       0.00      0.00      0.00         4
+             Antipsychotic       0.60      0.75      0.67         4
+                 Antiviral       1.00      0.75      0.86         4
+            Benzodiazepine       0.75      1.00      0.86         3
+              Beta Blocker       1.00      1.00      1.00         4
+            Bronchodilator       1.00      1.00      1.00         3
+   Calcium Channel Blocker       1.00      0.67      0.80         3
+  Cephalosporin Antibiotic       1.00      1.00      1.00         4
+            Corticosteroid       0.50      0.67      0.57         3
+                  Diuretic       0.29      0.67      0.40         3
+Fluoroquinolone Antibiotic       1.00      1.00      1.00         2
+      Macrolide Antibiotic       0.50      1.00      0.67         1
+                     NSAID       1.00      0.75      0.86         4
+          Opioid Analgesic       0.67      0.67      0.67         3
+     Penicillin Antibiotic       1.00      1.00      1.00         3
+     Proton Pump Inhibitor       1.00      1.00      1.00         2
+       SSRI Antidepressant       0.67      1.00      0.80         2
+                    Statin       1.00      1.00      1.00         2
+   Tetracycline Antibiotic       1.00      1.00      1.00         2
+
+                  accuracy                           0.77        81
+                 macro avg       0.82      0.79      0.78        81
+              weighted avg       0.80      0.77      0.77        81
