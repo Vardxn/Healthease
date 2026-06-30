@@ -3,7 +3,7 @@ services:
     name: healthease-api
     env: node
     plan: free
-    buildCommand: cd server && npm ci
+    buildCommand: cd server && npm install
     startCommand: cd server && npm start
     healthCheckPath: /health
     envVars:
