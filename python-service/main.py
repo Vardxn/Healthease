@@ -96,12 +96,14 @@ app = FastAPI(
 
 allowed_origins = [
     "http://localhost:3000",
+    "https://health-ease-rho.vercel.app",
     os.getenv("CLIENT_URL", ""),
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o for o in allowed_origins if o],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
