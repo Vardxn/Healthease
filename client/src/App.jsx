@@ -8,6 +8,7 @@ import SidebarLayout from './components/SidebarLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Landing from './pages/Landing';
 import UploadPrescription from './pages/UploadPrescription';
 import PrescriptionList from './pages/PrescriptionList';
 import PatientProfile from './pages/PatientProfile';
@@ -55,7 +56,7 @@ function AppContent() {
       <Route path="/doctor/register" element={<DoctorRegister />} />
 
       {/* Landing Page */}
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
 
       {/* Protected Routes - With Sidebar */}
       <Route
@@ -145,7 +146,7 @@ function AppContent() {
         element={user ? <SidebarLayout><AdminDashboard /></SidebarLayout> : <Navigate to="/login" replace />}
       />
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

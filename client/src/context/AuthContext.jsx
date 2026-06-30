@@ -75,6 +75,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const demoLogin = async () => {
+    try {
+      const response = await authAPI.demoLogin();
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      setToken(token);
+      setUser(normalizeUser(user));
+      
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.msg || 'Demo login failed' 
+      };
+    }
+  };
+
   const logout = () => {
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -142,6 +160,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
+        demoLogin,
         logout,
         updateProfile,
         socket,

@@ -49,8 +49,8 @@ const seedData = async () => {
 
     // Seed Patient Account
     const patientUser = await User.create({
-      name: 'Rohan Sharma',
-      email: 'user@healthease.demo',
+      name: 'Demo User',
+      email: 'demo@healthease.ai',
       passwordHash: userPasswordHash,
       role: 'patient',
       profile: {
@@ -93,7 +93,7 @@ const seedData = async () => {
     console.log('Seeding Patient Profile & Vitals...');
     const patient = await Patient.create({
       userId: patientUser._id,
-      fullName: 'Rohan Sharma',
+      fullName: 'Demo User',
       dateOfBirth: new Date('1997-06-15'),
       gender: 'Male',
       bloodGroup: 'B+',

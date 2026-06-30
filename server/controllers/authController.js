@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Patient = require('../models/Patient');
 
 /**
  * Register a new user
@@ -198,6 +199,89 @@ exports.updateProfile = async (req, res) => {
         });
     } catch (err) {
         console.error('Update profile error:', err);
+        res.status(500).json({ 
+            success: false,
+            msg: 'Server Error' 
+        });
+    }
+};
+
+/**
+ * Login demo user (auto-creates if not found)
+ * @route POST /api/auth/demo-login
+ * @access Public
+ */
+exports.demoLogin = async (req, res) => {
+    try {
+        const demoEmail = 'demo@healthease.ai';
+        let user = await User.findOne({ email: demoEmail });
+
+        if (!user) {
+            console.log('Demo user not found. Creating a new demo user...');
+            const salt = await bcrypt.genSalt(10);
+            const passwordHash = await bcrypt.hash('Demo@123', salt);
+
+            user = new User({
+                name: 'Demo User',
+                email: demoEmail,
+                passwordHash: passwordHash,
+                role: 'patient',
+                profile: {
+                    age: 30,
+                    bloodGroup: 'O+',
+                    chronicConditions: ['None'],
+                    allergies: ['None']
+                }
+            });
+
+            await user.save();
+
+            // Create patient record
+            const patient = new Patient({
+                userId: user._id,
+                fullName: 'Demo User',
+                dateOfBirth: new Date('1996-01-01'),
+                gender: 'Other',
+                bloodGroup: 'O+',
+                height: 175,
+                weight: 70,
+                allergies: ['None'],
+                chronicConditions: ['None']
+            });
+
+            await patient.save();
+            console.log('Demo user and patient record created successfully.');
+        }
+
+        // Generate JWT token
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role
+            }
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({
+                    success: true,
+                    token,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role
+                    }
+                });
+            }
+        );
+
+    } catch (err) {
+        console.error('Demo Login error:', err);
         res.status(500).json({ 
             success: false,
             msg: 'Server Error' 

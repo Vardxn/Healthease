@@ -59,7 +59,10 @@ export const authAPI = {
     api.get('/auth/me'),
   
   updateProfile: (profileData) => 
-    api.put('/auth/profile', profileData)
+    api.put('/auth/profile', profileData),
+  
+  demoLogin: () => 
+    api.post('/auth/demo-login', {})
 };
 
 // Prescription API
