@@ -27,6 +27,16 @@ import Badge from '../components/ui/Badge';
 import Input from '../components/ui/Input';
 import SectionHeading from '../components/ui/SectionHeading';
 
+const formatDoctorName = (doctorName) => {
+  const cleanName = (doctorName || '').trim().replace(/^(dr\.?\s*)+/i, '').trim();
+
+  if (!cleanName) {
+    return 'Unknown Doctor';
+  }
+
+  return `Dr. ${cleanName}`;
+};
+
 const PrescriptionList = () => {
   const { isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -158,15 +168,15 @@ const PrescriptionList = () => {
 
       {/* Expanded search/filters */}
       {(showFilters || searchQuery) && (
-        <Card className="p-4 bg-slate-50 border border-border rounded-custom flex flex-col md:flex-row gap-4 items-center">
+        <Card className="p-4 bg-surface-secondary border border-border rounded-custom flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
               placeholder="Search by doctor or medicine..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border bg-white rounded-[14px] text-sm focus:outline-none focus:border-primary"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 bg-white rounded-[14px] text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary"
             />
           </div>
           
@@ -175,7 +185,7 @@ const PrescriptionList = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-border bg-white rounded-[14px] text-xs focus:outline-none focus:border-primary"
+              className="px-3 py-2 border border-slate-200 bg-white rounded-[14px] text-xs text-slate-900 focus:outline-none focus:border-primary"
             >
               <option value="all">All Records</option>
               <option value="verified">Verified Only</option>
@@ -211,6 +221,7 @@ const PrescriptionList = () => {
           {filteredPrescriptions.map((p) => {
             const id = p._id;
             const isExpanded = !!expandedIds[id];
+            const doctorDisplayName = formatDoctorName(p.doctorName);
             const date = new Date(p.date || p.uploadDate || p.createdAt).toLocaleDateString(undefined, {
               year: 'numeric',
               month: 'short',
@@ -227,7 +238,7 @@ const PrescriptionList = () => {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-lg font-bold text-text-primary">
-                        Dr. {p.doctorName || 'Unknown Doctor'}
+                        {doctorDisplayName}
                       </h3>
                       {p.isVerified ? (
                         <Badge variant="success">Verified</Badge>
@@ -280,22 +291,22 @@ const PrescriptionList = () => {
                 </div>
 
                 {/* 2. Mini Summary Indicators */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 border border-border p-3.5 rounded-custom mb-4 text-xs">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white border border-slate-200 p-4 rounded-custom mb-4 text-xs shadow-sm">
                   <div>
-                    <span className="text-text-secondary font-semibold">Total Drugs:</span>
-                    <p className="font-bold text-text-primary text-sm mt-0.5">{p.medications?.length || 0}</p>
+                    <span className="text-slate-500 font-bold">Total Drugs:</span>
+                    <p className="font-extrabold text-slate-950 text-sm mt-0.5">{p.medications?.length || 0}</p>
                   </div>
                   <div>
-                    <span className="text-text-secondary font-semibold">Duration:</span>
-                    <p className="font-bold text-text-primary text-sm mt-0.5">{p.medications?.[0]?.duration || 'N/A'}</p>
+                    <span className="text-slate-500 font-bold">Duration:</span>
+                    <p className="font-extrabold text-slate-950 text-sm mt-0.5">{p.medications?.[0]?.duration || 'N/A'}</p>
                   </div>
                   <div>
-                    <span className="text-text-secondary font-semibold">Doctor Signature:</span>
-                    <p className="font-bold text-text-primary text-sm mt-0.5 truncate">{p.doctorName || 'N/A'}</p>
+                    <span className="text-slate-500 font-bold">Doctor Signature:</span>
+                    <p className="font-extrabold text-slate-950 text-sm mt-0.5 truncate">{doctorDisplayName}</p>
                   </div>
                   <div>
-                    <span className="text-text-secondary font-semibold">Diagnosis Note:</span>
-                    <p className="font-bold text-text-primary text-sm mt-0.5 truncate">{p.notes || 'None'}</p>
+                    <span className="text-slate-500 font-bold">Diagnosis Note:</span>
+                    <p className="font-extrabold text-slate-950 text-sm mt-0.5 truncate">{p.notes || 'None'}</p>
                   </div>
                 </div>
 
@@ -319,7 +330,7 @@ const PrescriptionList = () => {
                   <div className="flex flex-wrap gap-2">
                     {p.medications?.length > 0 ? (
                       p.medications.map((med, idx) => (
-                        <span key={idx} className="bg-primary/5 text-primary text-xs font-semibold px-3 py-1.5 rounded-full border border-primary/10">
+                        <span key={idx} className="bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-full border border-primary/30">
                           {med.name} ({med.dosage})
                         </span>
                       ))
@@ -332,7 +343,7 @@ const PrescriptionList = () => {
                   {isExpanded && p.medications?.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 pt-3 border-t border-border animate-slideUp">
                       {p.medications.map((med, idx) => (
-                        <div key={idx} className="bg-slate-50/50 p-3.5 border border-border rounded-custom space-y-1">
+                        <div key={idx} className="bg-surface-secondary p-3.5 border border-border rounded-custom space-y-1">
                           <p className="font-bold text-text-primary text-sm">{med.name}</p>
                           <div className="text-xs text-text-secondary space-y-0.5">
                             <p><span className="font-semibold text-text-primary">Dosage:</span> {med.dosage || 'N/A'}</p>

@@ -149,7 +149,6 @@ const UploadPrescription = () => {
   const addMedicationRow = () => {
     setReviewDraft((prev) => ({
       ...prev,
-      ...prev,
       medications: [...prev.medications, { ...EMPTY_MEDICATION }]
     }));
   };
@@ -433,7 +432,7 @@ const UploadPrescription = () => {
                   ) : (
                     <>
                       <Cpu size={20} />
-                      Upload & Extact Records
+                      Upload & Extract Records
                     </>
                   )}
                 </Button>
@@ -468,17 +467,17 @@ const UploadPrescription = () => {
 
           {/* Result Block */}
           {result?.data && (
-            <Card className="p-8 border border-green-200 bg-green-50/20 shadow-custom space-y-6">
-              <div className="flex items-center justify-between border-b border-green-200/50 pb-4">
-                <h3 className="text-xl font-bold text-green-800 flex items-center gap-2">
-                  <CheckCircle size={22} className="text-green-600" />
+            <Card className="p-8 border border-primary/30 bg-surface shadow-custom space-y-6">
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                  <CheckCircle size={22} className="text-success" />
                   Digitization Complete!
                 </h3>
                 <Badge variant="success">OCR Done</Badge>
               </div>
 
               {ocrQuality && (
-                <div className="p-4 bg-white border border-slate-100 rounded-custom shadow-xs space-y-3">
+                <div className="p-4 bg-surface-secondary border border-border rounded-custom shadow-xs space-y-3">
                   <p className="text-xs font-bold text-text-secondary uppercase">Confidence Report</p>
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
@@ -500,7 +499,7 @@ const UploadPrescription = () => {
               )}
 
               {reviewDraft && (
-                <div className="space-y-4 bg-white border border-slate-100 rounded-custom p-6 shadow-xs">
+                <div className="space-y-4 bg-surface-secondary border border-border rounded-custom p-6 shadow-xs">
                   <p className="text-xs font-bold text-text-secondary uppercase border-b border-border pb-2 mb-4">
                     Review Extracted Metadata
                   </p>
@@ -534,11 +533,11 @@ const UploadPrescription = () => {
 
               {/* Medications list */}
               <div className="space-y-4">
-                <p className="text-xs font-bold text-text-secondary uppercase">Extracted Medications</p>
+                <p className="text-xs font-bold text-text-primary uppercase">Extracted Medications</p>
                 {reviewDraft?.medications?.length > 0 ? (
                   <div className="space-y-3">
                     {reviewDraft.medications.map((med, idx) => (
-                      <div key={idx} className="bg-white p-4 border border-slate-100 rounded-custom shadow-xs relative flex flex-col md:flex-row md:items-end justify-between gap-4">
+                      <div key={idx} className="bg-surface-secondary p-4 border border-border rounded-custom shadow-xs relative flex flex-col md:flex-row md:items-end justify-between gap-4">
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 flex-1">
                           <Input
                             label="Medicine Name"
@@ -577,13 +576,13 @@ const UploadPrescription = () => {
                     <button
                       type="button"
                       onClick={addMedicationRow}
-                      className="w-full bg-white border-2 border-dashed border-primary/30 hover:border-primary/60 text-primary rounded-custom p-3 text-sm font-bold flex items-center justify-center gap-1.5 transition-colors"
+                      className="w-full bg-surface-secondary border-2 border-dashed border-primary/40 hover:border-primary/70 text-primary rounded-custom p-3 text-sm font-bold flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <Plus size={16} /> Add Medication Row
                     </button>
                   </div>
                 ) : (
-                  <p className="text-sm text-text-secondary bg-white p-4 rounded-custom">No medications parsed.</p>
+                  <p className="text-sm text-text-secondary bg-surface-secondary border border-border p-4 rounded-custom">No medications parsed.</p>
                 )}
               </div>
 
