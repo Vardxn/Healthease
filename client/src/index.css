@@ -81,6 +81,27 @@
   --shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.6);
 }
 
+/* The authenticated application uses a dedicated high-contrast dashboard palette. */
+.dashboard-shell {
+  --primary: #00F2FE;
+  --primary-dark: #00C8D2;
+  --primary-hover: #00C8D2;
+  --secondary: #00F2FE;
+  --accent: #0575E6;
+  --bg: #0B0F19;
+  --background: #0B0F19;
+  --surface: #131926;
+  --card: #131926;
+  --surface-secondary: #1B2336;
+  --text: #F8FAFC;
+  --text-primary: #F8FAFC;
+  --text-secondary: #9CA3AF;
+  --border: rgba(255, 255, 255, 0.05);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-custom: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.42);
+}
+
 @layer base {
   body {
     margin: 0;

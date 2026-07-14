@@ -153,20 +153,35 @@ export default function SidebarLayout({ children }) {
           <ul className="space-y-1">
             {menuItems.main.map((item) => {
               const active = isActive(item.path);
+              const isAiAssistant = item.path === '/assistant';
               const Icon = item.icon;
               return (
                 <li key={item.name} className="relative group">
                   <Link
                     to={item.path}
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-[14px] transition-all duration-200 border-l-4 ${
-                      active
+                    className={`group flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                      isAiAssistant
+                        ? active
+                          ? 'border-l-2 border-[#00F2FE] bg-gradient-to-r from-[#00F2FE]/20 to-transparent text-[#00F2FE]'
+                          : 'border-l-2 border-transparent text-gray-400 hover:bg-white/5 hover:text-white'
+                        : active
                         ? 'bg-[rgba(20,184,166,0.12)] text-primary-dark border-primary font-medium'
                         : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary border-transparent'
                     }`}
                   >
-                    <Icon size={20} className="flex-shrink-0" />
-                    {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        size={isAiAssistant ? 16 : 20}
+                        className={`flex-shrink-0 ${isAiAssistant ? `transition-transform group-hover:rotate-12 ${active ? 'text-[#00F2FE]' : 'text-gray-400 group-hover:text-[#00F2FE]'}` : ''}`}
+                      />
+                      {!isCollapsed && <span>{item.name}</span>}
+                    </div>
+                    {isAiAssistant && !isCollapsed && (
+                      <span className="rounded border border-[#00F2FE]/20 bg-[#00F2FE]/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#00F2FE] transition-all group-hover:scale-105">
+                        Live
+                      </span>
+                    )}
                   </Link>
 
                   {/* Tooltip for collapsed mode */}
@@ -243,7 +258,7 @@ export default function SidebarLayout({ children }) {
   );
 
   return (
-    <div className="flex h-screen bg-background font-sans overflow-hidden">
+    <div className="dashboard-shell flex h-screen min-h-screen overflow-hidden bg-[#0B0F19] font-sans text-gray-100 antialiased">
       {/* 1. Desktop Sidebar */}
       <aside
         className={`hidden md:block bg-surface border-r border-border h-full flex-shrink-0 transition-all duration-300 ${

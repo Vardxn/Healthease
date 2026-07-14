@@ -25,7 +25,8 @@ import {
   CheckCircle2,
   CalendarCheck2,
   FileCheck,
-  Bell
+  Bell,
+  Sparkles
 } from 'lucide-react';
 
 import HealthScoreModal from '../components/HealthScoreModal';
@@ -178,52 +179,82 @@ const Dashboard = () => {
       {/* SECTION 1: Hero Banner & Health Score */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Banner */}
-        <div className="lg:col-span-2 bg-gradient-to-r from-primary to-[#14B8A6] rounded-custom p-8 md:p-10 text-white relative overflow-hidden flex flex-col justify-between min-h-[200px] shadow-custom">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-16 -mb-16"></div>
-          
-          <div className="relative z-10 space-y-2">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-              {getGreeting()}, {user?.name || 'Guest'} 👋
-            </h2>
-            <p className="text-teal-50 text-base md:text-lg max-w-xl font-light">
-              Manage your health records, prescriptions, and medical consultations in one place.
-            </p>
-          </div>
+        <div className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#131926] to-[#1b2336] p-8 shadow-[0_0_30px_rgba(0,242,254,0.03)]">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#00F2FE]/10 blur-[80px]" />
 
-          <div className="relative z-10 pt-6">
-            <Link to="/upload">
-              <Button variant="secondary" className="bg-white text-primary border-transparent hover:bg-teal-50 hover:text-primary-hover shadow-md font-bold rounded-custom">
-                Upload New Prescription
-              </Button>
-            </Link>
+          <div className="relative z-10 flex flex-col items-center justify-between gap-6 md:flex-row">
+            <div className="max-w-xl space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#00F2FE]/20 bg-[#00F2FE]/10 px-3 py-1 text-xs font-medium text-[#00F2FE]">
+                <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                AI-Powered OCR Extraction Engine Active
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight text-white">
+                {getGreeting()}, {user?.name || 'Guest'} 👋
+              </h2>
+              <p className="text-sm leading-relaxed text-gray-400">
+                Upload handwritten or digital prescriptions. Our intelligence system will instantly digitize medications, dosages, and timelines.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/upload')}
+              className="group flex h-36 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-700 bg-[#0B0F19]/60 px-6 transition-all duration-300 hover:border-[#00F2FE] hover:bg-[#0B0F19] md:w-64"
+              aria-label="Upload a new prescription"
+            >
+              <div className="mb-2 rounded-lg bg-gray-800 p-3 text-gray-400 transition-all duration-300 group-hover:bg-[#00F2FE]/10 group-hover:text-[#00F2FE]">
+                <Upload className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium text-gray-300 group-hover:text-white">Upload New Prescription</p>
+              <p className="mt-1 text-xs text-gray-500">Drag & drop or click to browse</p>
+            </button>
           </div>
         </div>
 
         {/* Health Score Card */}
-        <Card 
+        <Card
           onClick={() => navigate('/health-score')}
-          className="flex flex-col justify-between p-6 text-center relative overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+          className="flex h-full cursor-pointer flex-col items-center justify-between rounded-2xl border border-white/5 bg-[#131926] p-6 text-center transition-all duration-200 hover:border-white/10"
         >
-          <div className="space-y-2">
-            <p className="text-text-secondary text-sm font-bold uppercase tracking-wider">Health Score</p>
-            <p className="text-xs text-text-secondary">Based on adherence and diagnostic indicators</p>
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Health Score</p>
+            <p className="text-xs text-gray-500">Based on adherence & diagnostics</p>
           </div>
 
-          <div className="my-3 relative flex items-center justify-center">
-            {/* Score Display */}
-            <div className="relative w-28 h-28 flex items-center justify-center rounded-full border-8 border-slate-100">
-              <div className="absolute inset-0 rounded-full border-8 border-primary border-t-transparent animate-pulse-slow"></div>
-              <span className="text-4xl font-extrabold text-primary">{healthScore}</span>
+          <div className="relative my-4 flex items-center justify-center">
+            <svg className="h-32 w-32 -rotate-90">
+              <circle cx="64" cy="64" r="50" stroke="#1b2336" strokeWidth="8" fill="transparent" />
+              <circle
+                cx="64"
+                cy="64"
+                r="50"
+                stroke="url(#healthScoreGradient)"
+                strokeWidth="10"
+                strokeDasharray={314}
+                strokeDashoffset={314 - (314 * healthScore) / 100}
+                strokeLinecap="round"
+                fill="transparent"
+                className="drop-shadow-[0_0_8px_rgba(0,242,254,0.5)] transition-all duration-500"
+              />
+              <defs>
+                <linearGradient id="healthScoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0575E6" />
+                  <stop offset="100%" stopColor="#00F2FE" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="absolute text-center">
+              <span className="text-3xl font-extrabold tracking-tight text-white">{healthScore}</span>
+              <span className="block text-xs text-gray-500">/100</span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+            <div className="inline-block rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
               Status: {healthData.status}
             </div>
             {healthData.recommendations?.[0] && (
-              <p className="text-[10px] text-text-secondary truncate max-w-[200px] mx-auto">
+              <p className="mx-auto max-w-[200px] truncate text-[10px] text-gray-500">
                 💡 {healthData.recommendations[0].text}
               </p>
             )}
@@ -233,43 +264,43 @@ const Dashboard = () => {
 
       {/* SECTION 2: Analytics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
-          <div className="w-12 h-12 rounded-[14px] bg-primary/10 text-primary flex items-center justify-center">
-            <FileCheck size={22} />
+        <Card className="flex items-center justify-between rounded-xl border border-white/5 bg-[#131926] p-5 transition-all duration-200 hover:border-white/10">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Total Prescriptions</p>
+            <p className="text-3xl font-bold tracking-tight text-white">{prescriptions.length}</p>
           </div>
-          <div>
-            <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Total Prescriptions</p>
-            <p className="text-2xl font-extrabold text-text-primary mt-0.5">{prescriptions.length}</p>
-          </div>
-        </Card>
-
-        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
-          <div className="w-12 h-12 rounded-[14px] bg-secondary/10 text-secondary flex items-center justify-center">
-            <CheckCircle2 size={22} />
-          </div>
-          <div>
-            <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Active Medicines</p>
-            <p className="text-2xl font-extrabold text-text-primary mt-0.5">{activeMedicinesCount}</p>
+          <div className="rounded-xl border border-white/5 bg-[#0B0F19] p-3 text-[#00F2FE]">
+            <FileCheck size={20} />
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
-          <div className="w-12 h-12 rounded-[14px] bg-accent/10 text-accent flex items-center justify-center">
-            <Calendar size={22} />
+        <Card className="flex items-center justify-between rounded-xl border border-white/5 bg-[#131926] p-5 transition-all duration-200 hover:border-white/10">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Active Medicines</p>
+            <p className="text-3xl font-bold tracking-tight text-white">{activeMedicinesCount}</p>
           </div>
-          <div>
-            <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Upcoming Visits</p>
-            <p className="text-2xl font-extrabold text-text-primary mt-0.5">{upcomingConsultations.length}</p>
+          <div className="rounded-xl border border-white/5 bg-[#0B0F19] p-3 text-emerald-400">
+            <CheckCircle2 size={20} />
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-6 hover:shadow-lg hover:-translate-y-1 transition-custom">
-          <div className="w-12 h-12 rounded-[14px] bg-[#6366F1]/10 text-[#6366F1] flex items-center justify-center">
-            <CalendarCheck2 size={22} />
+        <Card className="flex items-center justify-between rounded-xl border border-white/5 bg-[#131926] p-5 transition-all duration-200 hover:border-white/10">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Upcoming Visits</p>
+            <p className="text-3xl font-bold tracking-tight text-white">{upcomingConsultations.length}</p>
           </div>
-          <div>
-            <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Completed Sessions</p>
-            <p className="text-2xl font-extrabold text-text-primary mt-0.5">{completedConsultationsCount}</p>
+          <div className="rounded-xl border border-white/5 bg-[#0B0F19] p-3 text-[#00F2FE]">
+            <Calendar size={20} />
+          </div>
+        </Card>
+
+        <Card className="flex items-center justify-between rounded-xl border border-white/5 bg-[#131926] p-5 transition-all duration-200 hover:border-white/10">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Completed Sessions</p>
+            <p className="text-3xl font-bold tracking-tight text-white">{completedConsultationsCount}</p>
+          </div>
+          <div className="rounded-xl border border-white/5 bg-[#0B0F19] p-3 text-violet-400">
+            <CalendarCheck2 size={20} />
           </div>
         </Card>
       </div>
