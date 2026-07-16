@@ -291,22 +291,22 @@ const PrescriptionList = () => {
                 </div>
 
                 {/* 2. Mini Summary Indicators */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white border border-slate-200 p-4 rounded-custom mb-4 text-xs shadow-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-surface-secondary border border-border/80 p-4 rounded-custom mb-4 text-xs shadow-sm">
                   <div>
-                    <span className="text-slate-500 font-bold">Total Drugs:</span>
-                    <p className="font-extrabold text-slate-950 text-sm mt-0.5">{p.medications?.length || 0}</p>
+                    <span className="text-text-secondary font-bold">Total Drugs:</span>
+                    <p className="font-extrabold text-text-primary text-sm mt-0.5">{p.medications?.length || 0}</p>
                   </div>
                   <div>
-                    <span className="text-slate-500 font-bold">Duration:</span>
-                    <p className="font-extrabold text-slate-950 text-sm mt-0.5">{p.medications?.[0]?.duration || 'N/A'}</p>
+                    <span className="text-text-secondary font-bold">Duration:</span>
+                    <p className="font-extrabold text-text-primary text-sm mt-0.5">{p.medications?.[0]?.duration || 'N/A'}</p>
                   </div>
                   <div>
-                    <span className="text-slate-500 font-bold">Doctor Signature:</span>
-                    <p className="font-extrabold text-slate-950 text-sm mt-0.5 truncate">{doctorDisplayName}</p>
+                    <span className="text-text-secondary font-bold">Doctor Signature:</span>
+                    <p className="font-extrabold text-text-primary text-sm mt-0.5 truncate">{doctorDisplayName}</p>
                   </div>
                   <div>
-                    <span className="text-slate-500 font-bold">Diagnosis Note:</span>
-                    <p className="font-extrabold text-slate-950 text-sm mt-0.5 truncate">{p.notes || 'None'}</p>
+                    <span className="text-text-secondary font-bold">Diagnosis Note:</span>
+                    <p className="font-extrabold text-text-primary text-sm mt-0.5 truncate">{p.notes || 'None'}</p>
                   </div>
                 </div>
 
