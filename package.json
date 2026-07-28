@@ -8,6 +8,7 @@
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
     "seed": "cd server && npm run seed",
+    "seed:demo": "cd server && npm run seed:demo",
     "dev:python": "cd python-service && ./start_service.sh",
     "dev:all": "bash scripts/start-all.sh",
     "dev": "concurrently \"npm run server\" \"npm run client\"",

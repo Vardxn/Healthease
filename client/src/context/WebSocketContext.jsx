@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import { WS_URL } from '../config/runtime';
 import { useToast } from './ToastContext';
 
 const WebSocketContext = createContext(null);
@@ -37,7 +38,7 @@ export function WebSocketProvider({ children }) {
 
     const connectSocket = () => {
       setStatus('connecting');
-      const wsUrl = import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const wsUrl = WS_URL;
       
       activeSocket = io(wsUrl, {
         transports: ['websocket'],
@@ -57,8 +58,8 @@ export function WebSocketProvider({ children }) {
         setStatus('disconnected');
       });
 
-      activeSocket.on('connect_error', (err) => {
-        console.warn("Socket unavailable");
+      activeSocket.on('connect_error', () => {
+        console.warn('Socket unavailable, switching to local simulation mode');
         setStatus('disconnected');
         // Graceful local simulation fallback
         startLocalSimulation();

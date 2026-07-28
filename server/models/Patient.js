@@ -62,6 +62,4 @@ PatientSchema.pre('save', function(next) {
   next();
 });
 
-PatientSchema.index({ userId: 1 }, { unique: true });
-
 module.exports = mongoose.model('Patient', PatientSchema);

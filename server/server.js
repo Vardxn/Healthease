@@ -6,6 +6,7 @@ const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
+const { allowedOrigins, validateRuntimeConfig } = require('./config/runtime');
 const socketInstance = require('./socket/socketInstance');
 
 const reminderScheduler = require('./services/reminderScheduler');
@@ -13,36 +14,13 @@ const reminderScheduler = require('./services/reminderScheduler');
 const app = express();
 const httpServer = createServer(app);
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://health-ease-rho.vercel.app',
-  process.env.CLIENT_URL,
-].filter(Boolean);
-
-const isAllowedOrigin = (origin) => {
-  if (!origin) {
-    return true;
-  }
-
-  try {
-    const { hostname } = new URL(origin);
-    return allowedOrigins.includes(origin) || hostname.endsWith('.vercel.app');
-  } catch (err) {
-    return false;
-  }
-};
+validateRuntimeConfig();
 
 const io = new Server(httpServer, {
   cors: {
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true
-  }
+    origin: allowedOrigins,
+    credentials: true,
+  },
 });
 
 if (!process.env.VERCEL) {
@@ -54,14 +32,8 @@ if (!process.env.VERCEL) {
 
 // Middleware
 app.use(cors({
-  origin: function(origin, callback) {
-    if (isAllowedOrigin(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: allowedOrigins,
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -119,7 +91,11 @@ app.use((err, req, res, next) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'HealthEase API is running' });
+  res.json({
+    status: 'ok',
+    message: 'HealthEase API is running',
+    allowedOrigins,
+  });
 });
 
 app.get('/api/health', (req, res) => {
@@ -129,7 +105,7 @@ app.get('/api/health', (req, res) => {
 // Development convenience: redirect root to frontend dev server
 if (process.env.NODE_ENV !== 'production') {
   app.get('/', (req, res) => {
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const clientUrl = process.env.CLIENT_URL || allowedOrigins[0] || 'http://localhost:3000';
     return res.redirect(clientUrl);
   });
 }

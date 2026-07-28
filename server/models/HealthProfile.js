@@ -84,8 +84,7 @@ const HealthProfileSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   medicalBackground: {
     age: {
@@ -146,8 +145,7 @@ const MentalHealthChatSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   sessionMessages: {
     type: [chatMessageSchema],

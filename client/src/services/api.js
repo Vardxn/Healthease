@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { API_BASE_URL, API_ORIGIN as RUNTIME_API_ORIGIN, REQUEST_TIMEOUT_MS } from '../config/runtime';
 
-export const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-const API_BASE_URL = API_ORIGIN ? `${API_ORIGIN}/api` : '/api';
+export const API_ORIGIN = RUNTIME_API_ORIGIN;
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT_MS,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -28,6 +29,7 @@ api.interceptors.request.use(
 // Create axios instance for doctor endpoints (uses doctorToken)
 const doctorApiInstance = axios.create({
   baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT_MS,
   headers: {
     'Content-Type': 'application/json'
   }

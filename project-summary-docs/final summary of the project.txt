@@ -1,274 +1,3022 @@
-Here is the complete, consolidated documentation for the **HealthEase** project. It combines every detail from your provided files (`STAKEHOLDER_OVERVIEW.md`, `PROJECT_SUMMARY.md`, `README.md`, `TECHNICAL_ARCHITECTURE.md`, `START_HERE.txt`, and `DEVELOPMENT_GUIDE.md`) into a single, comprehensive text document. 
+================================================================================
+                    HEALTHEASE - COMPLETE PROJECT SUMMARY
+================================================================================
 
-***
+================================================================================
+FILE: API_DOCUMENTATION.md
+================================================================================
 
-# 🏥 HealthEase — Complete Project Master Documentation
+# 🏥 HealthEase - API Documentation
 
-## PART 1: STAKEHOLDER OVERVIEW & BUSINESS VALUE
-*This section provides a high-level summary of the project's purpose, value, and current status.*
+## Base URL
+```
+http://localhost:5000/api
+```
 
-**1. Project in One Line**
-HealthEase is an AI-powered healthcare platform that helps users digitize prescription images, store health records securely, and get quick guidance from a medical assistant chatbot.
-
-**2. Why This Project Matters**
-* Many patients keep paper prescriptions that are easy to lose and hard to read.
-* HealthEase converts those papers into structured digital records.
-* Users can view medicines, dosage, and history in one place.
-* The chatbot helps users understand basic health and medicine information faster.
-
-**3. Core User Value**
-* Faster access to health information.
-* Better medication tracking.
-* Safer record keeping with login-protected access.
-* Easy-to-use interface for daily healthcare management.
-
-**4. Business and Impact Potential**
-* Better continuity of care through organized digital records.
-* Reduced friction for medicine recall and follow-up.
-* Expandable for family health management, reminders, and clinician workflows.
-
-**5. Current Status & Next Milestones**
-* **Status:** End-to-end flows are implemented across frontend and backend. Core APIs for auth, prescriptions, OCR, chat, and voice are integrated. Documentation and deploy-ready configuration are present.
-* **Next Milestones:** Add reminders and notification workflows; introduce doctor/clinic collaboration workflows; improve audit logs and compliance hardening; add multilingual UI and accessibility enhancements.
+## Authentication
+Most endpoints require authentication. Include JWT token in the header:
+```
+Authorization: Bearer <your_jwt_token>
+```
 
 ---
 
-## PART 2: PROJECT SUMMARY & FEATURES
-*This section details the completion status, deliverables, and core features of the platform.*
+## 🔐 Authentication Endpoints
 
-**Project Completion Status:** 100%
-A production-ready, full-stack AI-powered healthcare platform.
+### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
 
-### 🎨 Key Features Implemented
-1.  **Smart OCR Pipeline:** Image preprocessing (grayscale, normalize, sharpen); Google Cloud Vision API / Tesseract text extraction; OpenAI GPT-4o / Groq Vision AI structured parsing. Extracts medication details (name, dosage, frequency, duration) and doctor name.
-2.  **AI Medical Assistant:** Context-aware responses using patient medical history; access to prescriptions and medications; conversation history tracking; empathetic medical guidance; floating chatbot UI in bottom-right. Supports voice input for conversational healthcare.
-3.  **User Authentication:** JWT-based authentication; password hashing with bcrypt; protected routes; profile management; role-based access (patient, doctor, admin).
-4.  **Prescription Management:** Upload handwritten/printed prescriptions; view all prescriptions with verification status; update, verify, and delete prescriptions; search and filter capabilities. PDF Export for prescriptions + analytics report.
-5.  **User Profile System:** Personal info (name, email, age); medical details (blood group, chronic conditions, allergies); profile updates; medical history for AI context.
-6.  **Medication Reminders & Analytics:** Medication reminders via Gmail (Nodemailer) and a Health Analytics Dashboard.
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "patient"  // optional: patient (default), doctor, admin
+}
+```
 
-### 📊 Project Statistics
-* **Total Files:** 35+
-* **Lines of Code:** ~3,500+
-* **API Endpoints:** 13
-* **React Components:** 8
-* **Database Models:** 2
-* **Services:** 2 (OCR, Chat)
-* **Middleware:** 2 (Auth, Upload)
+**Response (200):**
+```json
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "60d5ec49f1b2c72b8c8e4f5a",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "patient"
+  }
+}
+```
 
-### 📦 Deliverables & File Structure
-**Backend (Node.js/Express):**
-Complete REST API with MongoDB/Mongoose, JWT Auth, AI/OCR integrations, and Multer file handling.
-* `server/config/db.js` (MongoDB connection)
-* `server/controllers/`: `authController.js`, `prescriptionController.js`, `chatController.js`
-* `server/models/`: `User.js`, `Prescription.js`
-* `server/routes/`: `authRoutes.js`, `prescriptionRoutes.js`, `chatRoutes.js`
-* `server/services/`: `ocrService.js`, `chatService.js`
-* `server/middleware/`: `auth.js`, `upload.js`
-* `server/utils/helpers.js`
-* `server/server.js`, `package.json`, `.env.example`, `.gitignore`
+### Login User
+```http
+POST /api/auth/login
+Content-Type: application/json
 
-**Frontend (React + Vite):**
-Responsive UI with Tailwind CSS, React Router, Context API, Axios, and real-time AI chatbot.
-* `client/src/components/`: `AIChatbot.jsx`, `Navbar.jsx`
-* `client/src/pages/`: `Dashboard.jsx`, `Login.jsx`, `Register.jsx`, `UploadPrescription.jsx`, `PrescriptionList.jsx`, `Profile.jsx`
-* `client/src/context/AuthContext.jsx`
-* `client/src/services/api.js`
-* `client/src/App.jsx`, `main.jsx`, `index.css`
-* `client/index.html`, `vite.config.js`, `tailwind.config.js`, `postcss.config.js`
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
 
-**Python Service (FastAPI):**
-* `python-service/analytics/`, `python-service/reminders/`
-* `python-service/main.py`, `requirements.txt`
+**Response (200):**
+```json
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "60d5ec49f1b2c72b8c8e4f5a",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "patient"
+  }
+}
+```
 
----
+### Get Current User
+```http
+GET /api/auth/me
+Authorization: Bearer <token>
+```
 
-## PART 3: TECHNICAL ARCHITECTURE
-*Deep dive into the system design, data flow, and technology stack.*
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "60d5ec49f1b2c72b8c8e4f5a",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "patient",
+    "profile": {
+      "age": 30,
+      "bloodGroup": "O+",
+      "chronicConditions": ["Diabetes"],
+      "allergies": ["Penicillin"]
+    }
+  }
+}
+```
 
-### 🔧 Technology Stack
-* **Frontend:** React 18, Vite, React Router, Tailwind CSS, Axios.
-* **Backend:** Node.js, Express.js, MongoDB, Mongoose, JWT, bcrypt, Multer.
-* **AI/ML Service:** Python 3.10+, FastAPI, OpenCV, Tesseract, Groq Vision OCR (meta-llama/llama-4-scout-17b-16e-instruct), OpenAI GPT-4o, Google Cloud Vision, Sharp (Image processing), Sarvam/Bhashini STT (Voice).
-* **Email:** Gmail SMTP (Nodemailer).
+### Update Profile
+```http
+PUT /api/auth/profile
+Authorization: Bearer <token>
+Content-Type: application/json
 
-### 🏗️ System Overview & Topology
-* **Frontend** is built with Vite and served as static assets.
-* **Backend** is an Express app that runs locally or as a Vercel serverless function (`server/api/index.js`). Vercel routing sends `/api/*` traffic to backend and everything else to frontend index.
-* **Python OCR Service** runs via FastAPI.
-
-**High-Level Flow:**
-User Browser ➞ React+Vite Frontend ➞ Node.js+Express API.
-The API connects to: MongoDB, Python FastAPI OCR Service (which uses Tesseract+OpenCV), OpenAI API, and Sarvam/Bhashini STT.
-
-**Backend Module Architecture:**
-* `server.js` routes to auth, prescription, chat, voiceChat, and ocr routes.
-* Routes connect to controllers, which utilize services (`ocrService.js`, `chatService.js`, `indicSttService.js`) and models (`User.js`, `Prescription.js`).
-* Middleware (`auth.js`, `upload.js`, `uploadAudio.js`) intercepts routes for validation.
-
-### 💾 Data Models
-**User Schema:**
-* `name`, `email`, `passwordHash`
-* `role` (patient, doctor, admin)
-* `profile`: `age`, `bloodGroup`, `chronicConditions[]`, `allergies[]`
-
-**Prescription Schema:**
-* `patientId` (ref User), `imageUrl`, `uploadDate`
-* `medications[]`: `name`, `dosage`, `frequency`, `duration`
-* `doctorName`, `ocrRawText`, `isVerified`, `notes`
-
-### 🌐 API Surface
-* **Auth:** `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `PUT /api/auth/profile`
-* **Prescriptions:** `POST /api/prescriptions/upload`, `GET /api/prescriptions`, `GET /api/prescriptions/:id`, `PUT /api/prescriptions/:id`, `DELETE /api/prescriptions/:id`
-* **AI Chat:** `POST /api/chat/ask`, `GET /api/chat/context`
-* **Voice Chat:** `POST /api/voice-chat`
-* **OCR:** `POST /api/ocr/handwriting`
-* **Health:** `GET /health`, `GET /api/health`
-
-### 🔄 Core Request Flows
-1.  **Auth Flow:** Frontend `POST /api/auth/login` ➞ API finds user in MongoDB, compares bcrypt hash ➞ API returns JWT + user payload ➞ Frontend stores token and sets auth state.
-2.  **Prescription Upload + OCR Flow:** Frontend `POST /api/prescriptions/upload` (image) ➞ API calls `digitizePrescription()` ➞ Sends to Python FastAPI `/ocr` ➞ Python does OpenCV preprocessing + Tesseract extraction ➞ Returns text to Node API ➞ Node API calls OpenAI for structured medicine parsing ➞ Saves document to MongoDB ➞ Returns success + data to UI.
-3.  **Chat & Voice Flow:**
-    * *Voice:* UI `POST /api/voice-chat` (audio) ➞ API calls Indic STT ➞ STT returns transcript ➞ API calls OpenAI with medical prompt ➞ OpenAI returns assistant reply ➞ UI receives transcript + reply.
-    * *Text:* UI `POST /api/chat/ask` ➞ API calls Chat Service ➞ Service gets contextual response from OpenAI ➞ UI receives text.
-
-### 🛡️ Security, Middleware & Architecture Talking Points
-* **Security:** Passwords hashed before storage; Auth token required for private data access; File upload validation (MIME/size); Sensitive credentials in `.env`; JWT auth middleware injects `req.user`.
-* **Resilience:** Node OCR service calls Python OCR over HTTP with timeout handling. Fallback/demo modes exist if Python OCR or OpenAI output is unavailable.
-* **Talking Points:** Service-Oriented Architecture (SOA); Clear separation of concerns; Context-aware assistant; Multi-modal support (text+voice+image); Progressive resilience.
-* **Improvements:** Add request validation (Joi/Zod); structured logging; automated tests; move image storage to S3/Cloudinary; strict role-based authorization.
+{
+  "name": "John Doe Updated",
+  "profile": {
+    "age": 30,
+    "bloodGroup": "O+",
+    "chronicConditions": ["Diabetes", "Hypertension"],
+    "allergies": ["Penicillin", "Peanuts"]
+  }
+}
+```
 
 ---
 
-## PART 4: GETTING STARTED & SETUP GUIDE
-*Instructions for setting up the project locally.*
+## 📋 Prescription Endpoints
+
+### Upload Prescription
+```http
+POST /api/prescriptions/upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+prescription: <file>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "msg": "Prescription processed successfully",
+  "data": {
+    "_id": "60d5ec49f1b2c72b8c8e4f5b",
+    "patientId": "60d5ec49f1b2c72b8c8e4f5a",
+    "imageUrl": "https://placeholder-url.com/temp.jpg",
+    "uploadDate": "2026-01-05T10:30:00.000Z",
+    "medications": [
+      {
+        "name": "Amoxicillin",
+        "dosage": "500mg",
+        "frequency": "3 times daily",
+        "duration": "7 days"
+      }
+    ],
+    "doctorName": "Dr. Smith",
+    "ocrRawText": "Dr. Smith\nDate: 2026-01-05...",
+    "isVerified": false
+  }
+}
+```
+
+### Get All Prescriptions
+```http
+GET /api/prescriptions
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "_id": "60d5ec49f1b2c72b8c8e4f5b",
+      "medications": [...],
+      "uploadDate": "2026-01-05T10:30:00.000Z",
+      "isVerified": true
+    }
+  ]
+}
+```
+
+### Get Single Prescription
+```http
+GET /api/prescriptions/:id
+Authorization: Bearer <token>
+```
+
+### Update Prescription
+```http
+PUT /api/prescriptions/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "isVerified": true,
+  "notes": "Verified by patient",
+  "medications": [...]  // optional: update medications
+}
+```
+
+### Delete Prescription
+```http
+DELETE /api/prescriptions/:id
+Authorization: Bearer <token>
+```
+
+---
+
+## 🤖 AI Chat Endpoints
+
+### Ask AI Assistant
+```http
+POST /api/chat/ask
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "message": "What is Amoxicillin used for?",
+  "conversationHistory": [
+    {
+      "role": "user",
+      "content": "Hello"
+    },
+    {
+      "role": "assistant",
+      "content": "Hi! How can I help?"
+    }
+  ]
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "reply": "Amoxicillin is a penicillin-type antibiotic used to treat bacterial infections..."
+}
+```
+
+### Get Patient Context
+```http
+GET /api/chat/context
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "context": "Patient Information:\n- Age: 30\n- Blood Group: O+\n..."
+}
+```
+
+---
+
+## ❌ Error Responses
+
+All error responses follow this format:
+
+```json
+{
+  "success": false,
+  "msg": "Error message here",
+  "error": "Detailed error (in development mode)"
+}
+```
+
+### Common Error Codes
+
+| Code | Description |
+|------|-------------|
+| 400 | Bad Request - Invalid input |
+| 401 | Unauthorized - Invalid or missing token |
+| 403 | Forbidden - Access denied |
+| 404 | Not Found - Resource doesn't exist |
+| 500 | Internal Server Error |
+
+---
+
+## 🧪 Testing with cURL
+
+### Register
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@test.com","password":"test123"}'
+```
+
+### Upload Prescription
+```bash
+curl -X POST http://localhost:5000/api/prescriptions/upload \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "prescription=@/path/to/image.jpg"
+```
+
+### Chat with AI
+```bash
+curl -X POST http://localhost:5000/api/chat/ask \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"What medications am I currently taking?"}'
+```
+
+---
+
+## 📊 Rate Limits
+
+- **Authentication**: 10 requests per minute
+- **Upload**: 5 prescriptions per hour per user
+- **Chat**: 20 messages per minute per user
+
+---
+
+## 🔒 Security Notes
+
+- All passwords are hashed using bcrypt
+- JWT tokens expire after 7 days
+- File uploads limited to 10MB
+- Only image files accepted (jpg, png, gif, webp)
+- CORS enabled for specific origins only
+
+---
+
+For more information, see the main [README.md](README.md)
+
+
+================================================================================
+FILE: DEVELOPMENT_GUIDE.md
+================================================================================
+
+# 💡 Development Tips & Best Practices
+
+## 🚀 Quick Commands
+
+### Installation
+```bash
+# From root directory - install all dependencies at once
+npm run install:all
+
+# Or separately
+cd server && npm install
+cd client && npm install
+```
+
+### Running the Application
+```bash
+# Option 1: Run both server and client concurrently (requires concurrently package)
+cd health-ease
+npm install -g concurrently  # Install globally
+npm run dev
+
+# Option 2: Separate terminals (recommended for beginners)
+# Terminal 1
+cd server && npm run dev
+
+# Terminal 2
+cd client && npm run dev
+```
+
+---
+
+## 🐛 Debugging Tips
+
+### Backend Debugging
+
+**Check if server is running:**
+```bash
+curl http://localhost:5000/health
+```
+
+**View MongoDB data:**
+```bash
+mongosh
+use healthease
+db.users.find()
+db.prescriptions.find()
+```
+
+**Test authentication:**
+```bash
+# Register
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","email":"test@test.com","password":"test123"}'
+
+# Login
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"test123"}'
+```
+
+### Frontend Debugging
+
+**Clear browser data:**
+```javascript
+// In browser console
+localStorage.clear()
+location.reload()
+```
+
+**Check network requests:**
+- Open DevTools (F12)
+- Go to Network tab
+- Filter by "XHR" or "Fetch"
+- Check request/response data
+
+**React DevTools:**
+- Install React DevTools browser extension
+- Inspect component props and state
+
+---
+
+## 🔧 Common Issues & Solutions
+
+### Issue 1: MongoDB Connection Failed
+```bash
+# Solution: Start MongoDB
+brew services start mongodb-community
+
+# Or check status
+brew services list
+
+# Or use MongoDB Atlas instead
+# Update MONGO_URI in .env to Atlas connection string
+```
+
+### Issue 2: Google Vision API Error
+```bash
+# Solution: Verify credentials
+ls server/config/google-vision-credentials.json
+
+# Check environment variable
+echo $GOOGLE_APPLICATION_CREDENTIALS
+
+# Re-download credentials from Google Cloud Console if needed
+```
+
+### Issue 3: OpenAI API Rate Limit
+```javascript
+// Solution: In server/services/ocrService.js
+// Temporarily use gpt-3.5-turbo instead of gpt-4o
+model: "gpt-3.5-turbo"  // Cheaper and faster for testing
+```
+
+### Issue 4: Port Already in Use
+```bash
+# Kill process on port 5000
+lsof -ti:5000 | xargs kill -9
+
+# Or use different port in server/.env
+PORT=5001
+```
+
+### Issue 5: CORS Error
+```javascript
+// Solution: Update server/server.js
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
+```
+
+---
+
+## 🎨 UI Customization
+
+### Change Color Theme
+Edit `client/tailwind.config.js`:
+```javascript
+colors: {
+  primary: {
+    600: '#1e40af',  // Change this to your color
+    700: '#1e3a8a',
+  }
+}
+```
+
+### Customize Chatbot Position
+Edit `client/src/components/AIChatbot.jsx`:
+```javascript
+// Change from bottom-right to bottom-left
+className="fixed bottom-5 left-5 z-50"
+```
+
+---
+
+## 🧪 Testing Workflow
+
+### 1. Test Authentication
+1. Register new user
+2. Login with credentials
+3. Check JWT token in localStorage
+4. Access protected route
+
+### 2. Test Prescription Upload
+1. Use a sample prescription image
+2. Upload and wait for processing
+3. Verify extracted medications
+4. Test verify/delete actions
+
+### 3. Test AI Chatbot
+1. Ask simple medical question
+2. Check if response uses your medical history
+3. Test conversation continuity
+4. Verify error handling
+
+---
+
+## 📊 Performance Optimization
+
+### Image Upload Optimization
+```javascript
+// In server/middleware/upload.js
+// Adjust file size limit
+limits: {
+  fileSize: 5 * 1024 * 1024  // Reduce to 5MB
+}
+```
+
+### Database Indexing
+```javascript
+// In server/models/User.js
+UserSchema.index({ email: 1 });
+
+// In server/models/Prescription.js
+PrescriptionSchema.index({ patientId: 1, uploadDate: -1 });
+```
+
+### Frontend Bundle Size
+```bash
+# Analyze bundle
+cd client
+npm run build
+npx vite-bundle-analyzer
+```
+
+---
+
+## 🔒 Security Checklist
+
+- [ ] JWT_SECRET is strong and unique
+- [ ] Passwords are hashed with bcrypt
+- [ ] API keys are in .env, not committed to Git
+- [ ] File upload size limits are set
+- [ ] File type validation is enabled
+- [ ] CORS is configured for specific origins
+- [ ] Input validation on all endpoints
+- [ ] Rate limiting implemented (for production)
+
+---
+
+## 📦 Deployment Preparation
+
+### Environment Variables for Production
+```env
+NODE_ENV=production
+MONGO_URI=mongodb+srv://...  # Atlas connection
+JWT_SECRET=<generate_strong_32_char_secret>
+OPENAI_API_KEY=sk-...
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
+```
+
+### Build Frontend
+```bash
+cd client
+npm run build
+# Upload 'dist' folder to hosting service
+```
+
+### Deploy Backend
+```bash
+# Heroku example
+heroku create healthease-api
+heroku config:set MONGO_URI="mongodb+srv://..."
+heroku config:set JWT_SECRET="..."
+git push heroku main
+```
+
+---
+
+## 🎓 Learning Resources
+
+### MongoDB
+- [MongoDB University](https://university.mongodb.com/)
+- [Mongoose Docs](https://mongoosejs.com/docs/)
+
+### React
+- [React Docs](https://react.dev/)
+- [React Router](https://reactrouter.com/)
+
+### AI/ML
+- [OpenAI API Docs](https://platform.openai.com/docs)
+- [Google Cloud Vision](https://cloud.google.com/vision/docs)
+
+### Node.js
+- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
+- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
+
+---
+
+## 💻 VS Code Extensions
+
+Recommended extensions for better development experience:
+
+- **ES7+ React/Redux/React-Native snippets**
+- **Prettier - Code formatter**
+- **ESLint**
+- **Tailwind CSS IntelliSense**
+- **MongoDB for VS Code**
+- **Thunder Client** (API testing)
+- **GitLens**
+
+---
+
+## 🎯 Next Steps After Setup
+
+1. **Customize the UI** - Make it match your brand
+2. **Add more features** - See PROJECT_SUMMARY.md for ideas
+3. **Deploy to production** - Vercel, Heroku, AWS, etc.
+4. **Get user feedback** - Test with real users
+5. **Add analytics** - Track usage patterns
+6. **Implement caching** - Redis for performance
+7. **Add tests** - Jest, React Testing Library
+
+---
+
+## 🤝 Contributing
+
+Want to improve HealthEase?
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+---
+
+## 📞 Get Help
+
+Stuck? Here's where to look:
+
+1. **README.md** - Full documentation
+2. **QUICK_START.md** - Setup guide
+3. **API_DOCUMENTATION.md** - API reference
+4. **PROJECT_SUMMARY.md** - Architecture overview
+5. **This file** - Development tips
+
+---
+
+**Happy Coding! 🚀**
+
+
+================================================================================
+FILE: FILE_STRUCTURE.md
+================================================================================
+
+# 📂 HealthEase - Complete File Structure
+
+## Total Files: 43
+
+```
+health-ease/
+│
+├── 📄 .prettierrc                          # Code formatting rules
+├── 📄 package.json                         # Root package with helper scripts
+├── 📄 README.md                            # Main documentation (comprehensive)
+├── 📄 QUICK_START.md                       # 5-minute setup guide
+├── 📄 API_DOCUMENTATION.md                 # Complete API reference
+├── 📄 PROJECT_SUMMARY.md                   # Project overview & deliverables
+├── 📄 DEVELOPMENT_GUIDE.md                 # Development tips & troubleshooting
+│
+├── 📁 server/                              # Backend (Node.js/Express)
+│   ├── 📄 .env.example                     # Environment variables template
+│   ├── 📄 .gitignore                       # Git ignore rules
+│   ├── 📄 package.json                     # Backend dependencies
+│   ├── 📄 server.js                        # Express app entry point
+│   │
+│   ├── 📁 config/
+│   │   └── 📄 db.js                        # MongoDB connection setup
+│   │
+│   ├── 📁 controllers/
+│   │   ├── 📄 authController.js            # Auth logic (register, login, profile)
+│   │   ├── 📄 chatController.js            # AI chat logic
+│   │   └── 📄 prescriptionController.js    # Prescription CRUD operations
+│   │
+│   ├── 📁 models/
+│   │   ├── 📄 User.js                      # User schema (with profile)
+│   │   └── 📄 Prescription.js              # Prescription schema
+│   │
+│   ├── 📁 routes/
+│   │   ├── 📄 authRoutes.js                # Auth endpoints
+│   │   ├── 📄 chatRoutes.js                # Chat endpoints
+│   │   └── 📄 prescriptionRoutes.js        # Prescription endpoints
+│   │
+│   ├── 📁 services/
+│   │   ├── 📄 ocrService.js                # Google Vision + OpenAI integration
+│   │   └── 📄 chatService.js               # AI medical assistant logic
+│   │
+│   ├── 📁 middleware/
+│   │   ├── 📄 auth.js                      # JWT authentication middleware
+│   │   └── 📄 upload.js                    # Multer file upload configuration
+│   │
+│   └── 📁 utils/
+│       └── 📄 helpers.js                   # Utility functions
+│
+└── 📁 client/                              # Frontend (React + Vite)
+    ├── 📄 .gitignore                       # Git ignore rules
+    ├── 📄 index.html                       # HTML entry point
+    ├── 📄 package.json                     # Frontend dependencies
+    ├── 📄 vite.config.js                   # Vite configuration
+    ├── 📄 tailwind.config.js               # Tailwind CSS configuration
+    ├── 📄 postcss.config.js                # PostCSS configuration
+    │
+    └── 📁 src/
+        ├── 📄 main.jsx                     # React entry point
+        ├── 📄 App.jsx                      # Main app component with routing
+        ├── 📄 index.css                    # Global styles (Tailwind)
+        │
+        ├── 📁 components/
+        │   ├── 📄 AIChatbot.jsx            # Floating AI chatbot component
+        │   └── 📄 Navbar.jsx               # Navigation bar component
+        │
+        ├── 📁 pages/
+        │   ├── 📄 Dashboard.jsx            # Home/Dashboard page
+        │   ├── 📄 Login.jsx                # Login page
+        │   ├── 📄 Register.jsx             # Registration page
+        │   ├── 📄 UploadPrescription.jsx   # Upload & digitize page
+        │   ├── 📄 PrescriptionList.jsx     # View all prescriptions
+        │   └── 📄 Profile.jsx              # User profile management
+        │
+        ├── 📁 context/
+        │   └── 📄 AuthContext.jsx          # Authentication state management
+        │
+        └── 📁 services/
+            └── 📄 api.js                   # Axios API client configuration
+```
+
+---
+
+## 📊 File Breakdown by Category
+
+### Documentation Files (7)
+- README.md
+- QUICK_START.md
+- API_DOCUMENTATION.md
+- PROJECT_SUMMARY.md
+- DEVELOPMENT_GUIDE.md
+- .prettierrc
+- package.json (root)
+
+### Backend Files (18)
+- **Core**: server.js, package.json
+- **Config**: db.js, .env.example, .gitignore
+- **Controllers**: authController.js, chatController.js, prescriptionController.js
+- **Models**: User.js, Prescription.js
+- **Routes**: authRoutes.js, chatRoutes.js, prescriptionRoutes.js
+- **Services**: ocrService.js, chatService.js
+- **Middleware**: auth.js, upload.js
+- **Utils**: helpers.js
+
+### Frontend Files (18)
+- **Core**: main.jsx, App.jsx, index.html
+- **Config**: package.json, vite.config.js, tailwind.config.js, postcss.config.js, .gitignore
+- **Styles**: index.css
+- **Components**: AIChatbot.jsx, Navbar.jsx
+- **Pages**: Dashboard.jsx, Login.jsx, Register.jsx, UploadPrescription.jsx, PrescriptionList.jsx, Profile.jsx
+- **Context**: AuthContext.jsx
+- **Services**: api.js
+
+---
+
+## 🎯 Key Files to Understand First
+
+### If you're new to the project, start with these files in order:
+
+1. **README.md** - Overall project documentation
+2. **QUICK_START.md** - Get it running
+3. **server/server.js** - Backend entry point
+4. **client/src/App.jsx** - Frontend entry point
+5. **server/services/ocrService.js** - AI magic happens here
+6. **client/src/components/AIChatbot.jsx** - Chatbot component
+7. **API_DOCUMENTATION.md** - API reference
+
+---
+
+## 🔍 File Dependencies Graph
+
+```
+server.js
+  ├─→ config/db.js
+  ├─→ routes/authRoutes.js
+  │     ├─→ controllers/authController.js
+  │     │     └─→ models/User.js
+  │     └─→ middleware/auth.js
+  ├─→ routes/prescriptionRoutes.js
+  │     ├─→ controllers/prescriptionController.js
+  │     │     ├─→ models/Prescription.js
+  │     │     └─→ services/ocrService.js
+  │     ├─→ middleware/auth.js
+  │     └─→ middleware/upload.js
+  └─→ routes/chatRoutes.js
+        ├─→ controllers/chatController.js
+        │     └─→ services/chatService.js
+        │           ├─→ models/User.js
+        │           └─→ models/Prescription.js
+        └─→ middleware/auth.js
+
+client/src/App.jsx
+  ├─→ components/Navbar.jsx
+  │     └─→ context/AuthContext.jsx
+  ├─→ components/AIChatbot.jsx
+  │     ├─→ context/AuthContext.jsx
+  │     └─→ services/api.js
+  ├─→ pages/Dashboard.jsx
+  ├─→ pages/Login.jsx
+  ├─→ pages/Register.jsx
+  ├─→ pages/UploadPrescription.jsx
+  ├─→ pages/PrescriptionList.jsx
+  └─→ pages/Profile.jsx
+```
+
+---
+
+## 📝 Lines of Code Estimate
+
+| Component | Files | Est. LOC |
+|-----------|-------|----------|
+| **Documentation** | 7 | ~2,000 |
+| **Backend** | 18 | ~2,500 |
+| **Frontend** | 18 | ~2,000 |
+| **Total** | 43 | **~6,500** |
+
+---
+
+## 🎨 File Naming Conventions
+
+- **Controllers**: `*Controller.js` (e.g., authController.js)
+- **Routes**: `*Routes.js` (e.g., authRoutes.js)
+- **Services**: `*Service.js` (e.g., ocrService.js)
+- **Components**: `PascalCase.jsx` (e.g., AIChatbot.jsx)
+- **Pages**: `PascalCase.jsx` (e.g., Dashboard.jsx)
+- **Config**: `lowercase.js` (e.g., db.js)
+
+---
+
+## 🔧 How Files Work Together
+
+### Upload Prescription Flow
+```
+1. User clicks upload → UploadPrescription.jsx
+2. File selected → Multer middleware (upload.js)
+3. API call → services/api.js
+4. Route handler → prescriptionRoutes.js
+5. Controller → prescriptionController.js
+6. Service call → ocrService.js
+   ├─ Google Vision API (OCR)
+   └─ OpenAI API (parsing)
+7. Save to DB → models/Prescription.js
+8. Response → Back to frontend
+9. Display result → UploadPrescription.jsx
+```
+
+### AI Chat Flow
+```
+1. User types message → AIChatbot.jsx
+2. API call → services/api.js
+3. Route handler → chatRoutes.js
+4. Controller → chatController.js
+5. Service call → chatService.js
+   ├─ Get user context (User & Prescriptions)
+   └─ OpenAI API call
+6. Response → Back to frontend
+7. Display message → AIChatbot.jsx
+```
+
+---
+
+## ✅ Verification Checklist
+
+Use this to verify your installation:
+
+- [ ] Root directory has 7 documentation files
+- [ ] Server has 18 files across 7 folders
+- [ ] Client has 18 files across 5 folders
+- [ ] All package.json files exist
+- [ ] All .gitignore files exist
+- [ ] All configuration files exist
+
+---
+
+## 🎓 Learning Path
+
+Follow this order to understand the codebase:
+
+### Day 1: Setup & Structure
+1. Read README.md
+2. Follow QUICK_START.md
+3. Explore file structure
+4. Run the application
+
+### Day 2: Backend Deep Dive
+1. Study server.js
+2. Understand routes
+3. Examine controllers
+4. Review models
+
+### Day 3: AI Integration
+1. Study ocrService.js
+2. Understand chatService.js
+3. Test with sample prescriptions
+4. Experiment with chatbot
+
+### Day 4: Frontend
+1. Understand App.jsx routing
+2. Study AuthContext
+3. Review page components
+4. Customize UI
+
+### Day 5: Integration & Testing
+1. Test authentication flow
+2. Test prescription upload
+3. Test AI chatbot
+4. Debug issues
+
+---
+
+**This is a complete, production-ready project with 43 files and ~6,500 lines of code!** 🎉
+
+
+================================================================================
+FILE: MEDICATION_REMINDER_SETUP.md
+================================================================================
+
+================================================================================
+                 MEDICATION REMINDER SYSTEM - SETUP GUIDE
+================================================================================
+
+Complete implementation of a medication reminder system across your MERN + 
+Python stack. Reminders are sent via email at scheduled times daily.
+
+================================================================================
+FILES CREATED / MODIFIED
+================================================================================
+
+PYTHON SERVICE (/python-service)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ NEW: reminders/scheduler.py
+   - APScheduler-based background job that runs every minute
+   - Queries MongoDB for prescriptions with enabled reminders
+   - Checks if current time matches scheduled reminder times
+   - Tracks last sent timestamp to prevent duplicate daily sends
+   - Calls email_sender.send_reminder_email()
+
+✨ NEW: reminders/email_sender.py
+   - Sends styled HTML reminder emails via SMTP
+   - Displays medication name, dosage, frequency
+   - Configuration via .env (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM)
+   - Includes HealthEase branding
+
+📝 MODIFIED: main.py
+   - Added POST /reminders/set endpoint for setting reminders
+   - Accepts: { prescriptionId, reminderTimes: ["08:00", "14:00"], enabled: true }
+   - Initializes scheduler on app startup (lifespan context)
+   - Validates reminder time format (HH:MM)
+   - Stores reminder config directly in MongoDB
+
+✅ UPDATED: requirements.txt
+   - Added: apscheduler, pymongo, python-dotenv
+
+NODE.JS BACKEND (/server)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ NEW: routes/reminderRoutes.js
+   - POST /api/reminders/set (Protected)
+     → Validates user authorization
+     → Proxies to Python service at PYTHON_OCR_URL/reminders/set
+     → Returns success confirmation
+   
+   - GET /api/reminders/:prescriptionId (Protected)
+     → Fetches current reminder config for a prescription
+     → Returns reminder enabled status and times array
+
+📝 MODIFIED: server.js
+   - Registered reminder routes: app.use('/api/reminders', reminderRoutes)
+
+📝 MODIFIED: models/Prescription.js
+   - Added reminder object with fields:
+     * enabled: Boolean (default: false)
+     * times: [String] - HH:MM format reminder times
+     * lastSentAt: Date - tracks last daily send
+
+REACT FRONTEND (/client)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ NEW: src/components/ReminderModal.jsx
+   - Beautiful modal component with:
+     ✓ Enable/Disable toggle
+     ✓ Time picker for up to 4 reminder times
+     ✓ Add/Remove time slots
+     ✓ Success/Error notifications
+     ✓ Medication list display
+     ✓ Tailored error validation
+
+📝 MODIFIED: src/pages/PrescriptionList.jsx
+   - Added 🔔 Reminders button to each prescription card
+   - Integrated ReminderModal component
+   - Handlers for modal open/close
+
+📝 MODIFIED: src/services/api.js
+   - Added reminderAPI with:
+     * setReminder(data) - POST /api/reminders/set
+     * getReminder(prescriptionId) - GET /api/reminders/:prescriptionId
+
+================================================================================
+ENVIRONMENT SETUP
+================================================================================
+
+1. UPDATE /python-service/.env
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
+   MONGO_URI=mongodb://localhost:27017/healthease
+   
+   # SMTP Configuration for email reminders
+   SMTP_HOST=smtp.gmail.com              # E.g., Gmail, AWS SES, Mailgun
+   SMTP_PORT=587                          # Usually 587 (TLS) or 465 (SSL)
+   SMTP_USER=your-email@gmail.com         # Your email account
+   SMTP_PASS=your-app-password            # Gmail: use App Password, not regular password
+   SMTP_FROM=noreply@healthease.com       # Sender email address
+
+2. UPDATE /server/.env (already has PYTHON_OCR_URL)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
+   PYTHON_OCR_URL=http://localhost:8000/ocr     # Ensure this is set
+
+3. INSTALL PYTHON DEPENDENCIES
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
+   cd /Users/vardxn/Developer/personal/health-ease/python-service
+   python3 -m pip install -r requirements.txt
+
+================================================================================
+SMTP CONFIGURATION EXAMPLES
+================================================================================
+
+GMAIL (Recommended for testing)
+───────────────────────────────────────────────────────────────────────────────
+1. Enable 2-Factor Authentication on your Gmail account
+2. Generate App Password: https://myaccount.google.com/apppasswords
+3. Use in .env:
+
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=youremail@gmail.com
+   SMTP_PASS=your-16-char-app-password
+   SMTP_FROM=youremail@gmail.com
+
+
+AWS SES (Production)
+───────────────────────────────────────────────────────────────────────────────
+   SMTP_HOST=email-smtp.us-east-1.amazonaws.com
+   SMTP_PORT=587
+   SMTP_USER=AKIA...
+   SMTP_PASS=your-smtp-password
+   SMTP_FROM=noreply@yourdomain.com
+
+   Create SMTP credentials in AWS SES → Account Dashboard → SMTP settings
+
+
+Mailgun
+───────────────────────────────────────────────────────────────────────────────
+   SMTP_HOST=smtp.mailgun.org
+   SMTP_PORT=587
+   SMTP_USER=postmaster@yourdomain.mailgun.org
+   SMTP_PASS=your-mailgun-smtp-password
+   SMTP_FROM=noreply@yourdomain.mailgun.org
+
+
+Sendgrid
+───────────────────────────────────────────────────────────────────────────────
+   SMTP_HOST=smtp.sendgrid.net
+   SMTP_PORT=587
+   SMTP_USER=apikey
+   SMTP_PASS=your-sendgrid-api-key
+   SMTP_FROM=noreply@yourdomain.com
+
+================================================================================
+HOW IT WORKS
+================================================================================
+
+USER FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. User views prescription in PrescriptionList
+2. Clicks 🔔 Reminders button
+3. ReminderModal opens showing:
+   - Medications in prescription
+   - Toggle to enable/disable reminders
+   - Time picker (up to 4 times daily)
+4. User selects reminder times and clicks "Save Reminders"
+5. Frontend calls POST /api/reminders/set with data
+6. Backend validates and proxies to Python /reminders/set endpoint
+7. Python service updates MongoDB prescription document with reminder config
+8. From then on, scheduler sends email reminders daily at scheduled times
+
+
+BACKGROUND PROCESS (Python Service)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Python service starts on port 8000
+2. FastAPI lifespan initializes APScheduler
+3. Scheduler job runs every 1 minute:
+   - Query: prescriptions where reminder.enabled = true
+   - For each prescription:
+     - Check if current time (HH:MM) matches any reminder time
+     - If match found:
+       * Check if already sent today (via lastSentAt)
+       * If not sent:
+         - Fetch user email from MongoDB
+         - Send styled HTML email with meds info
+         - Update prescription.reminder.lastSentAt
+     - Run once per day due to date-based tracking
+
+EXAMPLE TIMELINE:
+   - 08:00 AM: Patient searches for prescriptions, sets reminders at 08:00, 14:00, 21:00
+   - 08:01 AM: Scheduler runs, finds match for 08:00, sends first email
+   - 08:02 AM: lastSentAt updated to today
+   - 08:03 AM: Scheduler runs again, sees lastSentAt is today, skips send
+   - 14:00 PM: Scheduler runs, finds match for 14:00, sends email (lastSentAt NOT reset)
+   - 21:00 PM: Scheduler runs, finds match for 21:00, sends email
+   - 11:59 PM: lastSentAt still shows today
+   - 12:01 AM (next day): lastSentAt now <> today, reset occurs
+   - 08:00 AM (next day): Cycle repeats
+
+
+DATA FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend                    Node Backend           Python Service           MongoDB
+   │                             │                       │                    │
+   ├─ 🔔 Reminders click ────────┤                       │                    │
+   │                             │                       │                    │
+   │  POST /api/reminders/set    │                       │                    │
+   │ {"prescriptionId": "...",   │                       │                    │
+   │  "reminderTimes": [...]     │                       │                    │
+   │ ├─ Validate JWT ────────────┤                       │                    │
+   │ ├─ Verify ownership ────────┤                       │                    │
+   │ │                           │                       │                    │
+   │ │  POST /reminders/set      │                       │                    │
+   │ │ ─────────────────────────────► Connect MongoDB   │                    │
+   │ │                           │     Update reminder    │                    │
+   │ │                           │ ────────────────────────────────────────┐   │
+   │ │                           │                       │                 │   │
+   │ │                           │◄─ Success response ─────────────────────┘   │
+   │ │                           │                       │                    │
+   │ │◄─ Return response ────────│                       │                    │
+   │ │                           │                       │                    │
+   └─ Show toast ™           │                       │                    │
+
+================================================================================
+TESTING REMINDERS
+================================================================================
+
+1. START ALL SERVICES
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
+   Terminal 1: Python OCR + Reminders
+     cd /Users/vardxn/Developer/personal/health-ease/python-service
+     python3 -m uvicorn main:app --reload --port 8000
+   
+   Terminal 2: Node Backend
+     cd /Users/vardxn/Developer/personal/health-ease/server
+     npm run dev
+   
+   Terminal 3: React Frontend
+     cd /Users/vardxn/Developer/personal/health-ease/client
+     npm run dev
+     → Open http://localhost:3000
+
+2. TEST UI
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
+   - Login/Register account
+   - Upload a prescription (OCR will create medications)
+   - Go to prescriptions list
+   - Click 🔔 Reminders on any prescription
+   - Set reminder times (e.g., "10:00", "15:00")
+   - Click "Save Reminders"
+   - Verify success toast appears
+
+3. DEBUG LOGS
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   
+   Python service logs (Terminal 1):
+   - ✅ Medication Reminder Scheduler started
+   - INFO: 127.0.0.1:xxx - "POST /reminders/set HTTP/1.1" 200 OK
+   
+   Backend logs (Terminal 2):
+   - Should show proxy activity to Python service
+   
+   To manually test email sending:
+     python3 -c "from reminders.email_sender import send_reminder_email; \
+     send_reminder_email('your-email@gmail.com', 'Test User', \
+     [{'name': 'Aspirin', 'dosage': '500mg', 'frequency': 'twice daily'}], '14:30')"
+
+================================================================================
+KEY FEATURES
+================================================================================
+
+✅ Scheduled Email Reminders
+   - One-minute interval check for prescriptions
+   - Time-based matching with daily deduplication
+   - Beautiful HTML email templates
+
+✅ User-Friendly UI
+   - Modal component for easy reminder setup
+   - Visual time picker with add/remove slots
+   - Shows medications in the prescription
+   - Real-time validation feedback
+
+✅ Database Integration
+   - MongoDB schema with reminder sub-document
+   - Tracks enabled status, times, and last send
+   - Prescription ownership verified
+
+✅ Security
+   - JWT authentication on all endpoints
+   - User authorization checks
+   - Protected routes via middleware
+
+✅ Flexible SMTP
+   - Works with Gmail, AWS SES, Mailgun, Sendgrid
+   - Configurable via .env
+   - Handles auth failures gracefully
+
+✅ Scalability
+   - Background scheduler independent of HTTP requests
+   - No blocking operations
+   - Optimized MongoDB queries
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+SCHEDULER NOT STARTING?
+───────────────────────────────────────────────────────────────────────────────
+Check Python service logs:
+  ✅ Medication Reminder Scheduler started  ← Should appear on startup
+
+If missing:
+  - Ensure apscheduler is installed: pip install apscheduler
+  - Check .env file is loaded correctly
+  - Verify no exceptions in FastAPI startup
+
+EMAILS NOT BEING SENT?
+───────────────────────────────────────────────────────────────────────────────
+1. Check Python service logs for:
+   - "❌ SMTP Authentication failed" → Wrong email/password
+   - "❌ SMTP error" → Connection issues
+   - "⚠️ SMTP config incomplete" → Missing .env vars
+
+2. Verify .env is configured:
+   cat /Users/vardxn/Developer/personal/health-ease/python-service/.env
+
+3. Test SMTP manually:
+   python3 -c "
+   import smtplib
+   try:
+       server = smtplib.SMTP('smtp.gmail.com', 587)
+       server.starttls()
+       server.login('your-email@gmail.com', 'your-app-password')
+       print('✅ SMTP connection successful')
+       server.quit()
+   except Exception as e:
+       print(f'❌ SMTP error: {e}')
+   "
+
+4. For Gmail, ensure App Password is used (not account password)
+
+REMINDERS NOT SHOWING IN DATABASE?
+───────────────────────────────────────────────────────────────────────────────
+Check MongoDB:
+  mongosh
+  > use healthease
+  > db.prescriptions.findOne({_id: ObjectId("...")})
+  > // Look for "reminder" field
+
+If missing, set reminder test:
+  python3 -c "
+  import os
+  from pymongo import MongoClient
+  mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017/healthease')
+  client = MongoClient(mongo_uri)
+  db = client.healthease
+  # Find a prescription and check
+  prescription = db.prescriptions.find_one()
+  print(prescription.get('reminder'))
+  "
+
+MODAL NOT OPENING?
+───────────────────────────────────────────────────────────────────────────────
+- Check browser console for JS errors (F12)
+- Verify prescriptionID is valid
+- Check if fetch calls are working (Network tab)
+- Ensure ReminderModal component is imported
+
+================================================================================
+DEPLOYMENT NOTES
+================================================================================
+
+For production:
+1. Use managed email service (AWS SES, Mailgun, SendGrid)
+2. Store .env securely (e.g., environment variables)
+3. Monitor scheduler health
+4. Set up logging to track email sends
+5. Consider rate limiting on /reminders/set endpoint
+6. Test email delivery before going live
+
+================================================================================
+
+Questions? Check the logs, verify .env config, and ensure all services are 
+running. The reminder system is now fully integrated! 💊📧
+
+
+================================================================================
+FILE: PROGRESS.md
+================================================================================
+
+# HealthEase Progress Log
+
+## 2026-06-14 - Standardized Local Development & Deployment Configurations Cleanup
+
+Removed all unused or incomplete deployment setups (Vercel configurations, production env files, Render instructions, and Atlas setups) to establish a clean and standardized local development workflow.
+
+### 1. Deployment Configurations Removed
+- Deleted root, client, and server `vercel.json` files and `.vercel` directories.
+- Deleted `client/.env.production`.
+
+### 2. Environment Configurations Restored
+- Re-configured backend environment variables (`server/.env.example`) to reference local MongoDB community server on `127.0.0.1:27017` and frontend client on `http://localhost:3000`.
+- Ensured client environment variables (`client/.env.example`) match the backend server port of `5001`.
+
+### 3. Documentation Updated
+- Rewrote the main `README.md` and `PROJECT_SUMMARY.md` files to remove references to live hosting URLs (Vercel/Render/Atlas) and outline local setup guides, local development startup endpoints, and default demo credentials.
+
+### 4. Working Features in the Workspace:
+- **Prescription Digitizer**: AI OCR parsing via Groq Vision API.
+- **Medication Tracker**: Live dosage check-ins, medication logs history, and inventory reminders.
+- **Symptom Triage Checker**: User check-ins with visual status cards.
+- **Wellness Vitals Hub**: Interactive trend charts tracking user health metrics (BP, blood sugar, SpO2, weight).
+- **Dr. AI Assistant**: Conversational medical chatbot aware of active medications and user profiles.
+- **Live Consultation Room**: Real-time video/audio calling utilizing PeerJS & Socket.io socket signaling.
+- **SaaS Export & Admin Dashboards**: Dynamic system analytics dashboards, audit logs feed, and clinical PDF report generation.
+
+---
+
+## 2026-05-18 - Steps 2 and 3 Completed
+
+Upgraded HealthEase from a CRUD-oriented flow into a more intelligent healthcare platform with production-style AI, wellness tracking, and engagement modules.
+
+### 1. Step 2: AI and Smart Features (Full-Stack Complete)
+- Added UserMedicalProfile persistence for allergies and active medications.
+- Added MentalHealthChat persistence for rolling conversational context.
+- Built services/aiService.js with structured JSON enforcement for safer LLM response parsing.
+- Implemented backend controllers for:
+  - Symptom triage with RED / YELLOW / GREEN urgency tiers.
+  - Drug-drug and drug-allergy conflict checks.
+  - Prescription-aware dietary recommendations.
+  - CBT-oriented mental health assistant with crisis override logic.
+- Implemented strict Red Button crisis handling that overrides standard AI text and returns emergency helpline guidance.
+- Built frontend SymptomChecker.jsx with triage color-coded response cards.
+- Refactored frontend DrugInteractions.jsx to proactively run interaction checks immediately after prescription import.
+
+### 2. Step 3: Patient Engagement and Wellness Features (Full-Stack Complete)
+- Added wellness schemas:
+  - VitalsLog
+  - FamilyProfile
+  - Gamification
+- Mounted unified /api/wellness route group in server/server.js to keep wellness features decoupled from basic auth/profile modules.
+- Implemented gamification pipeline:
+  - +50 points per new day with vitals logging
+  - Daily streak tracking
+  - 7-day milestone badge unlock: 7-Day Health Champion
+- Built frontend VitalsDashboard.jsx with Recharts trend visualization for:
+  - Blood Pressure (Systolic + Disastolic)
+  - Blood Sugar
+  - SpO2
+  - Weight
+- Built reusable frontend components:
+  - VitalsForm.jsx
+  - WellnessWidget.jsx
+  - FamilyManager.jsx
+
+
+================================================================================
+FILE: PROJECT_OVERVIEW.txt
+================================================================================
+
+🏥 HealthEase — Project Overview & Technology Summary
+
+=========================================
+1. CURRENTLY IMPLEMENTED FEATURES
+=========================================
+* User Authentication & Role Management:
+  - Secure JWT authentication with bcrypt password hashing.
+  - Role-based profiles: Patient, Doctor, and Admin.
+  
+* Smart OCR Prescription Pipeline:
+  - Image preprocessing using Sharp library (grayscale, normalize, sharpen).
+  - OCR text extraction (Google Cloud Vision API / Tesseract).
+  - OpenAI GPT-4o-mini structured JSON parsing of medications (dosage, frequency, duration) and doctor details.
+
+* AI-assisted E-Prescription Builder:
+  - Real-time prescription interaction checking against patient allergies and current medications during doctor note writing.
+  - Interactive alerts and warnings based on severity (High/Medium/Low).
+
+* AI Symptom Checker & Triage:
+  - Classifies patient symptoms into RED (Emergency), YELLOW (Medical Review), and GREEN (Self-care) urgency tiers.
+  - Recommends clinical specialties.
+
+* Vitals Dashboard:
+  - Trend visualization using Recharts for Blood Pressure (Systolic + Diastolic), Blood Sugar, SpO2, and Weight.
+
+* Family Health Management:
+  - Creation and management of dependent/family member profiles under a single parent account.
+
+* Patient Gamification:
+  - Streak tracking and milestone rewards (+50 points per day for vitals logging).
+  
+* Speech-to-Text (STT) Integration:
+  - Regional language support for voice-guided medical commands.
+
+=========================================
+2. TECHNOLOGY STACK USED
+=========================================
+* Frontend:
+  - React 18, Vite (Fast build tool)
+  - Tailwind CSS (Premium dashboard UI design)
+  - Recharts (Data visualization & vitals graphing)
+  - Axios (API Client)
+
+* Backend API:
+  - Node.js, Express.js
+  - MongoDB & Mongoose (NoSQL database and schema modeling)
+  - JWT (Token-based stateless authentication)
+  - Multer & Sharp (File uploads and image processing)
+  - Nodemailer (Gmail SMTP reminders)
+
+* Python Services:
+  - FastAPI (Fast Python microservice framework)
+  - OpenCV & Tesseract (Local OCR and image manipulation)
+  
+* AI & Third-Party APIs:
+  - OpenAI API (GPT-4o / GPT-4o-mini for structured analysis and chat)
+  - Google Cloud Vision API (Prescription OCR)
+  - Groq Vision AI API (Secondary OCR/Vision model)
+  - Sarvam/Bhashini (Indic Voice STT)
+
+=========================================
+3. ROADMAP: TO BE DONE IN THE NEAR FUTURE
+=========================================
+* Telemedicine & Video Consulting (High Priority):
+  - PeerJS / WebRTC video & audio consult sessions.
+  - Razorpay or Stripe payment gateway integration.
+  - Live doctor dashboards and consultation queues.
+
+* Smart Reminders & Alerts (High Priority):
+  - Twilio integration for SMS reminders.
+  - Missed dose notifications (Firebase Cloud Messaging).
+
+* Common Indian Diseases Guidance Module (High Priority):
+  - Symptom, diagnosis, next-step care, and follow-up paths for the top 30 common Indian diseases.
+
+* Lab Report Digitization (Medium Priority):
+  - Uploading lab results to parse blood levels and flag out-of-range values.
+
+* Emergency SOS & QR ID (Medium Priority):
+  - Offline Medical ID card with QR codes for paramedics.
+
+* Compliance & Hardening (Low Priority):
+  - Access audit logs for HIPAA/DPDP Act compliance.
+
+
+================================================================================
+FILE: PROJECT_SUMMARY.md
+================================================================================
+
+# 🎯 HealthEase - Project Summary
+
+## ✅ Project Completion Status: 100% (Local Development Optimized)
+
+### What Has Been Built
+
+A **production-ready, full-stack AI-powered healthcare ecosystem** with comprehensive telehealth, patient tracking, and clinical analytics components, fully optimized for standardized local development.
+
+---
+
+## 📦 Deliverables
+
+### ✅ Backend (Node.js/Express & Python FastAPI Services)
+- **Express REST API** with complete routes for Auth, Prescriptions, Wellness Vitals, Medicine Tracker, Telehealth Consultations, and Admin audits
+- **FastAPI AI OCR service** utilizing Groq LLM/Llama Vision API for extracting medicines, dosages, and duration from prescriptions
+- **MongoDB integration** via Mongoose models
+- **Real-time WebSockets** using Socket.io for patient queues, live doctor status, and consultation room handshakes
+- **Reminders engine** with SMTP email automation and node-cron schedulers
+
+### ✅ Frontend (React + Vite)
+- **Modern UI** built with Tailwind CSS, Framer Motion, and Recharts visualization
+- **Robust Client Services** including PeerJS client connection for video consultations
+- **Premium SaaS Features** including the AI Health Assistant, Branded PDF Clinical Reports Exporter, and system-wide Audit feeds
+
+---
+
+## 🎨 Key Features Implemented & Working
+
+### 1. Smart OCR Pipeline ✅
+- Google Cloud Vision / Groq Llama Vision OCR integration.
+- Automated extraction of medicine names, schedules, frequency, and doctor names.
+
+### 2. Telemedicine & Live Consultation Room ✅
+- Real-time video/audio calling using PeerJS and Socket.io.
+- Split-screen doctor/patient chat, vitals side-panels, and digital prescription builder.
+- Interactive queue management and custom doctor consultation notes creator.
+
+### 3. Patient Engagement & Wellness Trackers ✅
+- **Medicine Tracker**: Logs dose compliance (taken/skipped) with automatic inventory counts.
+- **Vitals Dashboard**: Chronological tracking and Recharts graphs for BP, blood sugar, SpO2, weight.
+- **Gamification**: Streak tracking and +50 points per day logging, unlocking milestones like the "7-Day Health Champion" badge.
+- **Symptom Checker**: Interactive symptom logging with triage color-coded urgency tiers (Red, Yellow, Green).
+
+### 4. Premium SaaS Features ✅
+- **Dr. AI Health Assistant**: Floating conversational AI helper aware of user medical history, allergies, and active medications.
+- **Export Engine**: Generates and downloads print-ready, high-fidelity PDF medical reports.
+- **Admin Dashboard**: System telemetry, audit trail feeds, and verified doctor listing management.
+
+### 5. Split-Screen User Authentication ✅
+- Role-based login and signup screens for Patients and Doctors.
+- Fully protected routes using JWT verification middleware.
+
+---
+
+## 🔧 Technology Stack
+
+| Category | Technologies |
+|----------|-------------|
+| **Backend API** | Node.js, Express.js, MongoDB, Mongoose, Socket.io |
+| **OCR Service** | Python, FastAPI, Groq Vision API, Uvicorn |
+| **Frontend UI** | React 18, Vite, Tailwind CSS, Framer Motion, Recharts |
+| **RTC Calling** | PeerJS WebRTC API, WebSocket handshakes |
+| **PDF Engine** | jsPDF, jsPDF-AutoTable |
+| **Auth** | JWT, bcryptjs |
+
+---
+
+## 🚀 Local Development Startup
+
+```bash
+# Clone and open project
+git clone https://github.com/Vardxn/Healthease.git
+cd Healthease
+
+# Install dependencies across all workspaces
+npm run install:all
+
+# Seed local database collections
+npm run seed
+
+# Start all local development servers (Vite + Express + Python OCR)
+npm run dev
+```
+
+- **Frontend Application**: http://localhost:3000
+- **Backend API Server**: http://localhost:5001
+- **Python OCR Service**: http://localhost:8000
+
+
+================================================================================
+FILE: QUICK_START.md
+================================================================================
+
+# ⚡ Quick Setup Guide - HealthEase
+
+## Fast Track Setup (5 minutes)
+
+### Step 1: Install Dependencies
+
+```bash
+# Install server dependencies
+cd health-ease/server
+npm install
+
+# Install client dependencies
+cd ../client
+npm install
+```
+
+### Step 2: Configure Environment
+
+```bash
+# In server directory, copy example env file
+cd ../server
+cp .env.example .env
+```
+
+Edit `server/.env` with your credentials:
+```env
+MONGO_URI=mongodb://localhost:27017/healthease
+JWT_SECRET=my_super_secret_key_12345
+OPENAI_API_KEY=sk-your-actual-openai-key
+GOOGLE_APPLICATION_CREDENTIALS=./config/google-vision-credentials.json
+```
+
+### Step 3: Setup Google Cloud Vision
+
+1. Visit: https://console.cloud.google.com/
+2. Create project → Enable "Cloud Vision API"
+3. Create Service Account → Download JSON
+4. Save JSON as: `server/config/google-vision-credentials.json`
+
+### Step 4: Start MongoDB
+
+```bash
+# macOS
+brew services start mongodb-community
+
+# Or use MongoDB Atlas (free cloud option)
+# Get connection string from: https://cloud.mongodb.com/
+```
+
+### Step 5: Run the Application
+
+**Terminal 1 (Backend):**
+```bash
+cd server
+npm run dev
+```
+✅ Server: http://localhost:5000
+
+**Terminal 2 (Frontend):**
+```bash
+cd client
+npm run dev
+```
+✅ Client: http://localhost:3000
+
+## 🧪 Test the App
+
+1. Open http://localhost:3000
+2. Click "Sign Up" → Create account
+3. Upload a prescription image
+4. Wait for AI to process (~10-15 seconds)
+5. View digitized prescription
+6. Chat with Dr. AI (bottom-right)
+
+## 🔑 Get API Keys
+
+### OpenAI API Key
+1. Visit: https://platform.openai.com/api-keys
+2. Sign up/Login
+3. Click "Create new secret key"
+4. Copy and paste into `.env`
+
+### Google Cloud Vision
+1. Go to: https://console.cloud.google.com/
+2. New Project → "HealthEase"
+3. Enable APIs → Search "Cloud Vision API" → Enable
+4. Credentials → Create Credentials → Service Account
+5. Download JSON → Save as `google-vision-credentials.json`
+
+## ⚠️ Common Issues
+
+**MongoDB not connecting?**
+```bash
+brew services list
+brew services restart mongodb-community
+```
+
+**Google Vision error?**
+- Check credentials path in `.env`
+- Verify API is enabled
+- Enable billing (free tier available)
+
+**OpenAI rate limit?**
+- Check account has credits
+- Verify API key is correct
+- Try different model: "gpt-3.5-turbo"
+
+## 📱 Default Test User
+
+For quick testing, you can register with:
+- Email: test@healthease.com
+- Password: password123
+- Name: Test User
+
+## 🚀 Ready to Build!
+
+Your HealthEase platform is now running! 
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000
+- API Health: http://localhost:5000/health
+
+Happy coding! 🎉
+
+
+================================================================================
+FILE: README.md
+================================================================================
+
+# HEALTHEASE — AI-Powered Healthcare Platform
+
+## Overview
+HEALTHEASE is an AI-powered healthcare platform that helps users digitize prescriptions, manage medications, and track treatment trends.
+It combines OCR, reminders, analytics, and assistant features into one workflow for patients.
+The platform is built as a full-stack system with React, Node.js, MongoDB, and a FastAPI AI service.
+
+## Tech Stack
+- Frontend: React + Vite + Tailwind CSS
+- Backend: Node.js + Express + MongoDB
+- AI Service: Python FastAPI + Groq Vision OCR (meta-llama/llama-4-scout-17b-16e-instruct)
+- Email: Gmail SMTP (Nodemailer)
+
+## Features
+- Prescription OCR upload (Groq Vision AI)
+- Medication management
+- Medication reminders via Gmail
+- Health Analytics Dashboard
+- PDF Export (prescriptions + analytics report)
+
+## Getting Started
 
 ### Prerequisites
-* Node.js 18+
-* Python 3.10+
-* MongoDB running locally (or Atlas)
-* Groq API key (free at console.groq.com)
-* Gmail App Password
+- Node.js 18+
+- Python 3.10+
+- MongoDB running locally
+- Groq API key (free at console.groq.com)
+- Gmail App Password
 
-### 🌍 MongoDB Setup
-**Local:** Start: `brew services start mongodb-community`. Stop: `brew services stop mongodb-community`.
-**Atlas:** Create free account ➞ New project "HealthEase" ➞ Free M0 cluster ➞ Security: Add user `healthease-admin` & Allow IP `0.0.0.0/0` ➞ Connect: Copy string, replace password, use as `MONGO_URI`.
+### Installation
+1. Clone repository
+```bash
+git clone <your-repo-url>
+cd health-ease
+```
+2. Install server dependencies
+```bash
+cd server
+npm install
+cd ..
+```
+3. Install client dependencies
+```bash
+cd client
+npm install
+cd ..
+```
+4. Install python dependencies
+```bash
+cd python-service
+python3 -m pip install -r requirements.txt
+cd ..
+```
+5. Copy environment files
+```bash
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+cp python-service/.env.example python-service/.env
+```
+6. Start all 3 services
+```bash
+npm run dev:all
+```
 
-### 💻 Installation & Startup Order
-*Always start in this exact order to ensure backend can connect to OCR before frontend connects to backend.*
+### MongoDB Atlas Setup
+1. Go to https://mongodb.com/atlas and create a free account
+2. Create a new project called "HealthEase"
+3. Create a free M0 cluster (choose any region closest to you)
+4. Under Security > Database Access:
+	Create a user with username: healthease-admin
+	Set a strong password and save it
+5. Under Security > Network Access:
+	Click "Add IP Address" → "Allow Access From Anywhere" (0.0.0.0/0)
+6. Under Deployment > Database:
+	Click "Connect" → "Drivers" → copy the connection string
+	It will look like:
+	mongodb+srv://healthease-admin:<password>@cluster0.xxxxx.mongodb.net/healthease?retryWrites=true&w=majority
+7. Replace <password> with your actual password
+8. Use this full string as your MONGO_URI environment variable
+	in both Railway services (Node + Python)
 
-**1. Python Service Setup (Port 8000) - FIRST**
+## Environment Variables
+
+| Service | Variable | Description |
+|---|---|---|
+| server | PORT | Node.js API port |
+| server | MONGO_URI | MongoDB connection string |
+| server | JWT_SECRET | JWT signing secret |
+| server | PYTHON_SERVICE_URL | Base URL for python service |
+| server | GMAIL_USER | Gmail address used for reminders |
+| server | GMAIL_APP_PASSWORD | Gmail app password for SMTP |
+| server | CLIENT_URL | Allowed frontend origin |
+| python-service | GROQ_API_KEY | Groq API key for OCR extraction |
+| python-service | MONGO_URI | MongoDB connection string |
+| python-service | DEBUG | Enables raw OCR debug prints when true |
+| python-service | PORT | FastAPI service port |
+| client | VITE_API_URL | Backend API base URL |
+| client | VITE_PYTHON_URL | Python service base URL |
+
+## Deployment
+
+### Vercel (Frontend)
+- Go to vercel.com → New Project → Import from GitHub → Vardxn/Healthease
+- Set Root Directory to: client
+- Framework Preset: Vite
+- Build Command: npm run build
+- Output Directory: dist
+- Add these environment variables on Vercel dashboard:
+	- VITE_API_URL = https://your-railway-node-url.up.railway.app
+	- VITE_PYTHON_URL = https://your-railway-python-url.up.railway.app
+- Click Deploy
+
+### Railway (Node Backend)
+- Go to railway.app → New Project → Deploy from GitHub → Vardxn/Healthease
+- Set Root Directory to: server
+- Add these environment variables in Railway dashboard:
+	- PORT = 5001
+	- MONGO_URI = your_atlas_connection_string
+	- JWT_SECRET = generate a random 32 char string
+	- PYTHON_SERVICE_URL = https://your-railway-python-url.up.railway.app
+	- GMAIL_USER = your_gmail@gmail.com
+	- GMAIL_APP_PASSWORD = your_gmail_app_password
+	- CLIENT_URL = https://your-vercel-url.vercel.app
+- Railway auto-detects Node.js and deploys
+
+### Railway (Python OCR Service)
+- Go to railway.app → same project → New Service → GitHub repo → Vardxn/Healthease
+- Set Root Directory to: python-service
+- Add these environment variables in Railway dashboard:
+	- PORT = 8000
+	- GROQ_API_KEY = your_groq_api_key
+	- MONGO_URI = your_atlas_connection_string
+	- DEBUG = false
+- Railway auto-detects Python and deploys
+
+## Project Structure
+
+```text
+health-ease/
+├── client/
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.js
+├── server/
+│   ├── controllers/
+│   ├── routes/
+│   ├── services/
+│   ├── models/
+│   ├── server.js
+│   └── package.json
+├── python-service/
+│   ├── analytics/
+│   ├── reminders/
+│   ├── main.py
+│   └── requirements.txt
+├── package.json
+└── README.md
+```
+
+## Development Progress
+
+- Latest sprint update: May 18, 2026 (Steps 2 and 3 completed)
+- Detailed engineering log and near-term roadmap: [PROGRESS.md](PROGRESS.md)
+
+### Sprint Highlights (May 18, 2026)
+
+- Step 2 AI features completed end-to-end:
+	- Symptom triage
+	- Drug conflict checks
+	- Dietary recommendations
+	- Mental health chatbot with crisis override
+- Step 3 wellness features completed end-to-end:
+	- Vitals logging and trend dashboards
+	- Family/dependent profile management
+	- Gamification and streak logic
+- Wellness route alignment finalized under /api/wellness.
+
+
+================================================================================
+FILE: SETUP_COMPLETE.txt
+================================================================================
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║                    🎉 HEALTHEASE SETUP COMPLETE! 🎉                        ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+✅ COMPLETED SETUP STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✅ Environment Variables Created
+   Location: /server/.env
+   - PORT=5000
+   - MongoDB URI configured for local
+   - JWT_SECRET generated
+
+2. ✅ MongoDB Installed & Running
+   Status: Started
+   URI: mongodb://localhost:27017/healthease
+   Check: brew services list
+
+3. ✅ Server Dependencies Installed
+   Packages: 266 packages installed
+   Location: /server/node_modules/
+   Time: ~24 seconds
+
+4. ✅ Client Dependencies Installed
+   Packages: 336 packages installed
+   Location: /client/node_modules/
+   Time: ~17 seconds
+
+5. ✅ Google Vision Placeholder Created
+   Location: /server/config/google-vision-credentials.json
+   ⚠️  Action Required: Replace with real credentials
+
+
+⚠️  REQUIRED: ADD YOUR API KEYS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before running the app, you need to add these API keys:
+
+1. OpenAI API Key
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   File: /server/.env
+   Line: OPENAI_API_KEY=sk-your-openai-api-key-here
+   
+   Get Key: https://platform.openai.com/api-keys
+   Steps:
+   - Sign up/login to OpenAI
+   - Go to API Keys
+   - Create new secret key
+   - Copy and paste into .env
+
+2. Google Cloud Vision Credentials
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   File: /server/config/google-vision-credentials.json
+   
+   Get Credentials: https://console.cloud.google.com/
+   Steps:
+   - Create new project (or select existing)
+   - Enable "Cloud Vision API"
+   - Create Service Account
+   - Download JSON credentials
+   - Replace the placeholder file
+
+
+🚀 TO RUN THE APPLICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TERMINAL 1 - Backend Server:
+────────────────────────────────────────────────────────────────────────
+cd /Users/vardxn/Developer/personal/health-ease/server
+npm run dev
+
+Expected Output:
+  🚀 Server running on port 5000
+  ✅ MongoDB Connected...
+
+
+TERMINAL 2 - Frontend Client:
+────────────────────────────────────────────────────────────────────────
+cd /Users/vardxn/Developer/personal/health-ease/client
+npm run dev
+
+Expected Output:
+  VITE v6.x.x ready in xxx ms
+  ➜ Local: http://localhost:3000
+
+
+🌐 ACCESS THE APPLICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend:  http://localhost:3000
+Backend:   http://localhost:5000
+API Health: http://localhost:5000/health
+
+
+🧪 TESTING WITHOUT API KEYS (Limited Functionality)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You can test these features WITHOUT API keys:
+
+✅ User Registration & Login
+✅ Profile Management
+✅ View Prescriptions List
+✅ UI/UX & Navigation
+
+❌ Will NOT work without API keys:
+❌ Prescription Upload (needs Google Vision + OpenAI)
+❌ AI Chatbot (needs OpenAI)
+
+
+📝 QUICK TEST STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Start both servers (Terminal 1 & 2)
+2. Open http://localhost:3000
+3. Click "Sign Up"
+4. Create account: test@healthease.com / password123
+5. Login with credentials
+6. Explore the dashboard
+7. Try profile management
+8. View empty prescriptions list
+
+Once you add API keys:
+9. Upload a prescription image
+10. Chat with Dr. AI assistant
+
+
+🔧 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MongoDB not connecting?
+→ Check: brew services list
+→ Restart: brew services restart mongodb/brew/mongodb-community
+
+Port already in use?
+→ Kill process: lsof -ti:5000 | xargs kill -9
+→ Or change PORT in .env
+
+Module not found?
+→ Reinstall: cd server && npm install
+→ Or: cd client && npm install
+
+
+📚 NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ⚠️  Add OpenAI API key to .env
+2. ⚠️  Add Google Vision credentials
+3. 🚀 Run the application
+4. 🧪 Test all features
+5. 🎨 Customize the UI
+6. 📊 Add your own data
+7. 🌐 Deploy to production
+
+
+💡 HELPFUL COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Check MongoDB
+mongosh
+
+# View database
+use healthease
+show collections
+db.users.find()
+
+# Stop MongoDB
+brew services stop mongodb/brew/mongodb-community
+
+# View logs
+tail -f server/logs/*.log
+
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║            🎊 Ready to build amazing healthcare solutions! 🎊             ║
+║                                                                            ║
+║                  Questions? Check the documentation:                       ║
+║                  - README.md                                               ║
+║                  - QUICK_START.md                                          ║
+║                  - DEVELOPMENT_GUIDE.md                                    ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+================================================================================
+FILE: SHOWCASE.md
+================================================================================
+
+# HealthEase — Local Setup & Showcase Guide
+
+Project Overview
+----------------
+
+HealthEase is an AI-powered healthcare platform that integrates a React frontend, a Node.js/Express API, and a Python OCR microservice to parse medical documents (prescriptions, reports) and extract structured health data.
+
+This document lists the basic steps to install dependencies, run the project locally (including via Docker), push changes to GitHub, and common tasks when showcasing the project to others.
+
+Prerequisites
+- Node.js (v16+ recommended) and `npm` installed
+- Python 3.10+ and `python3 -m venv` available (for the OCR service)
+- MongoDB or other DB if required by the server (see `server/.env.example`)
+- Git configured with your GitHub account
+
+Install dependencies
+1. From the project root, install server and client dependencies:
+
+```bash
+cd health-ease
+npm run install:all
+```
+
+2. Create Python virtual environment and install Python deps:
+
 ```bash
 cd python-service
 python3 -m venv venv
 source venv/bin/activate
-python3 -m pip install -r requirements.txt
-# Ensure Tesseract is installed: brew install tesseract
+pip install -r requirements.txt
+```
+
+Environment variables
+- Copy example env files and update secrets (API keys, DB URIs):
+
+```bash
+cp server/.env.example server/.env
+cp python-service/.env.example python-service/.env || true
+cp client/.env.example client/.env || true
+# Edit the .env files to add DB connections, OpenAI keys, SMTP, Razorpay keys, etc.
+```
+
+
+Run the app locally (all services)
+
+Option A — Docker (recommended for demos)
+
+1. From the project root, build and start all services with Docker Compose:
+
+```bash
+cd health-ease
+docker-compose up --build
+```
+
+2. Open the app in your browser: http://localhost:3000/
+
+Quick Start Demo (Docker)
+
+1. Run `docker-compose up`.
+2. Access the dashboard at `http://localhost:3000`.
+3. Upload a medical document (PDF/PNG) to the OCR module.
+4. View the parsed health metrics in the results tab.
+
+Option B — Local (no Docker)
+
+The project includes a launcher script that starts the Python OCR, Node API, and Vite frontend and waits for health checks.
+
+```bash
+cd health-ease
+bash scripts/start-all.sh
+```
+
+If you prefer to run parts individually:
+
+```bash
+# API
+cd health-ease/server
+npm run dev
+
+# Frontend
+cd health-ease/client
+npm run dev
+
+# Python OCR
+cd health-ease/python-service
+./start_service.sh
+```
+
+Access URLs
+- Frontend: http://localhost:3000/
+- API health: http://localhost:5001/health (or proxied at http://localhost:3000/api/health)
+- Python OCR: http://localhost:8000/health
+
+Build for production (frontend)
+
+```bash
+cd health-ease/client
+npm run build
+```
+
+Git / GitHub basics for showcasing
+1. Create a remote repository on GitHub and add it as `origin` if not already set.
+
+```bash
+# from project root
+git remote add origin git@github.com:YOUR_USERNAME/health-ease.git
+git branch -M main
+git push -u origin main
+```
+
+2. Common workflow when making changes:
+
+```bash
+git status
+git add -A
+git commit -m "feat: short description"
+git pull --rebase origin main   # sync remote first
+git push origin main
+```
+
+Showcase checklist (what to demonstrate)
+- Start all services with `bash scripts/start-all.sh` and point the interviewer to the frontend URL.
+- Explain architecture: frontend (Vite + React), backend (Express + MongoDB), Python OCR microservice.
+- Show a feature end-to-end (e.g., upload prescription -> OCR -> view parsed data).
+- Show API health endpoints.
+- Tail logs to demonstrate live behavior:
+
+```bash
+# In separate terminals
+# Server logs
+cd health-ease/server
+# If using nodemon (dev):
+npm run dev
+
+# Python service logs (venv activated)
+cd health-ease/python-service
+venv/bin/python -m uvicorn main:app --reload
+
+# Frontend logs
+cd health-ease/client
+npm run dev
+```
+
+Troubleshooting & tips
+- Ports in use: if a port (3000, 5001, 8000) is occupied, stop the occupying process or change ports in `scripts/start-all.sh` and `.env`.
+- Virtual environment: ensure `venv` exists under `python-service/venv`. If not, create it and install requirements.
+- Missing env vars: many features (OpenAI, email, payments) require keys; either set them or mock those features when demonstrating.
+- Rebuilding client: run `npm run build` and serve `client/dist` if you need a static preview.
+
+Security note
+- Do not commit secrets to Git. Add any real keys to your machine environment or use a secrets manager. Add `.env` to `.gitignore` (already present in repo).
+
+Further resources
+- Project docs: [README.md](README.md) and [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) in this repo.
+
+That's it — this guide should get you ready to run and demo `health-ease` locally. Good luck!
+
+
+================================================================================
+FILE: STAKEHOLDER_OVERVIEW.md
+================================================================================
+
+# HealthEase Stakeholder Overview (One-Page)
+
+## 1. Project in One Line
+HealthEase is an AI-enabled healthcare platform that helps users digitize prescription images, store health records securely, and get quick guidance from a medical assistant chatbot.
+
+## 2. Why This Project Matters
+- Many patients keep paper prescriptions that are easy to lose and hard to read.
+- HealthEase converts those papers into structured digital records.
+- Users can view medicines, dosage, and history in one place.
+- The chatbot helps users understand basic health and medicine information faster.
+
+## 3. Core User Value
+- Faster access to health information.
+- Better medication tracking.
+- Safer record keeping with login-protected access.
+- Easy-to-use interface for daily healthcare management.
+
+## 4. Key Features
+- User account registration and secure login.
+- Prescription image upload and OCR-based text extraction.
+- Structured medicine details (name, dosage, frequency, duration).
+- Profile management (age, blood group, conditions, allergies).
+- AI chat assistant for health-related Q&A.
+- Voice input support for conversational healthcare assistance.
+
+## 5. Product Experience (Screen Layout Summary)
+- Dashboard: welcome hero, quick actions, feature cards.
+- Upload screen: drag-drop image upload, processing progress, extracted result review.
+- Prescription list: card-based history with verification and delete options.
+- Profile screen: editable health profile form.
+- Floating assistant: always-available chat/voice/prescription helper.
+
+## 6. Technology Snapshot (High Level)
+- Frontend: React + Tailwind CSS.
+- Backend: Node.js + Express.
+- Database: MongoDB.
+- AI and OCR: OpenAI + Python FastAPI + Tesseract.
+- Security: JWT-based authentication and protected APIs.
+
+## 7. Security and Privacy Approach
+- Passwords are hashed before storage.
+- Auth token required for private data access.
+- File upload validation for image/audio type and size.
+- Sensitive credentials handled through environment variables.
+
+## 8. Current Status
+- End-to-end flows are implemented across frontend and backend.
+- Core APIs for auth, prescriptions, OCR, chat, and voice are integrated.
+- Documentation and deploy-ready configuration are present.
+
+## 9. Business and Impact Potential
+- Better continuity of care through organized digital records.
+- Reduced friction for medicine recall and follow-up.
+- Expandable for family health management, reminders, and clinician workflows.
+
+## 10. Suggested Next Milestones
+- Add reminders and notification workflows.
+- Introduce doctor/clinic collaboration workflows.
+- Improve audit logs and compliance hardening.
+- Add multilingual UI and accessibility enhancements.
+
+
+================================================================================
+FILE: START_HERE.txt
+================================================================================
+
+================================================================================
+                    HealthEase - Daily Startup Guide
+================================================================================
+
+QUICK START - Open 3 Terminal Windows
+
+================================================================================
+Terminal 1 - Python OCR Service (Port 8000)
+================================================================================
+
+cd python-service
+source venv/bin/activate
 python3 -m uvicorn main:app --reload --port 8000
-```
-*Health Check:* `curl http://localhost:8000/health`
 
-**2. Node Backend Setup (Port 5001) - SECOND**
-```bash
+Expected Output: "Application startup complete. Uvicorn running on http://0.0.0.0:8000"
+
+Health Check:
+  curl http://localhost:8000/health
+  Expected: {"status":"ok","service":"python-tesseract-ocr"}
+
+================================================================================
+Terminal 2 - Node Backend (Port 5001)
+================================================================================
+
 cd server
-npm install
 npm run dev
-```
-*Health Check:* `curl http://localhost:5001/`
 
-**3. React Frontend Setup (Port 3000) - THIRD**
-```bash
+Expected Output: "🚀 Server running on port 5001" & "✅ MongoDB Connected"
+
+Health Check:
+  curl http://localhost:5001/
+  Expected: Response from backend (may vary by endpoint)
+
+================================================================================
+Terminal 3 - React Frontend (Port 3000)
+================================================================================
+
 cd client
-npm install
 npm run dev
+
+Expected Output: "VITE v6.x.x ready in XXX ms" & "➜ Local: http://localhost:3000/"
+
+Health Check:
+  Visit http://localhost:3000 in browser
+  Expected: HealthEase login page loads
+
+================================================================================
+SERVICE PORTS REFERENCE
+================================================================================
+
+Python OCR Service:     http://localhost:8000
+Node Backend API:       http://localhost:5001
+React Frontend:         http://localhost:3000
+
+================================================================================
+IMPORTANT - BEFORE FIRST START
+================================================================================
+
+1. Python Service Setup (One-time):
+   cd python-service
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   Tesseract: brew install tesseract
+
+2. Backend Setup (One-time):
+   cd server
+   npm install
+   
+3. Frontend Setup (One-time):
+   cd client
+   npm install
+
+================================================================================
+ENVIRONMENT FILES REQUIRED
+================================================================================
+
+✓ /server/.env
+  Required variables:
+    PORT=5001
+    MONGO_URI=mongodb://localhost:27017/healthease
+    JWT_SECRET=your_super_secret_jwt_key_change_this
+    OPENAI_API_KEY=sk-your-openai-api-key-here
+    PYTHON_OCR_URL=http://localhost:8000/ocr
+
+✓ /python-service/.env (optional, for future use)
+
+Ensure both .env files exist before starting services!
+
+================================================================================
+STARTUP ORDER IS CRITICAL
+================================================================================
+
+Always start in this order:
+  1. Python OCR Service (Port 8000) - FIRST
+  2. Node Backend (Port 5001) - SECOND
+  3. React Frontend (Port 3000) - THIRD
+
+This ensures the backend can connect to the OCR service before frontend
+tries to connect to the backend.
+
+================================================================================
+QUICK TROUBLESHOOTING
+================================================================================
+
+Python Service fails to start:
+  - Ensure Tesseract is installed: brew install tesseract
+  - Verify venv is activated: source venv/bin/activate
+  - Check Python 3.10+: python3 --version
+
+Backend connection errors:
+  - Confirm MongoDB is running: brew services list
+  - Check .env file exists and PORT=5001 is set
+  - Verify PYTHON_OCR_URL points to http://localhost:8000/ocr
+
+Frontend shows blank page:
+  - Clear browser cache: Ctrl+Shift+Delete (or Cmd+Shift+Delete on Mac)
+  - Check backend is running at http://localhost:5001
+  - Open browser console for error messages (F12)
+
+================================================================================
+MONGODB LOCAL SETUP (if not already running)
+================================================================================
+
+Start MongoDB:
+  brew services start mongodb-community
+
+Stop MongoDB:
+  brew services stop mongodb-community
+
+Check status:
+  brew services list
+
+Reset database (caution - deletes all data):
+  mongosh
+  > use healthease
+  > db.dropDatabase()
+
+================================================================================
+TESTING THE FULL STACK
+================================================================================
+
+1. Go to http://localhost:3000
+2. Register a new account
+3. Login with your credentials
+4. Upload a handwritten prescription image
+5. Wait for AI processing (OCR + parsing)
+6. View digitized prescription in list
+7. Chat with Dr. AI using the chatbot
+
+================================================================================
+DOCUMENTATION FILES
+================================================================================
+
+High-level overview:       STAKEHOLDER_OVERVIEW.md
+Technical architecture:    TECHNICAL_ARCHITECTURE.md
+API documentation:         API_DOCUMENTATION.md
+File structure guide:       FILE_STRUCTURE.md
+Development notes:          DEVELOPMENT_GUIDE.md
+Project summary:            PROJECT_SUMMARY.md
+
+================================================================================
+
+
+================================================================================
+FILE: TECHNICAL_ARCHITECTURE.md
+================================================================================
+
+# HealthEase Technical Architecture
+
+## 1. Objective
+This document explains the technical architecture of HealthEase for engineering reviews, interviews, and technical presentations.
+
+## 2. System Overview
+HealthEase is a full-stack web platform with:
+- React frontend for user interaction.
+- Express backend API for auth, prescriptions, OCR, and chat.
+- MongoDB for user and prescription persistence.
+- Python FastAPI OCR microservice with OpenCV preprocessing and Tesseract extraction.
+- OpenAI integrations for prescription structuring and assistant responses.
+
+## 3. High-Level Architecture
+```mermaid
+flowchart LR
+  U[User Browser] --> FE[React + Vite Frontend]
+  FE --> API[Node.js + Express API]
+  API --> DB[(MongoDB)]
+  API --> PYOCR[Python FastAPI OCR Service]
+  PYOCR --> TESS[Tesseract + OpenCV]
+  API --> OPENAI[OpenAI API]
+  API --> STT[Sarvam or Bhashini STT]
 ```
-*Health Check:* Visit `http://localhost:3000`
 
-*(Alternatively, from the root directory: `npm run install:all` and `npm run dev:all` / `npm run dev` with concurrently).*
+## 4. Deployment Topology
+- Frontend is built with Vite and served as static assets.
+- Backend is an Express app that can run as:
+  - Local Node server.
+  - Vercel serverless function via server/api/index.js.
+- Vercel routing sends /api/* traffic to backend and everything else to frontend index route.
+
+## 5. Backend Module Architecture
+```mermaid
+flowchart TD
+  S[server.js] --> R1[routes/authRoutes.js]
+  S --> R2[routes/prescriptionRoutes.js]
+  S --> R3[routes/chatRoutes.js]
+  S --> R4[routes/voiceChatRoutes.js]
+  S --> R5[routes/ocrRoutes.js]
+
+  R1 --> C1[controllers/authController.js]
+  R2 --> C2[controllers/prescriptionController.js]
+  R3 --> C3[controllers/chatController.js]
+  R4 --> C4[controllers/voiceChatController.js]
+  R5 --> C5[controllers/ocrController.js]
+
+  C2 --> SV1[services/ocrService.js]
+  SV1 --> PY[python-service/main.py /ocr]
+  C3 --> SV2[services/chatService.js]
+  C4 --> SV3[services/indicSttService.js]
+
+  C1 --> M1[models/User.js]
+  C2 --> M2[models/Prescription.js]
+  C3 --> M1
+  C3 --> M2
+
+  R1 --> MW1[middleware/auth.js]
+  R2 --> MW1
+  R2 --> MW2[middleware/upload.js]
+  R4 --> MW1
+  R4 --> MW3[middleware/uploadAudio.js]
+```
+
+## 6. Frontend Composition
+- App shell: router, navbar, page container, chatbot widget.
+- Pages:
+  - Dashboard
+  - Login
+  - Register
+  - Upload Prescription
+  - Prescription List
+  - Profile
+- Cross-cutting state: AuthContext (token + user profile + auth actions).
+- API layer: Axios instance with interceptor for Authorization bearer token.
+
+## 7. API Surface
+### Auth
+- POST /api/auth/register
+- POST /api/auth/login
+- GET /api/auth/me (private)
+- PUT /api/auth/profile (private)
+
+### Prescriptions
+- POST /api/prescriptions/upload (private, multipart image)
+- GET /api/prescriptions (private)
+- GET /api/prescriptions/:id (private)
+- PUT /api/prescriptions/:id (private)
+- DELETE /api/prescriptions/:id (private)
+
+### AI Chat
+- POST /api/chat/ask (private)
+- GET /api/chat/context (private)
+
+### Voice Chat
+- POST /api/voice-chat (private, multipart audio)
+
+### OCR (public utility)
+- POST /api/ocr/handwriting (multipart image)
+
+### Health
+- GET /health
+- GET /api/health
+
+## 8. Data Model
+### User
+- name, email, passwordHash
+- role (patient, doctor, admin)
+- profile:
+  - age
+  - bloodGroup
+  - chronicConditions[]
+  - allergies[]
+
+### Prescription
+- patientId (ref User)
+- imageUrl
+- uploadDate
+- medications[]:
+  - name
+  - dosage
+  - frequency
+  - duration
+- doctorName
+- ocrRawText
+- isVerified
+- notes
+
+## 9. Core Request Flows
+### 9.1 Auth Flow
+```mermaid
+sequenceDiagram
+  participant UI as Frontend
+  participant API as Auth API
+  participant DB as MongoDB
+
+  UI->>API: POST /api/auth/login
+  API->>DB: Find user by email
+  API->>API: Compare bcrypt hash
+  API-->>UI: JWT + user payload
+  UI->>UI: Store token and set auth state
+```
+
+### 9.2 Prescription Upload + OCR Flow
+```mermaid
+sequenceDiagram
+  participant UI as Frontend
+  participant API as Prescription API
+  participant OCR as OCR Service (Node)
+  participant PY as FastAPI OCR Service
+  participant T as Tesseract
+  participant O as OpenAI
+  participant DB as MongoDB
+
+  UI->>API: POST /api/prescriptions/upload (image)
+  API->>OCR: digitizePrescription(imageBuffer)
+  OCR->>PY: POST /ocr (multipart image)
+  PY->>PY: OpenCV preprocessing
+  PY->>T: OCR text extraction
+  PY-->>OCR: text
+  OCR->>O: Structured medicine parsing
+  OCR-->>API: rawText + medications + metadata
+  API->>DB: Save prescription document
+  API-->>UI: Success + extracted data
+```
+
+### 9.3 Chat and Voice Flow
+```mermaid
+sequenceDiagram
+  participant UI as Frontend
+  participant API as Chat/Voice API
+  participant STT as Indic STT
+  participant CS as Chat Service
+  participant O as OpenAI
+
+  UI->>API: POST /api/voice-chat (audio)
+  API->>STT: transcribeIndicAudio
+  STT-->>API: transcript
+  API->>O: chat completion with medical prompt
+  O-->>API: assistant reply
+  API-->>UI: transcript + reply
+
+  UI->>API: POST /api/chat/ask (text)
+  API->>CS: processMessage
+  CS->>O: contextual response generation
+  O-->>CS: reply
+  CS-->>API: reply
+  API-->>UI: assistant text
+```
+
+## 10. Security and Middleware Design
+- JWT auth middleware validates bearer token and injects req.user.
+- Upload middleware validates media MIME and file size constraints.
+- Error handling maps upload validation errors to clear API messages.
+- Secrets are sourced from environment variables, not hardcoded in logic.
+
+## 11. Reliability and Fallback Strategy
+- Node OCR service calls Python OCR over HTTP with timeout handling.
+- OCR service supports demo and fallback modes if Python OCR or OpenAI output is unavailable.
+- Chat service also supports demo response mode when OpenAI key is absent.
+- Health endpoints provide quick operational checks.
+
+## 12. Key Engineering Talking Points (Interview-Friendly)
+- Clear separation of concerns: routes, controllers, services, models, middleware.
+- Context-aware assistant design using user profile and recent prescriptions.
+- Multi-modal assistant support: text + voice + prescription image pathways.
+- Progressive resilience with fallback logic for external API dependency failures.
+- Scalable extension points for reminders, role-based workflows, and analytics.
+
+## 13. Known Improvement Opportunities
+- Add request validation library (Joi/Zod/express-validator) for strict payload contracts.
+- Add structured logging and distributed trace IDs.
+- Add automated tests (unit + integration + API contract tests).
+- Move image storage from placeholder URL to durable object storage (S3/Cloudinary).
+- Introduce role-based authorization enforcement beyond basic role field presence.
+
+
+================================================================================
+FILE: future things to be completed.txt
+================================================================================
+
+# HealthEase - Future Things To Be Completed (Roadmap Todo)
+
+Use this file as the active checklist for pending work.
+
+Update rule:
+- When a feature is completed, add it to final summary of the project.txt.
+- Then remove that completed item from this file.
+- Keep this file inside project-summary-docs.
+
+Recommended build order:
+- Start with Medicine Tracker -> Vitals Dashboard -> Lab Reports -> Symptom Checker -> then scale to Doctor Portal and Telemedicine.
 
 ---
 
-## PART 5: DEVELOPMENT & DEBUGGING GUIDE
-*Tips for developing, testing, and customizing the application.*
+## High Priority (Core Healthcare Value)
 
-### 🐛 Debugging Tips
-* **Backend:** View MongoDB data using `mongosh`, `use healthease`, `db.users.find()`. Test auth via cURL POST to `/api/auth/register` and `/login`.
-* **Frontend:** Clear browser data (`localStorage.clear()`, `location.reload()`). Check Network tab (XHR/Fetch). Use React DevTools.
-* **Troubleshooting:**
-    * *Python Service fails:* Check Tesseract install, verify venv is activated, check Python version.
-    * *Backend connection errors:* Confirm MongoDB is running, check `.env` file, verify `PYTHON_OCR_URL`.
-    * *Port in use:* `lsof -ti:5000 | xargs kill -9` or change port.
-    * *Google Vision Error:* Check `$GOOGLE_APPLICATION_CREDENTIALS` path.
-    * *OpenAI Rate Limit:* Temporarily change `model: "gpt-4o"` to `"gpt-3.5-turbo"` in `server/services/ocrService.js`.
-    * *CORS Error:* Update `server/server.js` with `app.use(cors({ origin: 'http://localhost:3000', credentials: true }));`
+- [x] CORE Doctor Consultation Platform (80% Complete - BACKEND ENDPOINTS PENDING)
+	- [x] Enable doctor consultation via WebRTC video call, audio call, and secure text chat (Socket.io + PeerJS)
+	- [x] Add Razorpay payment integration with transparent fee display before booking
+	- [x] Maintain unified doctor directory with search, filters, and online status
+	- [x] Doctor authentication and dashboard with consultation queue
+	- [x] Store consultation history with diagnosis, notes, prescriptions, follow-ups
+	- [x] Create comprehensive doctor notes form with medicines, tests, follow-up tracking
+	- [x] Socket.io real-time events for consultation notifications
+	- [ ] CRITICAL: Backend endpoints still pending (NEXT PRIORITY):
+		- [x] GET /api/consultations/my (fetch patient's consultation history)
+		- [x] GET /api/consultations/queue/:doctorId (fetch doctor's queue)
+		- [x] POST /api/consultations (create consultation after payment success)
 
-### 🎨 UI Customization
-* **Change Color Theme:** Edit `client/tailwind.config.js` (`colors: { primary: { 600: '#1e40af' } }`).
-* **Customize Chatbot Position:** Edit `client/src/components/AIChatbot.jsx` (change `className="fixed bottom-5 right-5 z-50"` to `bottom-5 left-5`).
+- [ ] Common Diseases Clinical Guidance Module
+	- [ ] Curate top 30 most common diseases in the country
+	- [ ] For each disease, add identification guidance (symptoms and risk indicators)
+	- [ ] For each disease, define recommended diagnostic tests after initial identification
+	- [ ] Add immediate next-step care guidance (home care, doctor visit, emergency triggers)
+	- [ ] Add follow-up workflow (when to retest, specialist referral criteria)
+	- [ ] Add data validation review with medical references before publishing guidance
 
-### 🧪 Testing Workflow
-1.  **Auth:** Register, login, check JWT in localStorage, access protected route.
-2.  **Upload:** Use sample image, wait for processing, verify extracted meds, test verify/delete.
-3.  **Chatbot:** Ask medical question, check history context, test continuity, verify error handling.
+- [ ] Appointment and Doctor Management
+	- [ ] Book appointments with doctors (calendar integration)
+	- [ ] Doctor profile pages with specialization, ratings, availability
+	- [ ] Video consultation via WebRTC or Twilio
+	- [ ] Appointment reminders via SMS/email/push notifications
 
-### ⚡ Performance & Optimization
-* **Image Optimization:** In `server/middleware/upload.js`, adjust `limits: { fileSize: 5 * 1024 * 1024 }` (5MB).
-* **DB Indexing:** `UserSchema.index({ email: 1 });`, `PrescriptionSchema.index({ patientId: 1, uploadDate: -1 });`
-* **Bundle Size:** `cd client`, `npm run build`, `npx vite-bundle-analyzer`.
+- [ ] Medicine Tracker and Smart Reminders
+	- [ ] Daily pill tracker with check-off system
+	- [ ] Missed dose alerts via push notifications
+	- [ ] Refill reminders based on dosage duration
+	- [ ] Drug interaction checker (OpenFDA API)
 
-### 📚 Learning Resources & VS Code Extensions
-* **Extensions:** ES7+ React/Redux snippets, Prettier, ESLint, Tailwind CSS IntelliSense, MongoDB for VS Code, Thunder Client, GitLens.
-* **Resources:** MongoDB University, Mongoose/React/OpenAI/Google Cloud Vision API Docs, Node.js Best Practices.
+- [ ] Health Vitals Dashboard
+	- [ ] Log vitals: BP, sugar, weight, SpO2, heart rate
+	- [ ] Historical graphs with trend analysis (Chart.js / Recharts)
+	- [ ] Abnormality detection with alerts (for example, BP > 140)
+	- [ ] Export vitals as PDF report for doctor visits
+
+- [ ] Emergency SOS and Medical ID
+	- [ ] One-tap SOS button calls emergency contact and shares live location
+	- [ ] Offline Medical ID card (blood group, allergies, conditions, emergency contacts)
+	- [ ] QR code on profile for quick scan by paramedics
+
+- [ ] Family Health Management
+	- [ ] Add family members under one account (parent/child/spouse)
+	- [ ] Separate health profiles per member
+	- [ ] Unified family dashboard for caregivers
 
 ---
 
-## PART 6: ENVIRONMENT VARIABLES & DEPLOYMENT
-*Configuration details for moving to production.*
+## Medium Priority (Engagement and Depth)
 
-### 🔐 Environment Variables
-**Server (`server/.env`):**
-* `PORT=5001`
-* `MONGO_URI` = MongoDB connection string
-* `JWT_SECRET` = Random 32 char string
-* `OPENAI_API_KEY` = OpenAI Key
-* `GOOGLE_APPLICATION_CREDENTIALS` = path/to/credentials.json
-* `PYTHON_SERVICE_URL` / `PYTHON_OCR_URL` = `http://localhost:8000` (or Railway URL)
-* `GMAIL_USER` = your_gmail@gmail.com
-* `GMAIL_APP_PASSWORD` = your_gmail_app_password
-* `CLIENT_URL` = Allowed frontend origin
-* `NODE_ENV=production` (for deployment)
+- [ ] Lab Report Digitization
+	- [ ] Upload blood test or lab reports (PDF or image)
+	- [ ] OCR plus AI parsing of test values (Hemoglobin, HbA1c, etc.)
+	- [ ] Flag out-of-range values with reference ranges
+	- [ ] Track lab values over time with graphs
 
-**Python Service (`python-service/.env`):**
-* `PORT=8000`
-* `GROQ_API_KEY` = Groq API Key
-* `MONGO_URI` = MongoDB string
-* `DEBUG` = true/false (enables raw OCR debug prints)
+- [ ] Symptom Checker
+	- [ ] Input symptoms and AI suggests probable conditions
+	- [ ] Urgency rating: Self-care / See a doctor / Emergency
+	- [ ] Powered by a medical LLM prompt or Infermedica API
 
-**Client (`client/.env`):**
-* `VITE_API_URL` = Backend API base URL
-* `VITE_PYTHON_URL` = Python service base URL
+- [ ] Health Insurance Wallet
+	- [ ] Store insurance card details and policy documents
+	- [ ] Claim tracking and history
+	- [ ] Hospital network search by insurer
 
-### 🚀 Deployment Guide
-**1. Vercel (Frontend Client)**
-* Import from GitHub. Root Directory: `client`.
-* Framework: Vite. Build: `npm run build`. Output: `dist`.
-* Add Env Vars: `VITE_API_URL`, `VITE_PYTHON_URL`. Deploy.
+- [ ] Diet and Nutrition Tracker
+	- [ ] Log meals with calorie and macro info (Nutritionix API)
+	- [ ] Condition-specific diet plans (diabetic, hypertensive, etc.)
+	- [ ] Integration with prescriptions to flag food-drug interactions
 
-**2. Railway (Node Backend Server)**
-* Deploy from GitHub. Root Directory: `server`.
-* Add Env Vars: `PORT`, `MONGO_URI`, `JWT_SECRET`, `PYTHON_SERVICE_URL`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `CLIENT_URL`.
-* Railway auto-detects Node.js.
+- [ ] Mental Health Module
+	- [ ] Daily mood tracker
+	- [ ] Guided breathing exercises and meditation timers
+	- [ ] Stress/anxiety self-assessment (PHQ-9, GAD-7 scales)
+	- [ ] Anonymous journaling with AI sentiment feedback
 
-**3. Railway (Python OCR Service)**
-* New Service ➞ GitHub repo. Root Directory: `python-service`.
-* Add Env Vars: `PORT`, `GROQ_API_KEY`, `MONGO_URI`, `DEBUG`.
-* Railway auto-detects Python.
+- [ ] Multilingual and Accessibility Support
+	- [ ] UI in Hindi, Urdu, Bengali, Tamil, etc. (i18next)
+	- [ ] Voice interface in regional languages (Bhashini/Sarvam integration)
+	- [ ] Screen reader compatibility (ARIA labels)
+	- [ ] High-contrast and font-size settings
 
-### 🔒 Security Deployment Checklist
-* [ ] `JWT_SECRET` is strong and unique
-* [ ] Passwords are hashed with bcrypt
-* [ ] API keys are in `.env`, not committed to Git
-* [ ] File upload size limits and type validation enabled
-* [ ] CORS configured for specific origins
-* [ ] Input validation on all endpoints
-* [ ] Rate limiting implemented (for production).  This is the content for my final file. I want you to combine. Make a file named final summary of the project and put it in the folder and delete rest of the project files that were made earlier. Make a text document for it.
+- [ ] Health News and Education Feed
+	- [ ] Curated health articles by user conditions/profile
+	- [ ] Medication info cards (side effects, usage tips)
+	- [ ] Weekly health tips from AI based on user data
+
+---
+
+## Low Priority (Premium and Future Growth)
+
+- [ ] Doctor/Clinician Portal
+	- [ ] Separate doctor login with patient management dashboard
+	- [ ] Doctors can verify/update prescriptions digitally
+	- [ ] Patient history visible only to assigned doctors
+	- [ ] E-prescription generation and digital signature
+
+- [ ] Wearable and IoT Integration
+	- [ ] Sync with Apple Health / Google Fit / Fitbit
+	- [ ] Auto-import step count, sleep data, heart rate
+	- [ ] Smartwatch alerts for medicine reminders
+
+- [ ] Telemedicine Marketplace
+	- [ ] Browse and book verified doctors by specialty
+	- [ ] Secure in-app messaging with doctors
+	- [ ] Payment gateway (Razorpay / Stripe) for consultations
+	- [ ] Prescription issuance post-consultation
+
+- [ ] Gamification and Health Score
+	- [ ] Personal Health Score (0-100) based on vitals, adherence, activity
+	- [ ] Streak rewards for logging vitals consistently
+	- [ ] Badges and milestones for health goals
+
+- [ ] Audit Logs and Compliance
+	- [ ] Full activity log (who accessed what, when)
+	- [ ] HIPAA/DPDP Act compliance hardening
+	- [ ] Data export (right to portability)
+	- [ ] Account deletion with data purge
+
+- [ ] Admin and Analytics Panel
+	- [ ] Platform usage metrics
+	- [ ] User growth, prescription uploads, chatbot usage
+	- [ ] Flagged/abnormal health reports review
+	- [ ] Moderation tools for doctor verification
+
+---
+
+## UX/UI Improvements (Cross-Cutting)
+
+- [ ] Onboarding flow: guided 3-step setup after registration (profile -> add family -> upload first prescription)
+- [ ] Dark/Light mode toggle
+- [ ] Progressive Web App (PWA): installable on mobile, offline support
+- [ ] Skeleton loaders instead of spinners for perceived speed
+- [ ] Drag-and-drop prescription upload with preview before submit
+- [ ] In-app notifications center: all alerts in one place
+- [ ] Search everything: global search bar across prescriptions, medicines, reports
+- [ ] Data visualization: unified health timeline for uploads, vitals, appointments
+
+---
+
+## Third-Party Integrations Worth Adding
+
+- [ ] Razorpay / Stripe (payments for consultations)
+- [ ] Twilio (SMS reminders, video calls)
+- [ ] Firebase Cloud Messaging (push notifications)
+- [ ] OpenFDA API (drug interaction and recall data)
+- [ ] Infermedica API (symptom checker engine)
+- [ ] Apple Health / Google Fit (wearable data sync)
+- [ ] Cloudinary / AWS S3 (scalable image/file storage)
+- [ ] Sentry (error monitoring)
+- [ ] PostHog (product analytics)
+
+---
+
+# HealthEase — Feature Expansion Roadmap (Merged Addition)
+
+Here's a comprehensive breakdown of all features that can be added, prioritized by impact and feasibility.
+
+---
+
+## 🔴 HIGH PRIORITY (Core Healthcare Value)
+
+**1. Appointment & Doctor Management**
+- Book appointments with doctors (calendar integration)
+- Doctor profile pages with specialization, ratings, availability
+- Video consultation via WebRTC or Twilio
+- Appointment reminders via SMS/email/push notifications
+
+**2. Medicine Tracker & Smart Reminders**
+- Daily pill tracker with check-off system
+- Missed dose alerts via push notifications
+- Refill reminders based on dosage duration
+- Drug interaction checker (OpenFDA API)
+
+**3. Health Vitals Dashboard**
+- Log vitals: BP, sugar, weight, SpO2, heart rate
+- Historical graphs with trend analysis (Chart.js / Recharts)
+- Abnormality detection with alerts (e.g., BP > 140)
+- Export vitals as PDF report for doctor visits
+
+**4. Emergency SOS & Medical ID**
+- One-tap SOS button → calls emergency contact + shares live location
+- Offline Medical ID card (blood group, allergies, conditions, emergency contacts)
+- QR code on profile for quick scan by paramedics
+
+**5. Family Health Management**
+- Add family members under one account (parent/child/spouse)
+- Separate health profiles per member
+- Unified family dashboard for caregivers
+
+---
+
+## 🟡 MEDIUM PRIORITY (Engagement & Depth)
+
+**6. Lab Report Digitization**
+- Upload blood test / lab reports (PDF or image)
+- OCR + AI parsing of test values (Hemoglobin, HbA1c, etc.)
+- Flag out-of-range values with reference ranges
+- Track lab values over time with graphs
+
+**7. Symptom Checker**
+- Input symptoms → AI suggests probable conditions
+- Urgency rating: Self-care / See a doctor / Emergency
+- Powered by a medical LLM prompt or Infermedica API
+
+**8. Health Insurance Wallet**
+- Store insurance card details and policy documents
+- Claim tracking and history
+- Hospital network search by insurer
+
+**9. Diet & Nutrition Tracker**
+- Log meals with calorie/macro info (Nutritionix API)
+- Condition-specific diet plans (diabetic, hypertensive, etc.)
+- Integration with prescriptions to flag food-drug interactions
+
+**10. Mental Health Module**
+- Daily mood tracker (emoji-based)
+- Guided breathing exercises and meditation timers
+- Stress/anxiety self-assessment (PHQ-9, GAD-7 scales)
+- Anonymous journaling with AI sentiment feedback
+
+**11. Multilingual & Accessibility Support**
+- UI in Hindi, Urdu, Bengali, Tamil, etc. (i18next)
+- Voice interface in regional languages (Bhashini/Sarvam already integrated)
+- Screen reader compatibility (ARIA labels)
+- High-contrast and font-size settings
+
+**12. Health News & Education Feed**
+- Curated health articles by user's conditions/profile
+- Medication info cards (side effects, usage tips)
+- Weekly health tips from AI based on user data
+
+---
+
+## 🟢 LOW PRIORITY (Premium / Future Growth)
+
+**13. Doctor/Clinician Portal**
+- Separate doctor login with patient management dashboard
+- Doctors can verify/update prescriptions digitally
+- Patient history visible to assigned doctors only
+- E-prescription generation and digital signature
+
+**14. Wearable & IoT Integration**
+- Sync with Apple Health / Google Fit / Fitbit
+- Auto-import step count, sleep data, heart rate
+- Smartwatch alerts for medicine reminders
+
+**15. Telemedicine Marketplace**
+- Browse and book verified doctors by specialty
+- Secure in-app messaging with doctors
+- Payment gateway (Razorpay / Stripe) for consultations
+- Prescription issuance post-consultation
+
+**16. Gamification & Health Score**
+- Personal "Health Score" (0–100) based on vitals, medication adherence, activity
+- Streak rewards for logging vitals consistently
+- Badges and milestones for health goals
+
+**17. Audit Logs & Compliance**
+- Full activity log (who accessed what, when)
+- HIPAA/DPDP Act compliance hardening
+- Data export (right to portability)
+- Account deletion with data purge
+
+**18. Admin & Analytics Panel**
+- Platform usage metrics
+- User growth, prescription uploads, chatbot usage
+- Flagged/abnormal health reports review
+- Moderation tools for doctor verification
+
+---
+
+## 💡 UX/UI Improvements (Cross-Cutting)
+
+- **Onboarding flow** — guided 3-step setup after registration (profile → add family → upload first prescription)
+- **Dark/Light mode toggle** — already dark-first, add toggle
+- **Progressive Web App (PWA)** — installable on mobile, offline support
+- **Skeleton loaders** instead of spinners for perceived speed
+- **Drag-and-drop prescription upload** with preview before submit
+- **In-app notifications center** — all alerts in one place
+- **Search everything** — global search bar across prescriptions, medicines, reports
+- **Data visualization** — unified health timeline showing all events (uploads, vitals, appointments)
+
+---
+
+## 🧩 Third-Party Integrations Worth Adding
+
+| Service | Purpose |
+|---|---|
+| Razorpay / Stripe | Payments for consultations |
+| Twilio | SMS reminders, video calls |
+| Firebase Cloud Messaging | Push notifications |
+| OpenFDA API | Drug interaction + recall data |
+| Infermedica API | Symptom checker engine |
+| Apple Health / Google Fit | Wearable data sync |
+| Cloudinary / AWS S3 | Scalable image/file storage |
+| Sentry | Error monitoring |
+| PostHog | Product analytics |
+
+---
+
+**Recommended Build Order:**
+Start with Medicine Tracker → Vitals Dashboard → Lab Reports → Symptom Checker → then scale to Doctor Portal and Telemedicine. This gives maximum user retention early while building toward a full platform.
+
+

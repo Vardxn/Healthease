@@ -37,6 +37,7 @@ export default function SidebarLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer open
   const [isCollapsed, setIsCollapsed] = useState(false); // Desktop/tablet collapsed status
   const [showNotifications, setShowNotifications] = useState(false);
+  const isDemoPatient = user?.email === 'demo@healthease.app' || user?.email === 'demo@healthease.ai';
 
   const isActive = (path) => location.pathname === path;
 
@@ -74,6 +75,12 @@ export default function SidebarLayout({ children }) {
     handleResize(); // run on initial mount
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
   const menuItems = {
     main: [
@@ -159,7 +166,6 @@ export default function SidebarLayout({ children }) {
                 <li key={item.name} className="relative group">
                   <Link
                     to={item.path}
-                    onClick={() => setSidebarOpen(false)}
                     className={`group flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
                       isAiAssistant
                         ? active
@@ -211,7 +217,6 @@ export default function SidebarLayout({ children }) {
                 <li key={item.name} className="relative group">
                   <Link
                     to={item.path}
-                    onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 rounded-[14px] transition-all duration-200 border-l-4 ${
                       active
                         ? 'bg-[rgba(20,184,166,0.12)] text-primary-dark border-primary font-medium'
@@ -258,10 +263,11 @@ export default function SidebarLayout({ children }) {
   );
 
   return (
-    <div className="dashboard-shell flex h-screen min-h-screen overflow-hidden bg-[#0B0F19] font-sans text-gray-100 antialiased">
+    <div className="dashboard-shell relative flex h-screen min-h-screen overflow-hidden bg-[#05070C] font-sans text-gray-100 antialiased">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_22%)]" />
       {/* 1. Desktop Sidebar */}
       <aside
-        className={`hidden md:block bg-surface border-r border-border h-full flex-shrink-0 transition-all duration-300 ${
+        className={`relative hidden md:block bg-surface/90 border-r border-white/8 h-full flex-shrink-0 transition-all duration-300 backdrop-blur-xl ${
           isCollapsed ? 'w-20' : 'w-[260px]'
         }`}
       >
@@ -273,15 +279,15 @@ export default function SidebarLayout({ children }) {
         <div className="fixed inset-0 z-50 md:hidden flex animate-fadeIn">
           {/* Backdrop overlay */}
           <div
-            className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs"
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
           
           {/* Drawer body */}
-          <div className="relative w-[260px] h-full bg-surface shadow-xl animate-slideUp flex flex-col">
+          <div className="relative w-[260px] h-full bg-surface/95 shadow-xl animate-slideUp flex flex-col backdrop-blur-xl border-r border-white/10">
             <button
               onClick={() => setSidebarOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-lg bg-surface-secondary border border-border text-text-secondary hover:text-text-primary transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-lg bg-white/5 border border-white/10 text-text-secondary hover:text-text-primary transition-colors"
             >
               <X size={16} />
             </button>
@@ -293,12 +299,12 @@ export default function SidebarLayout({ children }) {
       {/* 3. Main View Area (Wrapper) */}
       <div className="flex-1 flex flex-col overflow-hidden h-full">
         {/* Sticky Top Navigation Bar */}
-        <header className="h-[72px] sticky top-0 bg-surface border-b border-border px-6 flex items-center justify-between z-30 flex-shrink-0">
+        <header className="h-[72px] sticky top-0 bg-surface/90 border-b border-white/8 px-6 flex items-center justify-between z-30 flex-shrink-0 backdrop-blur-xl">
           <div className="flex items-center gap-4">
             {/* Hamburger Trigger for Mobile */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-xl hover:bg-surface-secondary border border-border text-text-secondary hover:text-text-primary transition-colors md:hidden"
+              className="p-2 rounded-xl hover:bg-white/5 border border-white/8 text-text-secondary hover:text-text-primary transition-colors md:hidden"
             >
               <Menu size={18} />
             </button>
@@ -316,7 +322,7 @@ export default function SidebarLayout({ children }) {
               <input
                 type="text"
                 placeholder="Search anything..."
-                className="w-full bg-surface-secondary border border-border rounded-[14px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:bg-surface transition-all duration-200 text-text-primary"
+                className="w-full bg-white/5 border border-white/10 rounded-[14px] pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white/8 transition-all duration-200 text-text-primary placeholder:text-text-secondary"
               />
             </div>
 
@@ -324,20 +330,20 @@ export default function SidebarLayout({ children }) {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2.5 rounded-[14px] hover:bg-surface-secondary text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200 relative"
+                className="p-2.5 rounded-[14px] hover:bg-white/5 text-text-secondary hover:text-text-primary border border-transparent hover:border-white/10 transition-all duration-200 relative"
                 aria-label="View Notifications"
               >
                 <Bell size={18} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-danger ring-2 ring-white dark:ring-slate-900"></span>
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-danger ring-2 ring-[#05070C]"></span>
                 )}
               </button>
 
               {showNotifications && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-                  <div className="absolute right-0 mt-2 w-80 sm:w-[400px] bg-surface border border-border shadow-lg rounded-custom z-50 p-4 space-y-3 animate-slideUp">
-                    <div className="flex items-center justify-between border-b border-border pb-2">
+                  <div className="absolute right-0 mt-2 w-80 sm:w-[400px] bg-surface/95 border border-white/10 shadow-lg rounded-custom z-50 p-4 space-y-3 animate-slideUp backdrop-blur-xl">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
                       <span className="font-extrabold text-xs text-text-primary">Notifications ({unreadCount})</span>
                       {unreadCount > 0 && (
                         <button
@@ -349,7 +355,7 @@ export default function SidebarLayout({ children }) {
                       )}
                     </div>
 
-                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 divide-y divide-border/50">
+                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 divide-y divide-white/8">
                       {notifications.length === 0 ? (
                         <div className="py-8 text-center text-text-secondary text-xs flex flex-col items-center justify-center gap-2">
                           <Bell size={24} className="text-text-secondary/35" />
@@ -371,7 +377,7 @@ export default function SidebarLayout({ children }) {
                                     onClick={() => {
                                       markAsRead(n.id);
                                     }}
-                                    className={`p-2 rounded-lg flex gap-2.5 cursor-pointer hover:bg-surface-secondary transition-colors relative ${n.read ? 'opacity-65' : ''}`}
+                                    className={`p-2 rounded-lg flex gap-2.5 cursor-pointer hover:bg-white/5 transition-colors relative ${n.read ? 'opacity-65' : ''}`}
                                   >
                                     {!n.read && (
                                       <div className="absolute left-0 top-2 bottom-2 w-0.75 bg-primary rounded-r" />
@@ -410,14 +416,14 @@ export default function SidebarLayout({ children }) {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-[14px] hover:bg-surface-secondary text-text-secondary hover:text-text-primary border border-transparent hover:border-border transition-all duration-200"
+              className="p-2.5 rounded-[14px] hover:bg-white/5 text-text-secondary hover:text-text-primary border border-transparent hover:border-white/10 transition-all duration-200"
               aria-label="Toggle Theme"
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
             {/* User Avatar */}
-            <div className="flex items-center gap-3 pl-2 border-l border-border">
+            <div className="flex items-center gap-3 pl-2 border-l border-white/8">
               <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-sm select-none">
                 {user?.name ? user.name[0].toUpperCase() : 'U'}
               </div>
@@ -434,8 +440,13 @@ export default function SidebarLayout({ children }) {
         </header>
 
         {/* Scrollable Content Pane */}
-        <main className="flex-1 overflow-y-auto px-6 py-8 md:px-8 bg-background">
+        <main className="flex-1 overflow-y-auto px-6 py-8 md:px-8 bg-[#05070C]">
           <div className="max-w-6xl mx-auto">
+            {isDemoPatient && (
+              <div className="mb-6 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs tracking-wider uppercase font-medium py-1.5 text-center backdrop-blur-md">
+                Viewing simulated data model. Configuration resets dynamically on session expiration.
+              </div>
+            )}
             {children}
           </div>
         </main>

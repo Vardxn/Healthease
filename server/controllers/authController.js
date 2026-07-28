@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Patient = require('../models/Patient');
+const { ensureDemoPatient } = require('../scripts/seedDemoPatient');
 
 /**
  * Register a new user
@@ -213,45 +213,7 @@ exports.updateProfile = async (req, res) => {
  */
 exports.demoLogin = async (req, res) => {
     try {
-        const demoEmail = 'demo@healthease.ai';
-        let user = await User.findOne({ email: demoEmail });
-
-        if (!user) {
-            console.log('Demo user not found. Creating a new demo user...');
-            const salt = await bcrypt.genSalt(10);
-            const passwordHash = await bcrypt.hash('Demo@123', salt);
-
-            user = new User({
-                name: 'Demo User',
-                email: demoEmail,
-                passwordHash: passwordHash,
-                role: 'patient',
-                profile: {
-                    age: 30,
-                    bloodGroup: 'O+',
-                    chronicConditions: ['None'],
-                    allergies: ['None']
-                }
-            });
-
-            await user.save();
-
-            // Create patient record
-            const patient = new Patient({
-                userId: user._id,
-                fullName: 'Demo User',
-                dateOfBirth: new Date('1996-01-01'),
-                gender: 'Other',
-                bloodGroup: 'O+',
-                height: 175,
-                weight: 70,
-                allergies: ['None'],
-                chronicConditions: ['None']
-            });
-
-            await patient.save();
-            console.log('Demo user and patient record created successfully.');
-        }
+        const user = await ensureDemoPatient();
 
         // Generate JWT token
         const payload = {

@@ -35,8 +35,7 @@ const FamilyProfileSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      unique: true,
-      index: true
+      unique: true
     },
     dependents: [
       {
@@ -59,8 +58,7 @@ const GamificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      unique: true,
-      index: true
+      unique: true
     },
     wellnessPoints: { type: Number, default: 0 },
     unlockedBadges: [
