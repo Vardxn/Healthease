@@ -46,13 +46,13 @@ export function Footer() {
               AI-powered healthcare platform for smarter medication management and vital tracking.
             </p>
             <div className="space-y-3">
-              <a href="mailto:support@healthease.app" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-[#0D9488] transition-colors">
+              <a href="mailto:vardan2701@gmail.com" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-[#0D9488] transition-colors">
                 <Mail className="w-4 h-4" />
-                support@healthease.app
+                vardan2701@gmail.com
               </a>
-              <a href="tel:+1-800-HEALTH" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-[#0D9488] transition-colors">
+              <a href="tel:+918279696707" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-[#0D9488] transition-colors">
                 <Phone className="w-4 h-4" />
-                1-800-HEALTH
+                +91-8279696707
               </a>
             </div>
           </div>

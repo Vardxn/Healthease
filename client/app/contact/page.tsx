@@ -31,7 +31,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Email Us</h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Our friendly team is here to help.</p>
-                  <a href="mailto:hello@healthease.com" className="text-teal-600 font-medium hover:underline">hello@healthease.com</a>
+                  <a href="mailto:vardan2701@gmail.com" className="text-teal-600 font-medium hover:underline">vardan2701@gmail.com</a>
                 </div>
               </div>
 
@@ -41,8 +41,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Call Us</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Mon-Fri from 8am to 5pm.</p>
-                  <a href="tel:+1234567890" className="text-teal-600 font-medium hover:underline">+1 (555) 123-4567</a>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Mon-Fri from 9am to 6pm IST.</p>
+                  <a href="tel:+918279696707" className="text-teal-600 font-medium hover:underline">+91 82796 96707</a>
                 </div>
               </div>
 
@@ -53,8 +53,9 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Office</h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    100 Health Innovation Way<br />
-                    San Francisco, CA 94107
+                    Marathahalli<br />
+                    Bangalore, Karnataka - 560037<br />
+                    India
                   </p>
                 </div>
               </div>
@@ -66,17 +67,17 @@ export default function ContactPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">First Name</label>
-                    <input type="text" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="John" />
+                    <input type="text" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Rahul" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Last Name</label>
-                    <input type="text" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Doe" />
+                    <input type="text" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Sharma" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-                  <input type="email" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="john@example.com" />
+                  <input type="email" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="rahul@example.in" />
                 </div>
 
                 <div className="space-y-2">

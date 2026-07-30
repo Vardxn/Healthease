@@ -36,12 +36,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           // If the token exists, try fetching the profile to ensure it's valid
           const res = await api.get('/auth/me');
-          if (res.success && res.data) {
+          if (res.success && res.data && res.data.user) {
             setUser({
-              id: res.data._id,
-              name: res.data.name,
-              email: res.data.email,
-              role: res.data.role
+              id: res.data.user._id || res.data.user.id,
+              name: res.data.user.name,
+              email: res.data.user.email,
+              role: res.data.user.role
             });
           }
         } catch (error) {
