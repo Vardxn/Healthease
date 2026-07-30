@@ -10,34 +10,34 @@ const features = [
     title: 'Prescription Scanner',
     description: 'Extract medications instantly with Cloud OCR. Snap a photo and get structured data in 2 seconds.',
     color: '#0D9488',
-    href: '/features/prescription-scanner',
+    href: '/dashboard/scanner',
   },
   {
     icon: CalendarDays,
     title: 'Smart Schedules',
     description: 'Automatic dosage logs and replenishment alerts. Never miss a medication again.',
     color: '#2563EB',
-    href: '/features/smart-schedules',
+    href: '/dashboard/medications',
   },
   {
     icon: Activity,
     title: 'Vitals Analytics',
     description: 'Interactive health tracker with wearable sync. Visualize trends and spot anomalies early.',
     color: '#10B981',
-    href: '/features/vitals-analytics',
+    href: '/dashboard/vitals',
   },
   {
     icon: MessageSquare,
     title: 'Dr. AI Assistant',
     description: 'Interactive chat for diagnostics and queries. Available 24/7 with medical-grade accuracy.',
     color: '#F59E0B',
-    href: '/features/ai-assistant',
+    href: '/dashboard/chat',
   },
 ]
 
 export function FeaturesSection() {
   return (
-    <section className="py-20 md:py-28">
+    <section id="features" className="py-20 md:py-28 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -85,7 +85,7 @@ export function FeaturesSection() {
                 className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
                 style={{ color: feature.color }}
               >
-                Learn more
+                Try it out
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </motion.div>
