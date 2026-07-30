@@ -173,11 +173,36 @@ export function OCRScanner() {
                     <h3 className="font-semibold text-lg">Extraction Complete</h3>
                   </div>
 
-                  {result.data?.structuredData?.medications && result.data.structuredData.medications.length > 0 ? (
+                  {result.meta?.vitals && Object.keys(result.meta.vitals).length > 0 && (
+                    <div className="space-y-4 mb-6">
+                      <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Extracted Vitals</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {Object.entries(result.meta.vitals).map(([key, value]) => {
+                          if (!value) return null;
+                          const labels: Record<string, string> = {
+                            bloodPressure: 'Blood Pressure',
+                            heartRate: 'Heart Rate',
+                            temperature: 'Temperature',
+                            weight: 'Weight',
+                            spO2: 'SpO2',
+                            sugar: 'Blood Sugar'
+                          };
+                          return (
+                            <div key={key} className="bg-white p-3 rounded-lg shadow-sm border border-slate-200">
+                              <p className="text-xs text-slate-500 font-medium mb-1">{labels[key] || key}</p>
+                              <p className="text-sm font-bold text-slate-900">{String(value)}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {result.data?.medications && result.data.medications.length > 0 ? (
                     <div className="space-y-4">
                       <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Identified Medications</h4>
                       <div className="space-y-3">
-                        {result.data.structuredData.medications.map((med, idx) => (
+                        {result.data.medications.map((med, idx) => (
                           <div key={idx} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex items-start gap-3">
                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-1">
                               <Pill className="w-4 h-4 text-indigo-600" />
@@ -205,16 +230,16 @@ export function OCRScanner() {
                     <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                       <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-2">Raw Extracted Text</h4>
                       <p className="text-sm text-slate-600 whitespace-pre-wrap font-mono">
-                        {result.data?.rawText || "No readable text found."}
+                        {result.data?.ocrRawText || "No readable text found."}
                       </p>
                     </div>
                   )}
 
-                  {result.data?.structuredData?.notes && (
+                  {result.data?.notes && (
                     <div className="mt-6">
                       <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-2">Doctor's Notes</h4>
                       <p className="text-sm text-slate-600 italic bg-white p-4 rounded-lg border border-slate-200">
-                        "{result.data.structuredData.notes}"
+                        "{result.data.notes}"
                       </p>
                     </div>
                   )}

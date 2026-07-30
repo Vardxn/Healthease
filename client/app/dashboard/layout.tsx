@@ -12,7 +12,8 @@ import {
   LogOut,
   Bell,
   User,
-  Settings
+  Settings,
+  Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ProtectedRoute } from '@/app/components/ProtectedRoute';
@@ -24,6 +25,7 @@ const sidebarLinks = [
   { name: 'Medications', href: '/dashboard/medications', icon: Pill },
   { name: 'Consultations', href: '/dashboard/consultations', icon: Calendar },
   { name: 'AI Assistant', href: '/dashboard/assistant', icon: MessageSquare },
+  { name: 'Prediction', href: '/dashboard/prediction', icon: Activity },
 ];
 
 export default function DashboardLayout({

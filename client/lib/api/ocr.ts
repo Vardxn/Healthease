@@ -8,32 +8,43 @@ export interface OCRResult {
   success: boolean;
   msg?: string;
   processingMode?: string;
-  data?: {
-    rawText: string;
-    structuredData?: {
-      patientName?: string;
-      date?: string;
-      medications?: Array<{
-        name: string;
-        dosage: string;
-        frequency: string;
-      }>;
-      notes?: string;
+  meta?: {
+    vitals?: {
+      bloodPressure?: string;
+      heartRate?: string;
+      temperature?: string;
+      weight?: string;
+      spO2?: string;
+      sugar?: string;
     };
+    [key: string]: any;
+  };
+  data?: {
+    _id?: string;
+    ocrRawText?: string;
+    doctorName?: string;
+    medications?: Array<{
+      name: string;
+      dosage: string;
+      frequency: string;
+    }>;
+    notes?: string;
   };
 }
 
 export async function uploadPrescriptionImage(file: File): Promise<OCRResult> {
   try {
     const formData = new FormData();
+    // prescriptionController expects 'image'
     formData.append('image', file);
 
-    const response = await fetch(`${API_URL}/ocr/handwriting`, {
+    const token = localStorage.getItem('token');
+    
+    // Call the correct endpoint that runs digitizePrescription
+    const response = await fetch(`${API_URL}/prescriptions/upload`, {
       method: 'POST',
       headers: {
-        // Note: Do NOT set Content-Type header manually when using FormData!
-        // The browser automatically sets it to multipart/form-data with the correct boundary.
-        'Authorization': `Bearer demo-token-placeholder`
+        'Authorization': `Bearer ${token}`
       },
       body: formData
     });

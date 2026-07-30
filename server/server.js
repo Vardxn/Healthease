@@ -68,6 +68,7 @@ app.use('/api/ocr', require('./routes/ocrRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/wellness', require('./routes/wellnessRoutes'));
+app.use('/api/ml', require('./routes/mlRoutes'));
 
 // Centralized error handling
 app.use((err, req, res, next) => {

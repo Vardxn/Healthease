@@ -1,3 +1,5 @@
+'use client';
+
 import { Navbar } from '@/app/components/Navbar'
 import { Footer } from '@/app/components/Footer'
 import { Mail, Phone, MapPin, Send } from 'lucide-react'

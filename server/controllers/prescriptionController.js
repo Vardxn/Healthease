@@ -48,6 +48,7 @@ exports.uploadPrescription = async (req, res) => {
         const {
             rawText,
             medications,
+            vitals,
             doctorName,
             prescriptionDate,
             processingMode,
@@ -99,6 +100,23 @@ exports.uploadPrescription = async (req, res) => {
 
         await newPrescription.save();
 
+        // 3. Update HealthProfile with extracted vitals if available
+        if (req.user && vitals && Object.keys(vitals).length > 0) {
+            try {
+                let hp = await HealthProfile.findOne({ userId: req.user.id });
+                if (hp) {
+                    if (vitals.bloodPressure) hp.vitals.bloodPressure = vitals.bloodPressure;
+                    if (vitals.heartRate) hp.vitals.heartRate = vitals.heartRate;
+                    if (vitals.temperature) hp.vitals.temperature = vitals.temperature;
+                    if (vitals.weight) hp.vitals.weight = vitals.weight;
+                    
+                    await hp.save();
+                }
+            } catch (err) {
+                console.error('Error saving extracted vitals to health profile:', err);
+            }
+        }
+
         res.json({
             success: true,
             msg: 'Prescription processed successfully',
@@ -111,6 +129,7 @@ exports.uploadPrescription = async (req, res) => {
                 confidenceScore,
                 medicationCount: normalizedMedications.length,
                 rawTextLength: textLength,
+                vitals: vitals || {},
                 uploadedFile: {
                     originalName: req.file.originalname,
                     mimeType: req.file.mimetype,

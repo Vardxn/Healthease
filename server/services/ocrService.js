@@ -241,16 +241,17 @@ async function extractMedicinesWithOpenAI(prescriptionText, parserPromptOverride
     if (!openaiClient) {
         return {
             medications: [],
+            vitals: {},
             doctorName: '',
             warnings: ['OPENAI_API_KEY missing. Parsing skipped.'],
             error: 'Could not parse prescription'
         };
     }
 
-    const defaultPrompt = `You are a strict medical prescription parser.
-Extract medicine information only from the OCR text provided.
-Do not invent, guess, or hallucinate medications.
-If OCR text is unclear or insufficient, return empty medications and error "Could not read prescription".
+    const defaultPrompt = `You are a strict medical prescription and health report parser.
+Extract medicine information and ANY recorded patient vitals from the OCR text provided.
+Do not invent, guess, or hallucinate medications or vitals.
+If OCR text is unclear or insufficient, return empty medications/vitals and error "Could not read prescription".
 
 Return valid JSON only with this schema:
 {
@@ -262,6 +263,14 @@ Return valid JSON only with this schema:
       "duration": ""
     }
   ],
+  "vitals": {
+    "bloodPressure": "", // e.g. "120/80"
+    "heartRate": "",     // e.g. "75"
+    "temperature": "",   // e.g. "98.6 F"
+    "weight": "",        // e.g. "70 kg"
+    "spO2": "",          // e.g. "98%"
+    "sugar": ""          // e.g. "110 mg/dL"
+  },
   "doctorName": "",
   "warnings": [],
   "error": null
@@ -285,6 +294,7 @@ ${prescriptionText}`;
 
         return {
             medications: Array.isArray(parsed.medications) ? parsed.medications : [],
+            vitals: parsed.vitals || {},
             doctorName: typeof parsed.doctorName === 'string' ? parsed.doctorName : '',
             warnings: Array.isArray(parsed.warnings) ? parsed.warnings : [],
             error: parsed.error || null
@@ -293,6 +303,7 @@ ${prescriptionText}`;
         console.error('OpenAI parsing error:', error.message);
         return {
             medications: [],
+            vitals: {},
             doctorName: '',
             warnings: ['Failed to parse OCR text with GPT-4o.'],
             error: 'Could not read prescription'
@@ -356,6 +367,7 @@ async function digitizePrescription(imageBuffer, parserPromptOverride = null) {
         let doctorName = structuredExtraction.doctorName;
         let prescriptionDate = structuredExtraction.prescriptionDate;
         let warningsFromParsers = structuredExtraction.warnings;
+        let vitals = {};
 
         if ((!medications || medications.length === 0) && openaiClient) {
             const promptToUse = parserPromptOverride
@@ -367,6 +379,7 @@ async function digitizePrescription(imageBuffer, parserPromptOverride = null) {
                 ? aiExtraction.medications
                 : medications;
             doctorName = doctorName || aiExtraction.doctorName || '';
+            vitals = aiExtraction.vitals || {};
             warningsFromParsers = [...warningsFromParsers, ...(aiExtraction.warnings || [])];
         }
 
@@ -380,6 +393,7 @@ async function digitizePrescription(imageBuffer, parserPromptOverride = null) {
 
         return {
             ...normalizedResult,
+            vitals,
             error: null,
             processingMode: PROCESSING_MODES.REAL,
             fallbackReason: null,

@@ -33,7 +33,7 @@ import { AuthProvider } from '@/context/AuthContext'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${playfair.variable} font-[family-name:var(--font-sans)] antialiased bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${playfair.variable} font-[family-name:var(--font-sans)] antialiased bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
         <ThemeProvider>
           <AuthProvider>
             <ScrollProgress />
