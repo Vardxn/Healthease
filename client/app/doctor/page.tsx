@@ -9,9 +9,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
 const mockPatients = [
-  { id: 1, name: 'Jane Doe', age: 28, lastVisit: 'Today', status: 'Requires Attention', score: 85 },
-  { id: 2, name: 'Michael Chen', age: 45, lastVisit: '2 days ago', status: 'Stable', score: 92 },
-  { id: 3, name: 'Sarah Connor', age: 34, lastVisit: '1 week ago', status: 'Review Needed', score: 78 },
+  { id: 1, name: 'Priya Sharma', age: 28, lastVisit: 'Today', status: 'Requires Attention', score: 85 },
+  { id: 2, name: 'Rahul Desai', age: 45, lastVisit: '2 days ago', status: 'Stable', score: 92 },
+  { id: 3, name: 'Amit Patel', age: 34, lastVisit: '1 week ago', status: 'Review Needed', score: 78 },
 ];
 
 export default function DoctorDashboard() {
@@ -101,7 +101,7 @@ export default function DoctorDashboard() {
              
              <CardContent className="relative z-10">
                <div className="mb-6">
-                 <p className="text-2xl font-bold font-[family-name:var(--font-heading)] mb-1">Jane Doe</p>
+                 <p className="text-2xl font-bold font-[family-name:var(--font-heading)] mb-1">Priya Sharma</p>
                  <p className="text-slate-300 text-sm">Follow-up • Today, 2:30 PM</p>
                </div>
                

@@ -8,20 +8,22 @@ import { motion } from 'framer-motion';
 const upcomingConsultations = [
   {
     id: 1,
-    doctor: 'Dr. Sarah Jenkins',
+    doctor: 'Dr. Vikram Singh',
     specialty: 'Cardiologist',
     date: 'Aug 15, 2026',
     time: '10:00 AM',
     type: 'Video Call',
+    fee: '₹800',
     status: 'Upcoming'
   },
   {
     id: 2,
-    doctor: 'Dr. Michael Chen',
+    doctor: 'Dr. Sneha Desai',
     specialty: 'General Practitioner',
     date: 'Aug 22, 2026',
     time: '2:30 PM',
     type: 'In Person',
+    fee: '₹500',
     status: 'Upcoming'
   }
 ];
@@ -29,11 +31,12 @@ const upcomingConsultations = [
 const pastConsultations = [
   {
     id: 3,
-    doctor: 'Dr. Emily Ross',
+    doctor: 'Dr. Rajesh Kumar',
     specialty: 'Dermatologist',
     date: 'Jul 10, 2026',
     time: '11:15 AM',
     type: 'Video Call',
+    fee: '₹600',
     status: 'Completed'
   }
 ];
@@ -82,7 +85,7 @@ export default function ConsultationsPage() {
                 </span>
               </div>
               
-              <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400 mb-6 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl">
+              <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400 mb-6 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl flex-wrap">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   {apt.date}
@@ -90,6 +93,9 @@ export default function ConsultationsPage() {
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   {apt.time}
+                </div>
+                <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
+                  <span>Fee:</span> {apt.fee}
                 </div>
               </div>
 

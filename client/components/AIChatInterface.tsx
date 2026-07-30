@@ -10,6 +10,14 @@ export function AIChatInterface() {
     {
       role: 'assistant',
       content: 'Hello! I am HealthEase AI. I have securely loaded your health profile. How can I assist you with your medications or symptoms today?'
+    },
+    {
+      role: 'user',
+      content: 'Hi, I have been experiencing a mild fever and some throat pain since yesterday evening. Should I take Dolo 650?'
+    },
+    {
+      role: 'assistant',
+      content: 'Based on your health profile, taking Dolo 650 (Paracetamol) is safe for temporary relief of a mild fever. However, since you are also experiencing throat pain, you might want to try warm salt water gargles. If your fever exceeds 101°F or lasts more than 48 hours, I strongly recommend booking a consultation with Dr. Vikram Singh.'
     }
   ]);
   const [input, setInput] = useState('');
