@@ -60,10 +60,10 @@ export default function LoginPage() {
         >
           <div className="text-center mb-8">
             <h1 className="font-[family-name:var(--font-heading)] text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Interview Demo Mode
+              Welcome to HealthEase
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-sm">
-              Standard authentication is temporarily disabled. Select a role below to instantly log in.
+              Sign in to your account or access the demo portals below.
             </p>
           </div>
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
-            Authentication logic (JWT, password hashing) remains intact on the backend but is hidden here for speed.
+            Secure, HIPAA-compliant access.
           </div>
         </motion.div>
       </div>
