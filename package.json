@@ -15,8 +15,8 @@
     "start:server": "cd server && npm start",
     "start:client": "cd client && npm start",
     "build:client": "cd client && npm run build",
-    "start:prod": "npm run build:client && cd server && NODE_ENV=production npm start",
-    "vercel-build": "cd client && npm install --include=dev && NODE_OPTIONS=--max-old-space-size=4096 ./node_modules/.bin/vite build"
+    "start:prod": "npm run build:client && cd server && cross-env NODE_ENV=production npm start",
+    "vercel-build": "cd client && npm install --include=dev && npm run build"
   },
   "keywords": [
     "healthcare",
@@ -29,7 +29,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0"
   },
   "dependencies": {
     "lucide-react": "^1.8.0"

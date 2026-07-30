@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
     name: { 
         type: String, 
-        required: true 
+        required: true,
+        trim: true 
     },
     email: { 
         type: String, 
@@ -21,14 +22,9 @@ const UserSchema = new mongoose.Schema({
         enum: ['patient', 'doctor', 'admin'], 
         default: 'patient' 
     },
-    profile: {
-        age: Number,
-        bloodGroup: {
-            type: String,
-            enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-        },
-        chronicConditions: [String], // e.g., ["Diabetes", "Hypertension"]
-        allergies: [String] // e.g., ["Penicillin", "Peanuts"]
+    isVerified: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

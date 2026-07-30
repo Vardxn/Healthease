@@ -96,7 +96,12 @@ class ChatService {
      */
     async getPatientContext(userId) {
         try {
-            const user = await User.findById(userId);
+            const Patient = require('../models/Patient');
+            const { HealthProfile } = require('../models/HealthProfile');
+
+            const patient = await Patient.findOne({ userId });
+            const healthProfile = await HealthProfile.findOne({ userId });
+
             const prescriptions = await Prescription.find({ patientId: userId })
                 .sort({ uploadDate: -1 })
                 .limit(5);
@@ -118,11 +123,18 @@ class ChatService {
                 ].filter(Boolean).join(' | ')
                 : null;
 
+            // Calculate age from DOB if available
+            let age = null;
+            if (patient?.dateOfBirth) {
+                const diff = Date.now() - patient.dateOfBirth.getTime();
+                age = Math.abs(new Date(diff).getUTCFullYear() - 1970);
+            }
+
             return {
-                age: user.profile?.age,
-                bloodGroup: user.profile?.bloodGroup,
-                conditions: user.profile?.chronicConditions || [],
-                allergies: user.profile?.allergies || [],
+                age: age,
+                bloodGroup: healthProfile?.medicalBackground?.bloodGroup,
+                conditions: healthProfile?.medicalBackground?.chronicConditions || [],
+                allergies: healthProfile?.knownAllergies || [],
                 prescriptionCount: prescriptions.length,
                 medications: prescriptions.flatMap(rx => (rx.medications || []).map(m => m.name)).filter(Boolean),
                 latestPrescriptionId: latest?._id?.toString?.() || null,

@@ -58,25 +58,13 @@ const prescriptionSnapshotSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-const chatMessageSchema = new mongoose.Schema({
-  sender: {
-    type: String,
-    enum: ['user', 'ai'],
-    required: true
-  },
-  text: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now
-  },
-  crisisTriggered: {
-    type: Boolean,
-    default: false
-  }
+const vitalsSchema = new mongoose.Schema({
+  recordedAt: { type: Date, default: Date.now },
+  bloodPressure: { type: String, default: '' },
+  heartRate: { type: Number, default: null },
+  temperature: { type: Number, default: null },
+  sugarLevel: { type: Number, default: null },
+  oxygenLevel: { type: Number, default: null }
 }, { _id: false });
 
 const HealthProfileSchema = new mongoose.Schema({
@@ -87,12 +75,6 @@ const HealthProfileSchema = new mongoose.Schema({
     unique: true
   },
   medicalBackground: {
-    age: {
-      type: Number,
-      min: 0,
-      max: 130,
-      default: null
-    },
     bloodGroup: {
       type: String,
       enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
@@ -109,11 +91,16 @@ const HealthProfileSchema = new mongoose.Schema({
     },
     emergencyContact: {
       name: { type: String, trim: true, default: '' },
-      phone: { type: String, trim: true, default: '' }
+      phone: { type: String, trim: true, default: '' },
+      relation: { type: String, trim: true, default: '' }
     }
   },
   knownAllergies: {
     type: [String],
+    default: []
+  },
+  vitalsHistory: {
+    type: [vitalsSchema],
     default: []
   },
   currentMedications: {
@@ -122,10 +109,6 @@ const HealthProfileSchema = new mongoose.Schema({
   },
   prescriptions: {
     type: [prescriptionSnapshotSchema],
-    default: []
-  },
-  chatHistory: {
-    type: [chatMessageSchema],
     default: []
   },
   safetyFlags: {
@@ -146,10 +129,6 @@ const MentalHealthChatSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
     unique: true
-  },
-  sessionMessages: {
-    type: [chatMessageSchema],
-    default: []
   },
   crisisEvents: {
     type: [{

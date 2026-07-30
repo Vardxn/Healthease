@@ -39,8 +39,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Connect Database
-connectDB();
-
+connectDB().then(() => {
+  // Seed test users
+  const seedTestUsers = require('./scripts/seedTestUsers');
+  seedTestUsers();
+});
 // Start reminder scheduler (checks every minute)
 if (!process.env.VERCEL) {
   reminderScheduler.startReminderScheduler();
@@ -66,12 +69,11 @@ app.use('/api/reminders', require('./routes/reminderRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/wellness', require('./routes/wellnessRoutes'));
 
-// Centralized file upload error mapping (multer, file type, file size)
+// Centralized error handling
 app.use((err, req, res, next) => {
-  if (!err) {
-    return next();
-  }
+  if (!err) return next();
 
+  // File upload errors
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
@@ -86,7 +88,14 @@ app.use((err, req, res, next) => {
     });
   }
 
-  return next(err);
+  // Global Error Handler Fallback
+  console.error('Unhandled Error:', err);
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode).json({
+    success: false,
+    msg: err.message || 'Internal Server Error',
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
 });
 
 // Health check endpoint

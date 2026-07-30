@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Doctor = require('../models/Doctor');
-
+const User = require('../models/User');
 /**
  * Register a new doctor
  * @route POST /api/doctors/register
@@ -32,21 +32,31 @@ exports.register = async (req, res) => {
             });
         }
 
-        let doctor = await Doctor.findOne({ email });
-        if (doctor) {
+        // Check if user already exists
+        let user = await User.findOne({ email });
+        if (user) {
             return res.status(400).json({
                 success: false,
-                msg: 'Doctor already exists with this email'
+                msg: 'User already exists with this email'
             });
         }
 
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        doctor = new Doctor({
+        // Create unified User
+        user = new User({
             name,
             email,
             passwordHash,
+            role: 'doctor',
+            isVerified: false
+        });
+        await user.save();
+
+        // Create Doctor profile linked to User
+        const doctor = new Doctor({
+            userId: user._id,
             profilePhoto,
             specialization,
             qualifications,
@@ -58,12 +68,11 @@ exports.register = async (req, res) => {
             hospitalAffiliation,
             bio
         });
-
         await doctor.save();
 
         const payload = {
             user: {
-                id: doctor.id,
+                id: user.id,
                 role: 'doctor'
             }
         };
@@ -78,11 +87,12 @@ exports.register = async (req, res) => {
                     success: true,
                     token,
                     doctor: {
-                        id: doctor.id,
-                        name: doctor.name,
-                        email: doctor.email,
+                        id: user.id,
+                        doctorId: doctor.id,
+                        name: user.name,
+                        email: user.email,
                         specialization: doctor.specialization,
-                        isVerified: doctor.isVerified
+                        isVerified: user.isVerified
                     }
                 });
             }
@@ -112,15 +122,15 @@ exports.login = async (req, res) => {
             });
         }
 
-        const doctor = await Doctor.findOne({ email });
-        if (!doctor) {
+        const user = await User.findOne({ email, role: 'doctor' });
+        if (!user) {
             return res.status(400).json({
                 success: false,
                 msg: 'Invalid credentials'
             });
         }
 
-        const isMatch = await bcrypt.compare(password, doctor.passwordHash);
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) {
             return res.status(400).json({
                 success: false,
@@ -128,9 +138,11 @@ exports.login = async (req, res) => {
             });
         }
 
+        const doctor = await Doctor.findOne({ userId: user._id });
+
         const payload = {
             user: {
-                id: doctor.id,
+                id: user.id,
                 role: 'doctor'
             }
         };
@@ -145,11 +157,12 @@ exports.login = async (req, res) => {
                     success: true,
                     token,
                     doctor: {
-                        id: doctor.id,
-                        name: doctor.name,
-                        email: doctor.email,
-                        specialization: doctor.specialization,
-                        isVerified: doctor.isVerified
+                        id: user.id,
+                        doctorId: doctor ? doctor.id : null,
+                        name: user.name,
+                        email: user.email,
+                        specialization: doctor ? doctor.specialization : '',
+                        isVerified: user.isVerified
                     }
                 });
             }
@@ -170,18 +183,19 @@ exports.login = async (req, res) => {
  */
 exports.getMe = async (req, res) => {
     try {
-        const doctor = await Doctor.findById(req.user.id).select('-passwordHash');
-
-        if (!doctor) {
-            return res.status(404).json({
-                success: false,
-                msg: 'Doctor not found'
-            });
+        const user = await User.findById(req.user.id).select('-passwordHash');
+        if (!user) {
+            return res.status(404).json({ success: false, msg: 'User not found' });
         }
+
+        const doctor = await Doctor.findOne({ userId: user._id });
 
         res.json({
             success: true,
-            data: doctor
+            data: {
+                user,
+                profile: doctor
+            }
         });
     } catch (err) {
         console.error('Doctor get profile error:', err);

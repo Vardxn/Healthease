@@ -2,21 +2,11 @@ const mongoose = require('mongoose');
 
 const DoctorSchema = new mongoose.Schema(
     {
-        name: {
-            type: String,
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
             required: true,
-            trim: true
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true
-        },
-        passwordHash: {
-            type: String,
-            required: true
+            unique: true
         },
         profilePhoto: {
             type: String,
@@ -89,10 +79,6 @@ const DoctorSchema = new mongoose.Schema(
             type: Number,
             default: 0,
             min: 0
-        },
-        isVerified: {
-            type: Boolean,
-            default: false
         },
         hospitalAffiliation: {
             type: String,

@@ -152,37 +152,55 @@ exports.handleMentalHealthChat = async (req, res) => {
     }
 
     const profile = await HealthProfile.findOne({ userId });
-    let chatLog = await MentalHealthChat.findOne({ userId });
-
-    if (!chatLog) {
-      chatLog = new MentalHealthChat({ userId, sessionMessages: [] });
-    }
+    
+    // Fetch recent conversation history from ChatMessage collection
+    const ChatMessage = require('../models/ChatMessage');
+    const recentMessages = await ChatMessage.find({ userId, chatType: 'mental_health' })
+      .sort({ timestamp: -1 })
+      .limit(20)
+      .lean();
+    
+    // Sort chronological
+    const chatHistory = recentMessages.reverse().map(msg => ({
+      sender: msg.sender,
+      text: msg.text,
+      crisisTriggered: msg.crisisTriggered
+    }));
 
     const reply = await aiService.generateMentalHealthReply({
       profile,
-      chatHistory: chatLog.sessionMessages || [],
+      chatHistory: chatHistory,
       userMessage: message
     });
 
-    chatLog.sessionMessages.push({
+    // Save user message
+    await ChatMessage.create({
+      userId,
+      chatType: 'mental_health',
       sender: 'user',
       text: message,
       crisisTriggered: Boolean(reply.crisisTriggered)
     });
 
-    chatLog.sessionMessages.push({
+    // Save AI reply
+    await ChatMessage.create({
+      userId,
+      chatType: 'mental_health',
       sender: 'ai',
       text: reply.text,
       crisisTriggered: Boolean(reply.crisisTriggered)
     });
 
     if (reply.crisisTriggered) {
+      let chatLog = await MentalHealthChat.findOne({ userId });
+      if (!chatLog) {
+        chatLog = new MentalHealthChat({ userId, crisisEvents: [] });
+      }
       chatLog.crisisEvents.push({
         trigger: message
       });
+      await chatLog.save();
     }
-
-    await chatLog.save();
 
     return res.status(200).json({
       success: true,
