@@ -57,18 +57,11 @@ export function HeroSection() {
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Link
-                href="/signup"
-                className="inline-flex items-center justify-center gap-2 bg-[#0D9488] text-white px-8 py-4 rounded-full text-base font-semibold hover:bg-[#0F766E] transition-all shadow-xl shadow-[#0D9488]/25 hover:shadow-[#0D9488]/40 hover:-translate-y-0.5"
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 bg-[#0D9488] text-white px-10 py-5 rounded-full text-lg font-bold hover:bg-[#0F766E] transition-all shadow-xl shadow-[#0D9488]/30 hover:shadow-[#0D9488]/50 hover:-translate-y-1 w-full sm:w-auto uppercase tracking-wide"
               >
-                Start Your Free Trial
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/dashboard-preview"
-                className="inline-flex items-center justify-center gap-2 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 px-8 py-4 rounded-full text-base font-semibold hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all backdrop-blur-md"
-              >
-                <Play className="w-5 h-5" />
-                Watch Demo
+                Launch Demo Dashboard
+                <ArrowRight className="w-6 h-6" />
               </Link>
             </div>
 

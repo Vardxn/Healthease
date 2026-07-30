@@ -8,11 +8,8 @@ import { ThemeToggle } from './ThemeToggle'
 import { MobileNav } from './MobileNav'
 
 const navLinks = [
-  { href: '/', label: 'Home' },
   { href: '/#features', label: 'Features' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
 ]
 
 export function Navbar() {
@@ -67,15 +64,9 @@ export function Navbar() {
             <ThemeToggle />
             <Link
               href="/login"
-              className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#0D9488] transition-colors"
+              className="text-sm font-bold bg-[#0D9488] text-white px-8 py-3 rounded-full hover:bg-[#0F766E] transition-all shadow-lg shadow-[#0D9488]/25 hover:scale-105 uppercase tracking-wide"
             >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="text-sm font-medium bg-[#0D9488] text-white px-6 py-2.5 rounded-full hover:bg-[#0F766E] transition-colors shadow-lg shadow-[#0D9488]/25"
-            >
-              Get Started
+              Launch Demo
             </Link>
           </div>
 
