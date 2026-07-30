@@ -24,7 +24,7 @@ const sidebarLinks = [
   { name: 'Vitals', href: '/dashboard/vitals', icon: HeartPulse },
   { name: 'Medications', href: '/dashboard/medications', icon: Pill },
   { name: 'Consultations', href: '/dashboard/consultations', icon: Calendar },
-  { name: 'AI Assistant', href: '/dashboard/assistant', icon: MessageSquare },
+  { name: 'AI Assistant', href: '/dashboard/chat', icon: MessageSquare },
   { name: 'Prediction', href: '/dashboard/prediction', icon: Activity },
 ];
 
