@@ -6,6 +6,7 @@ import { Activity, Heart, Scale, Video } from 'lucide-react';
 import { HealthScore } from '@/app/components/dashboard/HealthScore';
 import { VitalsCard } from '@/app/components/dashboard/VitalsCard';
 import { MedicationTimeline } from '@/app/components/dashboard/MedicationTimeline';
+import { VitalsChart } from '@/app/components/dashboard/VitalsChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -15,7 +16,7 @@ export default function DashboardOverview() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-[family-name:var(--font-heading)]">
-            Good morning, Jane
+            Good morning, Priya
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Here is your daily health summary.</p>
         </div>
@@ -76,31 +77,23 @@ export default function DashboardOverview() {
 
           <MedicationTimeline />
 
-          {/* Find a Doctor Section */}
-          <Card className="relative overflow-hidden bg-card/60 backdrop-blur-xl border-border/50 shadow-sm mt-6">
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
-            <CardHeader className="flex flex-row items-center justify-between relative z-10 pb-2">
-              <CardTitle className="text-xl font-bold font-[family-name:var(--font-heading)]">Find a Doctor</CardTitle>
-              <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">View All</Button>
+          {/* Medical History & Body Analysis Graph */}
+          <Card className="border-border/50 shadow-sm overflow-hidden bg-card mt-6">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-bold font-[family-name:var(--font-heading)]">Medical History & Analysis</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4 relative z-10">
-              {[
-                { type: 'Cardiologist', icon: Heart, bg: 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400', border: 'hover:border-rose-200 dark:hover:border-rose-900/50' },
-                { type: 'Neurologist', icon: Activity, bg: 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400', border: 'hover:border-purple-200 dark:hover:border-purple-900/50' },
-                { type: 'Dietitian', icon: Scale, bg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400', border: 'hover:border-emerald-200 dark:hover:border-emerald-900/50' },
-                { type: 'General', icon: Activity, bg: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400', border: 'hover:border-blue-200 dark:hover:border-blue-900/50' }
-              ].map((doc, idx) => (
-                <motion.div 
-                  key={idx}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border bg-card cursor-pointer transition-all shadow-sm ${doc.border}`}
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-inner ${doc.bg}`}>
-                    <doc.icon className="w-6 h-6" />
-                  </div>
-                  <span className="text-sm font-medium">{doc.type}</span>
-                </motion.div>
-              ))}
+            <CardContent>
+              <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Primary Diagnosis: Stage 1 Hypertension</h4>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Diagnosed in March 2026. Initially presented with elevated blood pressure (135/88 mmHg). 
+                  Patient was prescribed Telmisartan 40mg and advised lifestyle modifications including dietary sodium restriction and regular cardiovascular exercise. 
+                  Since intervention, blood pressure has steadily normalized.
+                </p>
+              </div>
+
+              <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-4">Blood Pressure Trend (6 Months)</h4>
+              <VitalsChart />
             </CardContent>
           </Card>
         </div>

@@ -96,13 +96,47 @@ export default function DashboardLayout({
                 <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900"></span>
               </button>
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
-              <div className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-700 dark:text-teal-400 uppercase font-bold">
-                  {user?.name?.charAt(0) || <User className="w-4 h-4" />}
+              
+              <div className="relative group">
+                <div className="flex items-center gap-3 cursor-pointer">
+                  <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-700 dark:text-teal-400 uppercase font-bold">
+                    {user?.name?.charAt(0) || <User className="w-4 h-4" />}
+                  </div>
+                  <div className="text-sm">
+                    <p className="font-medium text-slate-700 dark:text-slate-200 group-hover:text-teal-600 transition-colors">{user?.name || 'Priya Sharma'}</p>
+                    <p className="text-xs text-slate-500 capitalize">{user?.role || 'Patient'}</p>
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <p className="font-medium text-slate-700 dark:text-slate-200 group-hover:text-teal-600 transition-colors">{user?.name || 'Loading...'}</p>
-                  <p className="text-xs text-slate-500 capitalize">{user?.role || 'Patient'}</p>
+
+                {/* Dropdown Menu */}
+                <div className="absolute right-0 top-full mt-3 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  <div className="p-5 border-b border-slate-100 dark:border-slate-800">
+                    <h3 className="font-semibold text-slate-900 dark:text-white text-base">Patient Profile</h3>
+                    <p className="text-xs text-slate-500">ID: HE-89302-IN</p>
+                  </div>
+                  <div className="p-5 space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Age</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">28 Years</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Blood Group</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">O+ Positive</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Known Allergies</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">Peanuts, Penicillin</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Primary Condition</span>
+                      <span className="font-medium text-teal-600 dark:text-teal-400">Hypertension</span>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-b-2xl">
+                    <button onClick={logout} className="w-full py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors font-medium">
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
