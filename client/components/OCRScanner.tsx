@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { uploadPrescriptionImage, OCRResult } from '@/lib/api/ocr';
+export interface OCRResult {
+  success: boolean;
+  data?: {
+    medications?: any[];
+    ocrRawText?: string;
+    notes?: string;
+  };
+  meta?: {
+    confidence?: number;
+    vitals?: any;
+  };
+}
 import { UploadCloud, FileText, Pill, FileImage, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -61,8 +72,42 @@ export function OCRScanner() {
     setError(null);
     
     try {
-      const data = await uploadPrescriptionImage(file);
-      setResult(data);
+      // Simulate network & AI processing delay (3 seconds)
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      const mockId = Math.random().toString(36).substring(7);
+      const mockResult: OCRResult = {
+        success: true,
+        data: {
+          medications: [
+            { name: "Amoxicillin", dosage: "500mg", frequency: "Twice a day" }
+          ],
+          ocrRawText: "Patient Name: Demo\nRx: Amoxicillin 500mg BID",
+          notes: "Take with food to avoid stomach upset."
+        },
+        meta: {
+          confidence: 94,
+          vitals: {}
+        }
+      };
+
+      setResult(mockResult);
+
+      // Append to the localStorage dashboard timeline
+      const stored = localStorage.getItem('healthease_meds');
+      const meds = stored ? JSON.parse(stored) : [];
+      meds.push({
+        id: mockId,
+        name: "Amoxicillin",
+        dosage: "500mg",
+        time: "09:00 AM", // default time for demo
+        taken: false
+      });
+      localStorage.setItem('healthease_meds', JSON.stringify(meds));
+      
+      // Tell the MedicationTimeline to refresh
+      window.dispatchEvent(new Event('medicationsUpdated'));
+      
     } catch (err: any) {
       setError(err.message || 'An error occurred during OCR processing.');
     } finally {

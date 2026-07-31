@@ -6,7 +6,6 @@ import { Footer } from '@/app/components/Footer';
 import { useRouter } from 'next/navigation';
 import { UserCircle, Stethoscope, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
@@ -19,31 +18,29 @@ export default function LoginPage() {
     setError('');
     setLoadingRole(role);
     
-    // Hardcoded credentials based on your database seeds
-    const credentials = {
-      patient: { email: 'john@test.com', password: 'easy123' },
-      doctor: { email: 'smith@test.com', password: 'care123' }
-    };
+    // Simulate network delay for UI feel
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
-      const res = await api.post('/auth/login', credentials[role]);
+      // Mock user object
+      const mockUser = {
+        id: role === 'patient' ? 'p-123' : 'd-456',
+        name: role === 'patient' ? 'Demo Patient' : 'Dr. Smith',
+        email: role === 'patient' ? 'patient@demo.com' : 'doctor@demo.com',
+        role: role
+      };
+
+      // @ts-ignore
+      login(mockUser);
       
-      if (res.success && res.token && res.user) {
-        login(res.token, res.user);
-        
-        // Role-based routing
-        if (res.user.role === 'admin') {
-          router.push('/admin');
-        } else if (res.user.role === 'doctor') {
-          router.push('/doctor');
-        } else {
-          router.push('/dashboard');
-        }
+      // Role-based routing
+      if (role === 'doctor') {
+        router.push('/doctor');
       } else {
-        setError('Login failed. Ensure test users are seeded in the database.');
+        router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials or backend unavailable');
+      setError('Failed to log in to showcase mode.');
     } finally {
       setLoadingRole(null);
     }

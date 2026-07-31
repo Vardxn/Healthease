@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, User, Shield, Stethoscope, HeartPulse } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 export default function SignupPage() {
@@ -25,25 +24,31 @@ export default function SignupPage() {
     setError('');
     setLoading(true);
     
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     try {
-      const res = await api.post('/auth/register', { name, email, password, role });
+      // Mock user object
+      const mockUser = {
+        id: `u-${Math.random().toString(36).substring(7)}`,
+        name,
+        email,
+        role: role as 'patient' | 'doctor' | 'admin'
+      };
+
+      // @ts-ignore
+      login(mockUser);
       
-      if (res.success && res.token && res.user) {
-        login(res.token, res.user);
-        
-        // Role-based routing
-        if (res.user.role === 'admin') {
-          router.push('/admin');
-        } else if (res.user.role === 'doctor') {
-          router.push('/doctor');
-        } else {
-          router.push('/dashboard');
-        }
+      // Role-based routing
+      if (role === 'admin') {
+        router.push('/admin');
+      } else if (role === 'doctor') {
+        router.push('/doctor');
       } else {
-        setError('Signup failed. Please try again.');
+        router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      setError('Failed to create account in showcase mode.');
     } finally {
       setLoading(false);
     }
