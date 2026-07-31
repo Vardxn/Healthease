@@ -4,34 +4,32 @@ import React, { useState } from 'react';
 import { Navbar } from '@/app/components/Navbar';
 import { Footer } from '@/app/components/Footer';
 import { useRouter } from 'next/navigation';
-import { UserCircle, Stethoscope, Loader2 } from 'lucide-react';
+import { Loader2, Mail, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState('');
-  const [loadingRole, setLoadingRole] = useState<'patient' | 'doctor' | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleDemoLogin = async (role: 'patient' | 'doctor') => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-    setLoadingRole(role);
-    
-    // Hardcoded credentials based on your database seeds
-    const credentials = {
-      patient: { email: 'john@test.com', password: 'easy123' },
-      doctor: { email: 'smith@test.com', password: 'care123' }
-    };
+    setLoading(true);
     
     try {
-      const res = await api.post('/auth/login', credentials[role]);
+      const res = await api.post('/auth/login', { email, password });
       
       if (res.success && res.token && res.user) {
         login(res.token, res.user);
         
-        // Role-based routing
         if (res.user.role === 'admin') {
           router.push('/admin');
         } else if (res.user.role === 'doctor') {
@@ -40,12 +38,35 @@ export default function LoginPage() {
           router.push('/dashboard');
         }
       } else {
-        setError('Login failed. Ensure test users are seeded in the database.');
+        setError('Invalid credentials');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials or backend unavailable');
     } finally {
-      setLoadingRole(null);
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setLoading(true);
+      const res = await api.post('/auth/google', { credential: credentialResponse.credential });
+      if (res.success && res.token && res.user) {
+        login(res.token, res.user);
+        if (res.user.role === 'admin') {
+          router.push('/admin');
+        } else if (res.user.role === 'doctor') {
+          router.push('/doctor');
+        } else {
+          router.push('/dashboard');
+        }
+      } else {
+        setError('Google login failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Google login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,56 +84,81 @@ export default function LoginPage() {
               Welcome to HealthEase
             </h1>
             <p className="text-slate-600 dark:text-slate-400 text-sm">
-              Sign in to your account or access the demo portals below.
+              Sign in to your account
             </p>
           </div>
 
-          <div className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 p-3 rounded-xl text-sm text-center">
                 {error}
               </div>
             )}
 
-            <button 
-              onClick={() => handleDemoLogin('patient')}
-              disabled={loadingRole !== null}
-              className="w-full flex items-center justify-between bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold p-4 rounded-xl transition-all disabled:opacity-50 group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-200/50 flex items-center justify-center">
-                  <UserCircle className="w-5 h-5" />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Mail className="h-5 w-5" />
                 </div>
-                <div className="text-left">
-                  <span className="block text-lg">Use as Patient</span>
-                  <span className="text-xs text-indigo-500 font-normal">View dashboard, AI chat, and book calls</span>
-                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                  placeholder="you@example.com"
+                  required
+                />
               </div>
-              {loadingRole === 'patient' ? <Loader2 className="w-5 h-5 animate-spin" /> : <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>}
-            </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
 
             <button 
-              onClick={() => handleDemoLogin('doctor')}
-              disabled={loadingRole !== null}
-              className="w-full flex items-center justify-between bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 font-semibold p-4 rounded-xl transition-all disabled:opacity-50 group"
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-sm disabled:opacity-50"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-teal-200/50 flex items-center justify-center">
-                  <Stethoscope className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <span className="block text-lg">Use as Doctor</span>
-                  <span className="text-xs text-teal-500 font-normal">Manage patients and join calls</span>
-                </div>
-              </div>
-              {loadingRole === 'doctor' ? <Loader2 className="w-5 h-5 animate-spin" /> : <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
             </button>
+          </form>
 
+          <div className="mt-6 flex items-center justify-center">
+            <span className="text-slate-500 text-sm">or</span>
           </div>
 
-          <div className="mt-8 text-center text-xs text-slate-400 dark:text-slate-500">
-            Secure, HIPAA-compliant access.
+          <div className="mt-6 flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google login failed')}
+              useOneTap
+              theme="outline"
+              size="large"
+              shape="pill"
+            />
           </div>
+
+          <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
+            Don't have an account?{' '}
+            <Link href="/signup" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+              Sign up
+            </Link>
+          </p>
         </motion.div>
       </div>
       <Footer />

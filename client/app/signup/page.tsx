@@ -9,6 +9,7 @@ import { Lock, Mail, User, Shield, Stethoscope, HeartPulse } from 'lucide-react'
 import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -44,6 +45,29 @@ export default function SignupPage() {
       }
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setLoading(true);
+      const res = await api.post('/auth/google', { credential: credentialResponse.credential });
+      if (res.success && res.token && res.user) {
+        login(res.token, res.user);
+        if (res.user.role === 'admin') {
+          router.push('/admin');
+        } else if (res.user.role === 'doctor') {
+          router.push('/doctor');
+        } else {
+          router.push('/dashboard');
+        }
+      } else {
+        setError('Google login failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Google login failed');
     } finally {
       setLoading(false);
     }
@@ -170,6 +194,21 @@ export default function SignupPage() {
               {loading ? 'Creating Account...' : 'Sign Up'}
             </button>
           </form>
+
+          <div className="mt-6 flex items-center justify-center">
+            <span className="text-slate-500 text-sm">or</span>
+          </div>
+
+          <div className="mt-6 flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google login failed')}
+              useOneTap
+              theme="outline"
+              size="large"
+              shape="pill"
+            />
+          </div>
 
           <div className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
             Already have an account?{' '}

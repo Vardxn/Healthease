@@ -29,17 +29,22 @@ export const metadata: Metadata = {
 }
 
 import { AuthProvider } from '@/context/AuthContext'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'dummy-client-id.apps.googleusercontent.com'
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className={`${inter.variable} ${playfair.variable} font-[family-name:var(--font-sans)] antialiased bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100`}>
-        <ThemeProvider>
-          <AuthProvider>
-            <ScrollProgress />
-            {children}
-          </AuthProvider>
-        </ThemeProvider>
+        <GoogleOAuthProvider clientId={googleClientId}>
+          <ThemeProvider>
+            <AuthProvider>
+              <ScrollProgress />
+              {children}
+            </AuthProvider>
+          </ThemeProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   )

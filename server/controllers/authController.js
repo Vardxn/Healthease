@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const { ensureDemoPatient } = require('../scripts/seedDemoPatient');
 
@@ -275,5 +276,78 @@ exports.demoLogin = async (req, res, next) => {
 
     } catch (err) {
         next(err);
+    }
+};
+
+/**
+ * Login/Register via Google OAuth
+ * @route POST /api/auth/google
+ * @access Public
+ */
+exports.googleLogin = async (req, res, next) => {
+    try {
+        const { credential } = req.body;
+        if (!credential) {
+            return res.status(400).json({ success: false, msg: 'Missing Google credential' });
+        }
+
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const { email, name } = ticket.getPayload();
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Auto-register as patient if they don't exist
+            const salt = await bcrypt.genSalt(10);
+            const passwordHash = await bcrypt.hash(Math.random().toString(36).slice(-8) + 'Aa1@', salt);
+            
+            user = new User({
+                name,
+                email,
+                passwordHash,
+                role: 'patient'
+            });
+            await user.save();
+
+            const patient = new Patient({ userId: user._id });
+            await patient.save();
+
+            const healthProfile = new HealthProfile({ userId: user._id });
+            await healthProfile.save();
+        }
+
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role
+            }
+        };
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({
+                    success: true,
+                    token,
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role
+                    }
+                });
+            }
+        );
+    } catch (err) {
+        console.error('Google auth error:', err);
+        return res.status(401).json({ success: false, msg: 'Google authentication failed' });
     }
 };
