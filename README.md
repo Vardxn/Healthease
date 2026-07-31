@@ -194,10 +194,27 @@ Healthease/
 
 ---
 
-## 🔮 Future Scope
-1. **Real-time Video Calls**: Implement WebRTC signaling for live video telemedicine consults.
-2. **Wearable Integrations**: Synchronize Apple Health / Google Fit telemetry streams directly.
-3. **Predictive AI Insights**: Integrate ML-based diagnostic models predicting blood pressure trends.
+## 🔮 Phase 2 Roadmap (What to Build Next)
+
+To evolve HealthEase from a showcase prototype into a fully functional, production-ready platform, the following features are actively needed in the development pipeline:
+
+### 1. 🧠 Dedicated FastAPI ML Microservice
+- **The Goal**: Move the Disease Prediction logic out of the Node.js backend and into a dedicated Python **FastAPI** microservice.
+- **Why**: Allows usage of robust Data Science libraries (Scikit-learn, PyTorch, Pandas) to train and serve a highly accurate text classifier.
+
+### 2. 🎥 Fully Functional WebRTC Video Calls
+- **The Goal**: Wire up the existing Video Consultation UI with `Socket.IO` and `simple-peer` (or standard WebRTC).
+- **Why**: To enable actual, real-time peer-to-peer video streaming between the patient and the doctor.
+
+### 3. 💾 Full Database Integration (MongoDB)
+- **The Goal**: Replace the hardcoded mock data in the frontend with dynamic API calls to the Express backend and MongoDB.
+- **Why**: Ensures users can register, save their vitals, and persist their chat history across sessions.
+
+### 4. 🔐 Secure Authentication & JWTs
+- **The Goal**: Remove the bypass/mock login currently used for the demo and strictly enforce JWT-based authentication and Role-Based Access Control (RBAC).
+
+### 5. ☁️ Dockerization & Cloud Deployment
+- **The Goal**: Create a `docker-compose.yml` that seamlessly orchestrates the Next.js Frontend, Node API Gateway, FastAPI ML Service, and MongoDB database.
 
 ---
 
