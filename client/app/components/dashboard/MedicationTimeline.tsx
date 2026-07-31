@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Clock, Pill } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,45 +21,11 @@ const mockMeds: Medication[] = [
 ];
 
 export const MedicationTimeline: React.FC = () => {
-  const [meds, setMeds] = useState<Medication[]>([]);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const loadMeds = () => {
-      const today = new Date().toISOString().split('T')[0];
-      const lastReset = localStorage.getItem('healthease_meds_reset');
-      const storedMeds = localStorage.getItem('healthease_meds');
-
-      if (lastReset !== today || !storedMeds) {
-        // Daily reset or first visit — load default healthy baseline
-        localStorage.setItem('healthease_meds_reset', today);
-        localStorage.setItem('healthease_meds', JSON.stringify(mockMeds));
-        setMeds(mockMeds);
-      } else {
-        try {
-          setMeds(JSON.parse(storedMeds));
-        } catch {
-          setMeds(mockMeds);
-        }
-      }
-      setMounted(true);
-    };
-
-    loadMeds();
-
-    // Listen for OCR scanner adding new meds
-    const handleMedsUpdated = () => loadMeds();
-    window.addEventListener('medicationsUpdated', handleMedsUpdated);
-    return () => window.removeEventListener('medicationsUpdated', handleMedsUpdated);
-  }, []);
+  const [meds, setMeds] = useState<Medication[]>(mockMeds);
 
   const toggleTaken = (id: string) => {
-    const newMeds = meds.map(med => med.id === id ? { ...med, taken: !med.taken } : med);
-    setMeds(newMeds);
-    localStorage.setItem('healthease_meds', JSON.stringify(newMeds));
+    setMeds(meds.map(med => med.id === id ? { ...med, taken: !med.taken } : med));
   };
-
-  if (!mounted) return <div className="h-[200px] bg-slate-50 dark:bg-slate-900 rounded-xl animate-pulse"></div>;
 
   return (
     <Card className="shadow-sm border-border/50 bg-card">

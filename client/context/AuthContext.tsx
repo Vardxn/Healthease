@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 export interface User {
   id: string;
@@ -12,7 +13,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (userData: User) => void;
+  login: (token: string, userData: User) => void;
   logout: () => void;
 }
 
@@ -28,16 +29,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Serverless Showcase Mode: Check localStorage for a mocked user session
-    const checkAuth = () => {
-      try {
-        const storedUser = localStorage.getItem('healthease_demo_user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+    // Check if user is already logged in
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // If the token exists, try fetching the profile to ensure it's valid
+          const res = await api.get('/auth/me');
+          if (res.success && res.data && res.data.user) {
+            setUser({
+              id: res.data.user._id || res.data.user.id,
+              name: res.data.user.name,
+              email: res.data.user.email,
+              role: res.data.user.role
+            });
+          }
+        } catch (error) {
+          console.error("Token invalid or expired", error);
+          localStorage.removeItem('token');
         }
-      } catch (error) {
-        console.error("Failed to parse local user data", error);
-        localStorage.removeItem('healthease_demo_user');
       }
       setLoading(false);
     };
@@ -45,13 +55,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, []);
 
-  const login = (userData: User) => {
-    localStorage.setItem('healthease_demo_user', JSON.stringify(userData));
+  const login = (token: string, userData: User) => {
+    localStorage.setItem('token', token);
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('healthease_demo_user');
+    localStorage.removeItem('token');
     setUser(null);
     window.location.href = '/login';
   };
