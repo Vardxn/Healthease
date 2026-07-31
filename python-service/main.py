@@ -409,3 +409,69 @@ Return ONLY the JSON array. No explanations, no markdown, no preamble.
             "interactions": [],
             "error": str(exc)
         }
+
+class DiseasePredictionRequest(BaseModel):
+    symptoms: str
+    vitals: dict
+    allergies: list[str]
+
+@app.post("/predict-disease")
+async def predict_disease(request: DiseasePredictionRequest):
+    """
+    Predict potential diseases based on symptoms, vitals, and allergies using Groq LLM.
+    """
+    if not groq_client:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY is missing")
+
+    if not request.symptoms.strip():
+        raise HTTPException(status_code=400, detail="Symptoms are required")
+
+    prompt = f"""
+You are an advanced medical diagnostic algorithm.
+Analyze the following patient profile (vitals, allergies) and current symptoms, and predict potential diseases or conditions.
+Return a valid JSON output matching this EXACT schema:
+{{
+  "predictions": [
+    {{
+      "disease": "string",
+      "probability": 85,
+      "severity": "Low | Medium | High | Critical",
+      "reasoning": "string explanation based on vitals/symptoms"
+    }}
+  ],
+  "recommendations": ["string", "string"],
+  "requiresImmediateAttention": true or false
+}}
+
+Do not include any text outside the JSON block.
+
+PATIENT VITALS:
+Blood Pressure: {request.vitals.get('bloodPressure', 'Unknown')}
+Heart Rate: {request.vitals.get('heartRate', 'Unknown')}
+Temperature: {request.vitals.get('temperature', 'Unknown')}
+Weight: {request.vitals.get('weight', 'Unknown')}
+
+KNOWN ALLERGIES:
+{', '.join(request.allergies) if request.allergies else 'None'}
+
+CURRENT SYMPTOMS:
+{request.symptoms}
+"""
+
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant", # or another groq model
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            response_format={"type": "json_object"}
+        )
+
+        content = response.choices[0].message.content or "{}"
+        parsed = json.loads(content)
+
+        return parsed
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(exc)}")
