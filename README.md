@@ -70,8 +70,8 @@ Detailed sequence flows, endpoints, and layered diagrams can be accessed in the 
       Queries  |                     Request | JSON
                v                             v
        +-------+---------+           +-------+---------+
-       |   Data Store    |           |   OCR Service   |
-       |    (MongoDB)    |           |    (Python)     |
+       |   Data Store    |           | Python FastAPI  |
+       |    (MongoDB)    |           |  (ML & OCR)     |
        +-----------------+           +-----------------+
 ```
 
@@ -191,6 +191,7 @@ Healthease/
 - **Integrated real-time notification alerts and messaging components** utilizing Socket.IO, improving response times for patient stock refills and health coefficient changes.
 - **Engineered modular React state structures and Context wrappers** for authentication and WebSockets, reducing page re-renders and improving client-side responsiveness.
 - **Built and documented a professional admin portal and audit dashboard** to approve medical specialist profiles and analyze telemetry parameters across user networks.
+- **Dedicated Python FastAPI ML Microservice**: Extracted disease prediction logic out of the Node.js backend to leverage robust Python data science tooling and Groq LLMs.
 
 ---
 
@@ -198,11 +199,7 @@ Healthease/
 
 To evolve HealthEase from a showcase prototype into a fully functional, production-ready platform, the following features are actively needed in the development pipeline:
 
-### 1. 🧠 Dedicated FastAPI ML Microservice
-- **The Goal**: Move the Disease Prediction logic out of the Node.js backend and into a dedicated Python **FastAPI** microservice.
-- **Why**: Allows usage of robust Data Science libraries (Scikit-learn, PyTorch, Pandas) to train and serve a highly accurate text classifier.
-
-### 2. 🎥 Fully Functional WebRTC Video Calls
+### 1. 🎥 Fully Functional WebRTC Video Calls
 - **The Goal**: Wire up the existing Video Consultation UI with `Socket.IO` and `simple-peer` (or standard WebRTC).
 - **Why**: To enable actual, real-time peer-to-peer video streaming between the patient and the doctor.
 
