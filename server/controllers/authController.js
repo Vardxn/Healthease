@@ -286,18 +286,37 @@ exports.demoLogin = async (req, res, next) => {
  */
 exports.googleLogin = async (req, res, next) => {
     try {
-        const { credential } = req.body;
-        if (!credential) {
-            return res.status(400).json({ success: false, msg: 'Missing Google credential' });
+        const { credential, access_token } = req.body;
+        
+        if (!credential && !access_token) {
+            return res.status(400).json({ success: false, msg: 'Missing Google credential or access token' });
         }
 
-        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-        const ticket = await client.verifyIdToken({
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
+        let email, name;
 
-        const { email, name } = ticket.getPayload();
+        if (credential) {
+            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+            const ticket = await client.verifyIdToken({
+                idToken: credential,
+                audience: process.env.GOOGLE_CLIENT_ID
+            });
+            const payload = ticket.getPayload();
+            email = payload.email;
+            name = payload.name;
+        } else if (access_token) {
+            // Verify access_token by fetching user info from Google
+            const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${access_token}` }
+            });
+            
+            if (!userInfoRes.ok) {
+                return res.status(401).json({ success: false, msg: 'Invalid Google access token' });
+            }
+            
+            const userInfo = await userInfoRes.json();
+            email = userInfo.email;
+            name = userInfo.name;
+        }
 
         let user = await User.findOne({ email });
 
