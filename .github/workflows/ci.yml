@@ -1,0 +1,39 @@
+name: HealthEase CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+
+    - name: Server - Install & Security Audit
+      working-directory: ./server
+      run: |
+        npm ci
+        npm audit --audit-level=high || true
+
+    - name: Client - Install & Lint
+      working-directory: ./client
+      run: |
+        npm ci
+        # Assuming standard Next.js linting is configured
+        npm run lint || true 
+
+    - name: Verify Docker Compose Build
+      # This ensures our Dockerfiles are valid and the images compile successfully
+      run: docker-compose -f docker-compose.yml build

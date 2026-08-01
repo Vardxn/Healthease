@@ -1,4 +1,5 @@
 # HEALTHEASE 🩺
+[![HealthEase CI Pipeline](https://github.com/Vardxn/Healthease/actions/workflows/ci.yml/badge.svg)](https://github.com/Vardxn/Healthease/actions/workflows/ci.yml)
 
 > **AI-Powered Healthcare Management Platform**  
 > An intelligent, full-stack compliance-tracking, vital-telemetry, and telemedicine platform designed to optimize patient health habits and unify clinical data workflows.
