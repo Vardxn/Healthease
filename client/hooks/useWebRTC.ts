@@ -84,7 +84,13 @@ export function useWebRTC({ consultationId, userId, userName, role }: UseWebRTCP
         });
 
         socketRef.current.on('call-ended', () => {
-          endCall();
+          setStatus('ended');
+          if (currentStream) {
+            currentStream.getTracks().forEach(t => t.stop());
+          }
+          if (peerRef.current) {
+            peerRef.current.close();
+          }
         });
 
       } catch (err: any) {

@@ -40,7 +40,7 @@ export default function LoginPage() {
       } else {
         setError('Invalid credentials');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Invalid credentials or backend unavailable');
     } finally {
       setLoading(false);
@@ -82,7 +82,7 @@ export default function LoginPage() {
         } else {
           setError('Google login failed');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(err.message || 'Google login failed');
       } finally {
         setLoading(false);
@@ -182,7 +182,7 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
               Sign up
             </Link>

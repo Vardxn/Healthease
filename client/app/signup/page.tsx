@@ -43,7 +43,7 @@ export default function SignupPage() {
       } else {
         setError('Signup failed. Please try again.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ export default function SignupPage() {
         } else {
           setError('Google login failed');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(err.message || 'Google login failed');
       } finally {
         setLoading(false);
