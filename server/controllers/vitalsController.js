@@ -1,22 +1,47 @@
-const User = require('../models/User'); // Assume health metrics are nested in User or a Vitals model
+const Vitals = require('../models/Vitals');
+
+exports.addVitals = async (req, res, next) => {
+  try {
+    const { patientId, doctorId, heartRate, systolic, diastolic, spo2 } = req.body;
+    
+    const newVitals = new Vitals({
+      patientId,
+      doctorId,
+      heartRate,
+      systolic,
+      diastolic,
+      spo2
+    });
+
+    await newVitals.save();
+    res.status(201).json({ success: true, data: newVitals });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getPatientVitals = async (req, res, next) => {
   try {
     const { patientId } = req.params;
     
-    // In a real scenario, this might be an aggregation pipeline on a Vitals collection.
-    // For this implementation, we will mock the database response to match the Recharts format.
-    const mockTimeSeriesData = [
-      { date: 'Jul 25', heartRate: 71, systolic: 118, diastolic: 78 },
-      { date: 'Jul 26', heartRate: 73, systolic: 119, diastolic: 79 },
-      { date: 'Jul 27', heartRate: 72, systolic: 121, diastolic: 81 },
-      { date: 'Jul 28', heartRate: 78, systolic: 125, diastolic: 85 },
-      { date: 'Jul 29', heartRate: 75, systolic: 122, diastolic: 82 },
-      { date: 'Jul 30', heartRate: 72, systolic: 118, diastolic: 76 },
-      { date: 'Aug 01', heartRate: 70, systolic: 117, diastolic: 75 },
-    ];
+    // Fetch the last 30 days of vitals, sorted chronologically
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    res.status(200).json({ success: true, data: mockTimeSeriesData });
+    const vitalsData = await Vitals.find({ 
+      patientId, 
+      dateRecorded: { $gte: thirtyDaysAgo } 
+    }).sort({ dateRecorded: 1 });
+
+    // Map to match Recharts expected format
+    const formattedData = vitalsData.map(v => ({
+      date: v.dateRecorded.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      heartRate: v.heartRate,
+      systolic: v.systolic,
+      diastolic: v.diastolic
+    }));
+
+    res.status(200).json({ success: true, data: formattedData });
   } catch (error) {
     next(error);
   }
