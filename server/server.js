@@ -70,6 +70,7 @@ app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/wellness', require('./routes/wellnessRoutes'));
 app.use('/api/ml', require('./routes/mlRoutes'));
 app.use('/api/export', require('./routes/exportRoutes'));
+app.use('/api/vitals', require('./routes/vitalsRoutes'));
 
 // Centralized error handling
 app.use((err, req, res, next) => {

@@ -131,7 +131,7 @@ export default function DashboardOverview() {
               </div>
 
               <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-4">Blood Pressure Trend (6 Months)</h4>
-              <VitalsChart />
+              <VitalsChart patientId={user?.id || 'demo_patient'} />
             </CardContent>
           </Card>
         </div>
