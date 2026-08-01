@@ -30,13 +30,32 @@ if (!process.env.VERCEL) {
   console.log('Skipping WebSocket initialization on Vercel');
 }
 
-// Middleware
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const { globalLimiter, aiServiceLimiter } = require('./middleware/rateLimiters');
+
+// 1. Security HTTP Headers
+app.use(helmet());
+
+// 2. Data Sanitization against NoSQL Query Injection
+app.use(mongoSanitize());
+
+// 3. Strict CORS Configuration
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 4. Apply Rate Limiters
+app.use('/api', globalLimiter);
+app.use('/api/ai', aiServiceLimiter);
+app.use('/api/scribe', aiServiceLimiter);
+app.use('/api/ocr', aiServiceLimiter);
 
 // Connect Database
 connectDB().then(() => {
