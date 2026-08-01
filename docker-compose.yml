@@ -1,55 +1,44 @@
 version: '3.8'
-
 services:
-  mongodb:
+  mongo:
     image: mongo:6.0
-    container_name: healthease-mongodb
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongo-data:/data/db
     networks:
-      - healthease_network
-    restart: unless-stopped
+      - healthease-network
 
   server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    container_name: healthease-server
+    build: ./server
     ports:
       - "5001:5001"
     environment:
+      - MONGO_URI=mongodb://mongo:27017/healthease
       - PORT=5001
-      - MONGODB_URI=mongodb://mongodb:27017/healthease
-      - NODE_ENV=development
-      # Note: For production, secret keys would be injected securely via CI/CD secrets
-      - JWT_SECRET=development_secret_key_change_me_in_prod
+      - CLIENT_URL=http://localhost:3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME}
     depends_on:
-      - mongodb
+      - mongo
     networks:
-      - healthease_network
-    restart: unless-stopped
+      - healthease-network
 
   client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    container_name: healthease-client
+    build: ./client
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5001/api
-      - NODE_ENV=development
     depends_on:
       - server
     networks:
-      - healthease_network
-    restart: unless-stopped
-
-volumes:
-  mongodb_data:
+      - healthease-network
 
 networks:
-  healthease_network:
+  healthease-network:
     driver: bridge
+
+volumes:
+  mongo-data:

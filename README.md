@@ -132,10 +132,24 @@ npm install
 ```
 
 ### 5. Launch the Application
+
+#### Option A: Local Development
 Start the development server for the entire stack (Express API server and Vite client):
 ```bash
 # In the root package directory or server directory:
 npm run dev:all
+```
+
+#### Option B: Docker Containerization (Production Orchestration)
+Run the entire platform (Next.js Client, Express Server, MongoDB) securely inside an orchestrated Docker cluster:
+```bash
+# Ensure your required environment variables are exported
+export GEMINI_API_KEY="your-gemini-key"
+export PINECONE_API_KEY="your-pinecone-key"
+export PINECONE_INDEX_NAME="healthease"
+
+# Build and spin up the cluster
+docker-compose up --build
 ```
 
 ---
