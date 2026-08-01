@@ -1,25 +1,63 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Heart, Scale, Video } from 'lucide-react';
+import { Activity, Heart, Scale, Video, FileDown, Loader2 } from 'lucide-react';
 import { HealthScore } from '@/app/components/dashboard/HealthScore';
 import { VitalsCard } from '@/app/components/dashboard/VitalsCard';
 import { MedicationTimeline } from '@/app/components/dashboard/MedicationTimeline';
 import { VitalsChart } from '@/app/components/dashboard/VitalsChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardOverview() {
+  const { user } = useAuth();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!user || !user.id) return;
+    setIsExporting(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/export/patient/${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to generate PDF');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `HealthEase_Record_${user.name?.replace(/\s+/g, '_') || 'Patient'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export medical record. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in-50 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-[family-name:var(--font-heading)]">
-            Good morning, Priya
+            Good morning, {user?.name?.split(' ')[0] || 'Patient'}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Here is your daily health summary.</p>
         </div>
+        <Button onClick={handleExport} disabled={isExporting} variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200">
+          {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}
+          Export Medical Record
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
