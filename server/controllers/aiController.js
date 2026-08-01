@@ -1,216 +1,51 @@
-const aiService = require('../services/aiService');
-const { HealthProfile, MentalHealthChat } = require('../models/HealthProfile');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getPineconeIndex } = require('../config/pinecone.js');
 
-function getAuthenticatedUserId(req, fallbackUserId = null) {
-  return req.user?.id || req.user?._id || fallbackUserId || null;
-}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
 
-function normalizeMedicationInput(medications) {
-  if (!Array.isArray(medications)) {
-    return [];
-  }
-
-  return medications
-    .map((medication) => {
-      if (typeof medication === 'string') {
-        return { name: medication };
-      }
-
-      if (!medication || typeof medication !== 'object') {
-        return null;
-      }
-
-      return {
-        name: medication.name || medication.medicationName || '',
-        dosage: medication.dosage || '',
-        frequency: medication.frequency || '',
-        instructions: medication.instructions || ''
-      };
-    })
-    .filter((medication) => medication && medication.name);
-}
-
-exports.handleSymptomCheck = async (req, res) => {
+exports.handleAIConsultation = async (req, res, next) => {
   try {
-    const symptoms = typeof req.body?.symptoms === 'string' ? req.body.symptoms.trim() : '';
-
-    if (!symptoms) {
-      return res.status(400).json({
-        success: false,
-        message: 'Symptoms text is required.'
-      });
-    }
-
-    const triageResult = await aiService.analyzeSymptoms(symptoms);
-
-    return res.status(200).json({
-      success: true,
-      data: triageResult
-    });
-  } catch (error) {
-    console.error('AI symptom check error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to process symptom triage.'
-    });
-  }
-};
-
-exports.checkDrugInteractions = async (req, res) => {
-  try {
-    const userId = getAuthenticatedUserId(req, req.body?.userId);
-    const incomingMedications = normalizeMedicationInput(req.body?.newMedications || req.body?.medications);
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required to evaluate medication safety.'
-      });
-    }
-
-    if (!incomingMedications.length) {
-      return res.status(400).json({
-        success: false,
-        message: 'At least one medication is required.'
-      });
-    }
-
-    const profile = await HealthProfile.findOne({ userId });
-
-    const interactionResult = await aiService.checkDrugInteractions({
-      profile,
-      newMedications: incomingMedications
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: interactionResult
-    });
-  } catch (error) {
-    console.error('AI interaction check error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to check drug interaction alerts.'
-    });
-  }
-};
-
-exports.getDietaryProfile = async (req, res) => {
-  try {
-    const userId = getAuthenticatedUserId(req, req.params?.userId);
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required to generate diet recommendations.'
-      });
-    }
-
-    const profile = await HealthProfile.findOne({ userId });
-
-    const activePrescriptions = Array.isArray(profile?.prescriptions)
-      ? profile.prescriptions.filter((prescription) => prescription.status === 'active')
-      : [];
-
-    const medications = activePrescriptions.flatMap((prescription) => prescription.medications || []);
-
-    const dietResult = await aiService.generateDietaryGuidelines({
-      profile,
-      medications
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: dietResult
-    });
-  } catch (error) {
-    console.error('AI diet guidance error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to generate dietary guidance.'
-    });
-  }
-};
-
-exports.handleMentalHealthChat = async (req, res) => {
-  try {
-    const userId = getAuthenticatedUserId(req, req.body?.userId);
-    const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required for mental health chat.'
-      });
-    }
-
-    if (!message) {
-      return res.status(400).json({
-        success: false,
-        message: 'Message cannot be empty.'
-      });
-    }
-
-    const profile = await HealthProfile.findOne({ userId });
+    const { patientId, query } = req.body;
     
-    // Fetch recent conversation history from ChatMessage collection
-    const ChatMessage = require('../models/ChatMessage');
-    const recentMessages = await ChatMessage.find({ userId, chatType: 'mental_health' })
-      .sort({ timestamp: -1 })
-      .limit(20)
-      .lean();
+    // 1. Embed the user's question
+    const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const queryEmbedding = await embeddingModel.embedContent(query);
     
-    // Sort chronological
-    const chatHistory = recentMessages.reverse().map(msg => ({
-      sender: msg.sender,
-      text: msg.text,
-      crisisTriggered: msg.crisisTriggered
-    }));
+    // 2. Query Pinecone for relevant context
+    let retrievedContext = "";
+    if (process.env.PINECONE_API_KEY) {
+        const index = getPineconeIndex();
+        const queryResponse = await index.query({
+            vector: queryEmbedding.embedding.values,
+            topK: 3, // Fetch top 3 most relevant chunks
+            includeMetadata: true,
+            filter: { patientId: { $eq: patientId.toString() } } // Security: Only retrieve THIS patient's data
+        });
 
-    const reply = await aiService.generateMentalHealthReply({
-      profile,
-      chatHistory: chatHistory,
-      userMessage: message
-    });
-
-    // Save user message
-    await ChatMessage.create({
-      userId,
-      chatType: 'mental_health',
-      sender: 'user',
-      text: message,
-      crisisTriggered: Boolean(reply.crisisTriggered)
-    });
-
-    // Save AI reply
-    await ChatMessage.create({
-      userId,
-      chatType: 'mental_health',
-      sender: 'ai',
-      text: reply.text,
-      crisisTriggered: Boolean(reply.crisisTriggered)
-    });
-
-    if (reply.crisisTriggered) {
-      let chatLog = await MentalHealthChat.findOne({ userId });
-      if (!chatLog) {
-        chatLog = new MentalHealthChat({ userId, crisisEvents: [] });
-      }
-      chatLog.crisisEvents.push({
-        trigger: message
-      });
-      await chatLog.save();
+        // 3. Construct the RAG Prompt
+        retrievedContext = queryResponse.matches
+            .map(match => match.metadata.text)
+            .join("\n\n");
     }
 
-    return res.status(200).json({
-      success: true,
-      data: reply
-    });
+    const systemPrompt = \`
+      You are the HealthEase AI Clinical Assistant. 
+      Answer the user's question using ONLY the following medical history and OCR records. 
+      If the context does not contain the answer, explicitly state that you do not have that information.
+      
+      Patient Medical Context:
+      \${retrievedContext}
+    \`;
+
+    // 4. Generate the response
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await chatModel.generateContent([
+      systemPrompt, 
+      \`User Query: \${query}\`
+    ]);
+    
+    res.status(200).json({ success: true, answer: result.response.text() });
   } catch (error) {
-    console.error('AI mental health chat error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to process mental health chat.'
-    });
+    next(error);
   }
 };

@@ -1,4 +1,5 @@
 const ocrService = require('../services/ocrService');
+const { processAndStoreMedicalRecord } = require('../services/embeddingService');
 
 /**
  * Extract handwritten text from uploaded image.
@@ -22,6 +23,15 @@ exports.recognizeHandwriting = async (req, res) => {
         }
 
         const result = await ocrService.recognizeHandwriting(req.file.buffer);
+
+        // Hook up RAG embedding for Pinecone
+        // Assuming req.user.id is available via auth middleware. If not, this is safe to fail gracefully or skip if patientId is missing.
+        const patientId = req.user?.id || req.body?.patientId;
+        if (patientId && result.text) {
+            // Process async in background so we don't block the OCR response
+            processAndStoreMedicalRecord(patientId, result.text, 'Prescription OCR')
+                .catch(err => console.error('Failed to upsert OCR to Pinecone:', err));
+        }
 
         return res.json({
             success: true,
