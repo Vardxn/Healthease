@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
+import { AmbientScribe } from '@/app/components/doctor/AmbientScribe';
+
 const mockPatients = [
   { id: 1, name: 'Priya Sharma', age: 28, lastVisit: 'Today', status: 'Requires Attention', score: 85 },
   { id: 2, name: 'Rahul Desai', age: 45, lastVisit: '2 days ago', status: 'Stable', score: 92 },
@@ -29,6 +31,8 @@ export default function DoctorDashboard() {
           Add Patient Note
         </Button>
       </div>
+
+      <AmbientScribe />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
