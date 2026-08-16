@@ -1,0 +1,8 @@
+erDiagram
+    USER ||--o{ PATIENT : has
+    USER ||--o{ DOCTOR : has
+    PATIENT ||--o{ CONSULTATION : books
+    DOCTOR ||--o{ CONSULTATION : conducts
+    CONSULTATION ||--o| PRESCRIPTION : generates
+    PATIENT ||--o{ VITALS : logs
+    PATIENT ||--o{ MEDICINE_REMINDER : sets

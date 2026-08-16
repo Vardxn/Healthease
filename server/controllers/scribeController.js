@@ -19,9 +19,10 @@ exports.generateSOAPNote = async (req, res, next) => {
     };
 
     const systemPrompt = `
-      You are an expert AI clinical scribe. Listen to this doctor-patient consultation audio.
-      Transcribe the relevant medical information and format it strictly into a SOAP note:
-      - Subjective (Patient's chief complaints)
+      You are an expert AI clinical scribe operating in India. Listen to this doctor-patient consultation audio.
+      The audio may contain code-mixed "Hinglish" (Hindi + English). Accurately transcribe and translate the clinical intent into professional English medical terminology.
+      Format it strictly into a SOAP note:
+      - Subjective (Patient's chief complaints, capturing cultural/local nuances)
       - Objective (Observations, vitals mentioned)
       - Assessment (Diagnosis or potential conditions)
       - Plan (Medications, next steps, follow-ups)

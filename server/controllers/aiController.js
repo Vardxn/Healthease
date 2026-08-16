@@ -28,23 +28,61 @@ exports.handleAIConsultation = async (req, res, next) => {
             .join("\n\n");
     }
 
-    const systemPrompt = \`
+    const systemPrompt = `
       You are the HealthEase AI Clinical Assistant. 
       Answer the user's question using ONLY the following medical history and OCR records. 
       If the context does not contain the answer, explicitly state that you do not have that information.
       
       Patient Medical Context:
-      \${retrievedContext}
-    \`;
+      ${retrievedContext}
+    `;
 
     // 4. Generate the response
     const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await chatModel.generateContent([
       systemPrompt, 
-      \`User Query: \${query}\`
+      `User Query: ${query}`
     ]);
     
     res.status(200).json({ success: true, answer: result.response.text() });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.triageSymptoms = async (req, res, next) => {
+  try {
+    const { symptoms } = req.body;
+    if (!symptoms) {
+      return res.status(400).json({ error: 'Symptoms are required for triage.' });
+    }
+
+    const triagePrompt = `
+      You are an expert AI clinical triage assistant. Analyze the following patient symptoms.
+      Classify the severity into one of three categories:
+      1. LOW (Routine checkup, mild symptoms)
+      2. MEDIUM (Needs attention soon, moderate symptoms)
+      3. HIGH (Emergency, severe or life-threatening symptoms)
+      
+      Respond strictly in JSON format:
+      {
+        "severity": "LOW|MEDIUM|HIGH",
+        "reasoning": "A brief 1-sentence clinical reasoning",
+        "recommendedAction": "Immediate steps the patient should take"
+      }
+      
+      Patient Symptoms: ${symptoms}
+    `;
+
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await chatModel.generateContent(triagePrompt);
+    
+    // Parse the JSON block from Gemini
+    const textResp = result.response.text();
+    const jsonMatch = textResp.match(/\{.*\}/s);
+    const triageData = jsonMatch ? JSON.parse(jsonMatch[0]) : { severity: 'MEDIUM', reasoning: 'Parsing failed', recommendedAction: 'Consult doctor' };
+
+    res.status(200).json({ success: true, triage: triageData });
   } catch (error) {
     next(error);
   }

@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant D as Doctor (Client)
+    participant P as Patient (Client)
+    participant E as Express Server (Socket)
+    participant G as Gemini API
+    participant M as MongoDB
+    
+    D->>E: Start Teleconsultation (WebRTC signaling)
+    P->>E: Join Teleconsultation
+    D->>E: Stream Audio (Scribe active)
+    E->>E: Transcribe Audio Chunk
+    D->>E: End Consultation
+    E->>G: Send transcript for Medical Structuring
+    G-->>E: Returns JSON Structured Prescription
+    E->>M: Save Prescription
+    E-->>D: Emit 'prescription_ready' with payload
+    D->>D: Review & Confirm Prescription

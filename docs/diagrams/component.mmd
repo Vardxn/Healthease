@@ -1,0 +1,23 @@
+graph LR
+    subgraph Client App
+        AuthComponents
+        DashboardComponents
+        ScribeInterface
+        TelemedRoom
+    end
+    
+    subgraph Express Backend
+        AuthMiddleware
+        SocketController
+        ConsultationController
+        ScribeController
+    end
+    
+    subgraph Python Service
+        OCRRouter
+        PredictRouter
+        AnalyticsRouter
+    end
+    
+    Client App --> Express Backend
+    Express Backend --> Python Service

@@ -1,0 +1,10 @@
+graph TD
+    Client[Next.js Client UI] -->|REST / WebSocket| Gateway[Express API Gateway & Server]
+    Gateway -->|CRUD & Auth| MongoDB[(MongoDB)]
+    Gateway -->|Heavy ML tasks| MLService[FastAPI ML Service]
+    Gateway -->|Telemed & Summaries| Gemini[Gemini API]
+    Gateway -->|Payments| Razorpay[Razorpay API]
+    Gateway -->|Emails| NodeMailer[Nodemailer]
+    
+    MLService -->|OCR & Triage| MLModels[Scikit-learn / Custom Models]
+    MLService -->|Vector Search| Pinecone[(Pinecone Vector DB)]
