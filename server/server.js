@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -144,13 +145,23 @@ if (process.env.NODE_ENV !== 'production') {
 
 const PORT = process.env.PORT || 5001;
 
-// Serve built frontend in production
+// Serve built frontend in production if client/dist exists, else return API status
 if (process.env.NODE_ENV === 'production') {
   const clientDist = path.join(__dirname, '..', 'client', 'dist');
-  app.use(express.static(clientDist));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
+  if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(clientDist, 'index.html'));
+    });
+  } else {
+    app.get('/', (req, res) => {
+      res.json({
+        status: 'ok',
+        message: 'HealthEase API is running in production',
+        health: '/health'
+      });
+    });
+  }
 }
 
 if (!process.env.VERCEL) {
