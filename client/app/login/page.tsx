@@ -40,8 +40,8 @@ export default function LoginPage() {
       } else {
         setError('Invalid credentials');
       }
-    } catch (err: unknown) {
-      setError(err.message || 'Invalid credentials or backend unavailable');
+    } catch (err: any) {
+      setError(err?.message || 'Invalid credentials or backend unavailable');
     } finally {
       setLoading(false);
     }
@@ -82,8 +82,8 @@ export default function LoginPage() {
         } else {
           setError('Google login failed');
         }
-      } catch (err: unknown) {
-        setError(err.message || 'Google login failed');
+      } catch (err: any) {
+        setError(err?.message || 'Google login failed');
       } finally {
         setLoading(false);
       }
