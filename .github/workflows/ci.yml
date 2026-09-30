@@ -32,9 +32,8 @@ jobs:
       working-directory: ./client
       run: |
         npm ci
-        # Assuming standard Next.js linting is configured
-        npm run lint || true 
+        npm run lint
 
     - name: Verify Docker Compose Build
       # This ensures our Dockerfiles are valid and the images compile successfully
-      run: docker-compose -f docker-compose.yml build
+      run: docker compose -f docker-compose.yml build
