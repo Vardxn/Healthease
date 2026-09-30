@@ -17,14 +17,15 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: '**/package-lock.json'
 
-    - name: Server - Install & Security Audit
+    - name: Server - Install, Test & Security Audit
       working-directory: ./server
       run: |
         npm ci
+        npm test
         npm audit --audit-level=high || true
 
     - name: Client - Install & Lint
