@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -14,7 +14,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const isAuthorized = !loading && Boolean(user) && (!allowedRoles || (user && allowedRoles.includes(user.role)));
 
   useEffect(() => {
     if (!loading) {
@@ -26,9 +26,6 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         if (user.role === 'admin') router.push('/admin');
         else if (user.role === 'doctor') router.push('/doctor');
         else router.push('/dashboard');
-      } else {
-        // Authorized
-        setIsAuthorized(true);
       }
     }
   }, [user, loading, router, pathname, allowedRoles]);

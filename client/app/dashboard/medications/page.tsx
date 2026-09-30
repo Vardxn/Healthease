@@ -22,7 +22,6 @@ export default function MedicationsPage() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isScanning) {
-      setScanProgress(0);
       interval = setInterval(() => {
         setScanProgress((prev) => {
           if (prev >= 90) return prev;
@@ -38,6 +37,7 @@ export default function MedicationsPage() {
     if (!file) return;
 
     setIsScanning(true);
+    setScanProgress(0);
     setError('');
     setExtractedMeds([]);
     setRawText('');

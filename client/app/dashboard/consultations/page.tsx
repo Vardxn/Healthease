@@ -99,8 +99,7 @@ export default function ConsultationsPage() {
         }
       };
 
-      // @ts-ignore
-      const rzp = new window.Razorpay(options);
+      const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
         setError(response.error.description);
       });
